@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giochi a squadre – STEM in brick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --mint:#00e49a;
+    --orange:#e8862a;
+    --card:#111926;
+    --card2:#0d1420;
+    --line:rgba(0,228,154,.16);
+    --txt:#dfe8e6;
+    --muted:#8ba0a0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:transparent;            /* sfondo trasparente: si fonde con la pagina ospite */
+    color:var(--txt);
+    font-family:'Roboto Mono', ui-monospace, monospace;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{position:relative;z-index:1;max-width:940px;margin:0 auto;padding:24px 18px 40px}
+
+  /* intestazione */
+  header.top{text-align:center;margin-bottom:26px}
+  .logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:12px}
+  .logo .mk{width:40px;height:26px;flex:0 0 auto}
+  .logo b{font-size:19px;letter-spacing:1px;color:#fff;font-weight:700}
+  .logo b span{color:var(--mint)}
+  header.top h1{margin:6px 0 8px;font-size:clamp(23px,4vw,32px);font-weight:700;color:#fff;letter-spacing:.5px}
+  header.top h1 .dot{color:var(--orange)}
+  header.top p{margin:0 auto;max-width:660px;color:var(--muted);font-size:14px;line-height:1.6}
+
+  /* filtri per grado = mattoncini colorati */
+  .filters{display:flex;flex-wrap:wrap;gap:13px 9px;justify-content:center;max-width:800px;margin:6px auto 8px}
+  .chip{
+    position:relative;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.4px;
+    padding:9px 15px 8px;margin-top:5px;border-radius:6px;font-weight:700;overflow:visible;
+    border:1.5px solid var(--cc,#00e49a);background:var(--cc,#00e49a);color:#08110c;
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);
+    transition:background .15s,color .15s,opacity .15s,transform .12s;
+    -webkit-user-select:none;user-select:none;
+  }
+  .chip::before,.chip::after{content:"";position:absolute;top:-5px;height:6px;width:28%;border-radius:2px 2px 1px 1px;background:var(--cc,#00e49a)}
+  .chip::before{left:15%}
+  .chip::after{right:15%}
+  .chip.all{--cc:#ffffff;color:#0a0f16}
+  .chip.off{background:transparent;color:var(--cc,#8ba0a0);box-shadow:none}
+  .chip.off::before,.chip.off::after{opacity:.5}
+  .chip:hover{transform:translateY(-1px)}
+  .chip:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+  .filters-hint{text-align:center;color:var(--muted);font-size:11.5px;margin:0 0 24px}
+  .grade{display:inline-block;font-weight:700;color:#08110c;background:var(--gc,#00e49a);border-radius:4px;padding:1px 6px;margin-right:6px}
+  .empty{grid-column:1 / -1;text-align:center;color:var(--muted);padding:46px 10px;font-size:14px}
+  footer .count{color:var(--orange)}
+
+  /* griglia */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+
+  /* casella */
+  .card{
+    position:relative;display:flex;flex-direction:column;
+    background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--line);border-radius:16px;padding:20px;
+    box-shadow:0 10px 24px rgba(0,0,0,.35);
+    transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+    overflow:hidden;
+  }
+  .card::after{content:"";position:absolute;left:0;top:0;height:3px;width:100%;background:var(--grad,var(--mint));opacity:.92}
+  .card:hover{transform:translateY(-3px);border-color:var(--accent,var(--mint));box-shadow:0 16px 32px rgba(0,0,0,.5)}
+  .brick-mark{position:absolute;right:14px;top:16px;width:30px;height:21px;opacity:.55}
+
+  .card h3{margin:2px 44px 2px 0;font-size:19px;line-height:1.25;font-weight:700}
+  .card h3 a{
+    color:var(--mint);text-decoration:none;
+    background-image:linear-gradient(var(--mint),var(--mint));
+    background-size:0% 2px;background-position:0 100%;background-repeat:no-repeat;
+    transition:background-size .22s ease,color .15s ease;
+  }
+  .card h3 a .arr{font-size:14px;opacity:.75;margin-left:4px}
+  .card h3 a:hover{color:var(--orange);background-size:100% 2px;background-image:linear-gradient(var(--orange),var(--orange))}
+  .card h3 a:focus-visible,.play:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:3px}
+
+  .org{color:var(--muted);font-size:12px;letter-spacing:.3px;margin:3px 0 12px}
+  .desc{font-size:13.5px;line-height:1.6;color:#c6d2d1;margin:0 0 14px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px;padding:0;list-style:none}
+  .tags li{font-size:11px;letter-spacing:.3px;padding:4px 8px;border-radius:6px;border:1px solid var(--accent,var(--mint));color:var(--accent,var(--mint))}
+
+  /* pulsante a mattoncino */
+  .play{
+    margin-top:auto;align-self:flex-start;position:relative;display:inline-block;
+    font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.4px;text-decoration:none;
+    padding:10px 16px 9px;margin-bottom:2px;border-radius:6px;
+    background:var(--accent,var(--mint));color:#08110c;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);
+    transition:transform .12s;
+  }
+  .play::before,.play::after{content:"";position:absolute;top:-5px;height:6px;width:26%;border-radius:2px 2px 1px 1px;background:var(--accent,var(--mint))}
+  .play::before{left:15%}
+  .play::after{right:15%}
+  .play:hover{transform:translateY(-1px)}
+
+  /* come si gioca */
+  .how{margin-top:30px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;padding:22px 22px 8px}
+  .how h2{margin:0 0 14px;font-size:18px;color:#fff;font-weight:700}
+  .how h2 .dot{color:var(--orange)}
+  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 26px;margin:0;padding:0;list-style:none;counter-reset:s}
+  @media(max-width:720px){.steps{grid-template-columns:1fr}}
+  .steps li{position:relative;padding-left:34px;margin-bottom:16px;font-size:13.5px;line-height:1.6;color:#c6d2d1}
+  .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:1px;width:24px;height:24px;border-radius:6px;
+    background:var(--mint);color:#08110c;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+  .steps b{color:#fff}
+
+  footer{margin-top:44px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
+  footer .made{color:#fff}
+  footer .made b{color:var(--mint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <svg class="mk" viewBox="0 0 40 26" aria-hidden="true">
+        <rect x="7" y="1.6" width="11" height="6" rx="2" fill="#00e49a"/>
+        <rect x="22" y="1.6" width="11" height="6" rx="2" fill="#00e49a"/>
+        <rect x="3" y="7.5" width="34" height="16" rx="3" fill="#00e49a"/>
+        <rect x="3" y="7.5" width="34" height="16" rx="3" fill="#0a1f19" opacity=".22"/>
+      </svg>
+      <b>STEM in <span>brick</span></b>
+    </div>
+    <h1>Giochi a squadre<span class="dot">.</span></h1>
+    <p>Matematica e scienze in realtà aumentata, sullo schermo e con la LIM: le squadre giocano in contemporanea con i tablet, l'insegnante segue la classifica in tempo reale e solo chi fa più punti apre le scatole premio.</p>
+  </header>
+
+  <div id="filters" class="filters"></div>
+  <p class="filters-hint">Filtra per grado &middot; uno stesso gioco può comparire in più gradi</p>
+
+  <div id="app"></div>
+
+  <section class="how" aria-labelledby="how-title">
+    <h2 id="how-title">Come si gioca<span class="dot">.</span></h2>
+    <ol class="steps">
+      <li><b>L'insegnante crea la partita.</b> Apre il gioco, tocca «Sono l'insegnante: crea una partita», sceglie quali scatole premio far aprire e ottiene un codice di 4 cifre. Va bene anche il telefono o il computer collegato alla LIM.</li>
+      <li><b>Le squadre entrano.</b> Su ogni tablet si apre lo stesso gioco, si inseriscono il codice e il nome della squadra (meglio un nome di fantasia).</li>
+      <li><b>Si prepara il gioco.</b> Nei giochi in realtà aumentata ogni squadra posiziona il gioco sul pavimento o sul banco, oppure gioca sullo schermo; negli altri basta premere «Siamo pronti!».</li>
+      <li><b>Via!</b> Quando tutti sono pronti l'insegnante dà il via: le squadre affrontano le stesse prove, e ogni errore toglie punti.</li>
+      <li><b>Vince il punteggio migliore.</b> Alla fine solo la squadra prima in classifica vede la schermata di vittoria e apre la scatola; le altre vedono la propria posizione.</li>
+      <li><b>Allenamento da soli.</b> Ogni gioco ha anche la modalità «Allenamento da soli», senza codice e senza insegnante: il dispositivo ricorda il record. Per la realtà aumentata serve un tablet Android con Chrome e supporto ARCore; altrimenti si gioca sullo schermo.</li>
+    </ol>
+  </section>
+
+  <footer>
+    <p class="made">Realizzato da <b>Andrea Gramazio</b> per STEM in Brick</p>
+    <p><span class="count" id="tot"></span> giochi mostrati su <span id="totAll"></span> &middot; si aprono in una nuova scheda, a schermo intero, come serve per la realtà aumentata.</p>
+  </footer>
+</div>
+
+<script>
+/* ---- colori dei gradi: i filtri si creano da soli in base ai gradi presenti nei giochi ---- */
+var GRADE_COLORS = { 1:"#f4c430", 2:"#5fcf5a", 3:"#35c2f0", 4:"#ff6fae", 5:"#e8862a", 6:"#c792ff", 7:"#00e49a", 8:"#ff7a59" };
+function gradeColor(g){ return GRADE_COLORS[g] || "#8ba0a0"; }
+
+/* ---- giochi: ogni voce ha uno o più gradi ---- */
+var GAMES = [
+  { t:"Caccia ai poligoni",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/caccia-poligoni-squadre.html",
+    gradi:[3], org:"Geometria · Realtà aumentata · 4 livelli", c:["#00e49a","#ff6fae"],
+    d:"Un triangolo, un quadrato, un pentagono e un esagono compaiono sul pavimento. Per ogni poligono le squadre contano i vertici toccandoli, scoprono i lati, ne indovinano il nome, trovano i vertici consecutivi, tracciano le diagonali e calcolano il perimetro.",
+    tags:["Vertici e lati","Diagonali","Perimetro"] },
+  { t:"Il tesoro delle coordinate",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/tesoro-coordinate-squadre.html",
+    gradi:[3], org:"Piano cartesiano · Realtà aumentata · 8 gemme", c:["#00e49a","#c792ff"],
+    d:"Una caccia al tesoro sul piano cartesiano: le squadre leggono le coordinate delle gemme che compaiono sulla griglia e raggiungono camminando i punti indicati. Se si scambiano x e y, il gioco lo fa notare e aiuta con le linee guida.",
+    tags:["Coordinate","Assi x e y","Orientamento"] },
+  { t:"Percorsi cartesiani",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/percorsi-cartesiani-squadre.html",
+    gradi:[5], org:"Piano cartesiano · Realtà aumentata · 4 livelli", c:["#00e49a","#e8862a"],
+    d:"Una griglia cartesiana da percorrere a piedi. Le squadre uniscono i punti tracciando segmenti, scoprono una figura misteriosa, ritrovano il vertice mancante di un rettangolo e misurano lati e perimetro contando i quadretti.",
+    tags:["Coordinate","Segmenti e poligoni","Perimetro"] },
+  { t:"Simmetrie sul pavimento",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/simmetrie-squadre.html",
+    gradi:[5], org:"Geometria · Realtà aumentata · 4 livelli", c:["#00e49a","#5fcf5a"],
+    d:"Un asse di simmetria verde attraversa la griglia: le squadre raggiungono camminando i punti simmetrici e costruiscono la figura riflessa, come allo specchio. Poi completano una figura di cui c'è solo metà e rispondono a tre domande sulla simmetria.",
+    tags:["Simmetria assiale","Coordinate","Assi di simmetria"] },
+  { t:"Battaglia navale cartesiana",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/battaglia-navale-squadre.html",
+    gradi:[5], org:"Piano cartesiano · Sullo schermo · 5 navi", c:["#00e49a","#35c2f0"],
+    d:"Cinque navi nascoste sui punti di una griglia da 0 a 7. Le squadre scelgono x e y, fanno fuoco e cercano di affondare tutta la flotta sprecando meno colpi possibile: vince chi ragiona meglio con le coordinate.",
+    tags:["Coordinate","Strategia","Assi x e y"] },
+  { t:"Solidi e sviluppi",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/solidi-sviluppi-squadre.html",
+    gradi:[6], org:"Geometria solida · Realtà aumentata · 4 livelli", c:["#00e49a","#f4c430"],
+    d:"Cubo, parallelepipedo, prisma e piramide compaiono sul banco o sul pavimento. Le squadre li riconoscono, contano facce, vertici e spigoli, li vedono aprirsi nel loro sviluppo piano, ne calcolano il volume riempiendoli di cubetti e scoprono la relazione di Eulero.",
+    tags:["Solidi","Sviluppi","Volume"] },
+  { t:"Dentro la cellula",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/dentro-la-cellula-squadre.html",
+    gradi:[6], org:"Biologia · Realtà aumentata · 3 livelli", c:["#00e49a","#ff7a59"],
+    d:"Una cellula gigante da esplorare girandoci intorno. Le squadre risolvono indovinelli e toccano l'organulo giusto: nucleo, mitocondri, apparato di Golgi, e poi cloroplasti, vacuolo e parete nella cellula vegetale. Ogni errore spiega che cosa si è toccato.",
+    tags:["Cellula animale","Cellula vegetale","Organuli"] },
+  { t:"Prevedi il moto",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/prevedi-il-moto-squadre.html",
+    gradi:[8], org:"Cinematica · Realtà aumentata · 5 prove", c:["#00e49a","#ff8a00"],
+    d:"Una pista lunga 4 metri e una pallina in moto rettilineo uniforme. Le squadre calcolano dove arriverà, vanno ad aspettarla in quel punto e poi la guardano partire con il cronometro: velocità, tempo, partenza spostata e conversione dei cm/s.",
+    tags:["Moto uniforme","Velocità","Spazio e tempo"] },
+  { t:"Misura con la fotocamera",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/misura-fotocamera-squadre.html",
+    gradi:[5,6,7], org:"Misure · Realtà aumentata · 6 misure a scelta", c:["#00e49a","#1fa463"],
+    d:"Le squadre inquadrano qualsiasi lunghezza o superficie della classe, ne segnano estremi o vertici con il tablet e scrivono la loro stima. Poi la fotocamera dà la misura esatta, con i lati, l'area, l'errore percentuale e i punti.",
+    tags:["Lunghezze","Aree","Stima"] },
+  { t:"Il geopiano gigante",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/geopiano-squadre.html",
+    gradi:[6,7], org:"Figure equivalenti · Realtà aumentata · 4 turni", c:["#00e49a","#8338ec"],
+    d:"Il Mago Algebrick mostra una figura: le squadre ne calcolano l'area e poi costruiscono camminando sulla griglia una figura diversa ma equivalente, segnandone i vertici. Il gioco controlla l'area e spiega che cosa non va.",
+    tags:["Figure equivalenti","Aree","Geopiano"] },
+  { t:"Taglia e ricomponi",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/taglia-ricomponi-squadre.html",
+    gradi:[7], org:"Equicomposizione · Realtà aumentata · 4 livelli", c:["#00e49a","#ffd23f"],
+    d:"Parallelogramma, triangolo, trapezio e rombo vengono tagliati e ricomposti davanti ai ragazzi: i pezzi si spostano e formano rettangoli e parallelogrammi. Così si scopre da dove nascono le formule delle aree.",
+    tags:["Equicomposizione","Formule delle aree","Poligoni"] },
+  { t:"Pitagora a mattoncini",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/pitagora-mattoncini-squadre.html",
+    gradi:[7,8], org:"Teorema di Pitagora · Sullo schermo · 4 livelli", c:["#00e49a","#ef3e36"],
+    d:"Sui cateti di un triangolo rettangolo ci sono quadrati di mattoncini LEGO: dopo la previsione, i mattoncini volano a riempire il quadrato sull'ipotenusa. Nell'ultimo livello, con un triangolo non rettangolo, ne avanzano: il teorema vale solo per i rettangoli.",
+    tags:["Pitagora","Equicomposizione","Quadrati"] },
+  { t:"Il quiz a pulsante",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/quiz-pulsante-squadre.html",
+    gradi:[5,6,7,8], org:"Matematica e scienze · Con la LIM · Domande modificabili", c:["#00e49a","#ef3e36"],
+    d:"Le domande vanno sulla lavagna, i tablet diventano pulsanti: la risposta giusta vale punti, la velocità vale un bonus. L'insegnante guida la partita dalla LIM, e le domande si possono riscrivere per qualsiasi argomento.",
+    tags:["Quiz","Velocità","Personalizzabile"] },
+  { t:"Stima e misura",
+    u:"https://steminbrick.com/wp-content/uploads/giochi/stima-e-misura-squadre.html",
+    gradi:[5,6,7,8], org:"Misure · Con la LIM · Oggetti della classe", c:["#00e49a","#9db4ff"],
+    d:"Le squadre stimano lunghezze, masse e capacità di oggetti veri della classe, poi si misura insieme. Più la stima è vicina al valore vero, più punti si prendono: sulla lavagna compare la tabella con lo scarto percentuale di ogni squadra.",
+    tags:["Stima","Unità di misura","Percentuali"] }
+];
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function brickSVG(cols, gid){
+  var defs = '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="1" y2="0">';
+  for (var i=0;i<cols.length;i++){
+    var off = cols.length === 1 ? 0 : Math.round(i/(cols.length-1)*100);
+    defs += '<stop offset="'+off+'%" stop-color="'+cols[i]+'"/>';
+  }
+  defs += '</linearGradient></defs>';
+  var fill = 'url(#'+gid+')';
+  return '<svg class="brick-mark" viewBox="0 0 30 21" aria-hidden="true">'+defs
+    + '<rect x="4.5" y="1.1" width="9" height="4.8" rx="1.6" fill="'+fill+'"/>'
+    + '<rect x="16.5" y="1.1" width="9" height="4.8" rx="1.6" fill="'+fill+'"/>'
+    + '<rect x="2" y="5.6" width="26" height="13" rx="2.4" fill="'+fill+'"/>'
+    + '<rect x="2" y="5.6" width="26" height="13" rx="2.4" fill="#0a1510" opacity=".28"/></svg>';
+}
+
+function cardHTML(g, idx){
+  var grad = 'linear-gradient(90deg,'+g.c.join(',')+')';
+  var tags = '';
+  for (var i=0;i<g.tags.length;i++){ tags += '<li>'+esc(g.tags[i])+'</li>'; }
+  return '<article class="card" data-gradi="'+g.gradi.join('|')+'" style="--grad:'+grad+';--accent:'+g.c[1]+'">'
+    + brickSVG(g.c, 'gg'+idx)
+    + '<h3><a href="'+esc(g.u)+'" target="_blank" rel="noopener">'+esc(g.t)+'<span class="arr">&#8599;</span></a></h3>'
+    + '<div class="org">'+gradesHTML(g.gradi)+esc(g.org)+'</div>'
+    + '<p class="desc">'+esc(g.d)+'</p>'
+    + '<ul class="tags">'+tags+'</ul>'
+    + '<a class="play" href="'+esc(g.u)+'" target="_blank" rel="noopener">Gioca</a>'
+    + '</article>';
+}
+
+function gradesHTML(gs){
+  var h = '';
+  for (var i=0;i<gs.length;i++){ h += '<span class="grade" style="--gc:'+gradeColor(gs[i])+'">Grado '+gs[i]+'</span>'; }
+  return h;
+}
+
+/* ---- gradi presenti e stato dei filtri ---- */
+var GRADES = [];
+for (var gi=0; gi<GAMES.length; gi++){
+  for (var gj=0; gj<GAMES[gi].gradi.length; gj++){
+    var gv = GAMES[gi].gradi[gj];
+    if (GRADES.indexOf(gv) === -1) GRADES.push(gv);
+  }
+}
+GRADES.sort(function(a,b){ return a-b; });
+var active = {};
+for (var ai=0; ai<GRADES.length; ai++){ active[GRADES[ai]] = true; }
+
+function allActive(){
+  for (var i=0;i<GRADES.length;i++){ if (!active[GRADES[i]]) return false; }
+  return true;
+}
+
+function applyFilter(){
+  var cards = document.querySelectorAll('.card'), vis = 0, i, j;
+  for (i=0;i<cards.length;i++){
+    var gs = cards[i].getAttribute('data-gradi').split('|'), show = false;
+    for (j=0;j<gs.length;j++){ if (active[gs[j]]){ show = true; break; } }
+    cards[i].style.display = show ? '' : 'none';
+    if (show) vis++;
+  }
+  var chips = document.querySelectorAll('#filters .chip');
+  for (i=0;i<chips.length;i++){
+    var ch = chips[i];
+    var on = ch.getAttribute('data-all') !== null ? allActive() : !!active[ch.getAttribute('data-grado')];
+    if (on) ch.classList.remove('off'); else ch.classList.add('off');
+  }
+  document.getElementById('empty').style.display = vis === 0 ? '' : 'none';
+  document.getElementById('tot').textContent = vis;
+}
+
+function onChip(e){
+  var b = e.currentTarget;
+  if (b.getAttribute('data-all') !== null){
+    var makeAll = !allActive();            // tutto attivo -> azzera; altrimenti attiva tutto
+    for (var i=0;i<GRADES.length;i++){ active[GRADES[i]] = makeAll; }
+  } else {
+    var g = b.getAttribute('data-grado');
+    active[g] = !active[g];
+  }
+  applyFilter();
+}
+
+function buildFilters(){
+  var f = document.getElementById('filters');
+  var h = '<button type="button" class="chip all" data-all="1">Tutti</button>';
+  for (var i=0;i<GRADES.length;i++){
+    h += '<button type="button" class="chip" style="--cc:'+gradeColor(GRADES[i])+'" data-grado="'+GRADES[i]+'">Grado '+GRADES[i]+'</button>';
+  }
+  f.innerHTML = h;
+  var chips = f.querySelectorAll('.chip');
+  for (var k=0;k<chips.length;k++){ chips[k].addEventListener('click', onChip); }
+}
+
+(function init(){
+  var html = '<div class="grid">';
+  for (var i=0;i<GAMES.length;i++){ html += cardHTML(GAMES[i], i); }
+  html += '<p id="empty" class="empty" style="display:none">Nessun gioco da mostrare: seleziona almeno un grado qui sopra.</p>';
+  html += '</div>';
+  document.getElementById('app').innerHTML = html;
+  document.getElementById('totAll').textContent = GAMES.length;
+  buildFilters();
+  applyFilter();
+})();
+</script>
+</body>
+</html>
