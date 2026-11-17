@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Gestione box – I.C. Cocchia - Scandone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --mint:#00e49a; --orange:#e8862a; --card:#111926; --card2:#0d1420;
+    --line:rgba(0,228,154,.16); --txt:#dfe8e6; --muted:#8ba0a0; --bg:#0a0f16;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Roboto Mono',ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 16px 44px}
+  header{text-align:center;margin-bottom:24px}
+  header .kicker{color:var(--mint);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px}
+  h1{margin:0 0 8px;font-size:clamp(22px,4.5vw,30px);color:#fff}
+  h1 .dot{color:var(--orange)}
+  header p{margin:0 auto;max-width:600px;color:var(--muted);font-size:13.5px;line-height:1.6}
+
+  .panel{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .panel h2{margin:0 0 4px;font-size:15px;color:#fff}
+  .panel .hint{margin:0 0 12px;color:var(--muted);font-size:12.5px;line-height:1.55}
+
+  .boxes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+  .box{background:var(--card2);border:2px solid var(--bc);border-radius:10px;padding:12px;position:relative}
+  .box::before,.box::after{content:"";position:absolute;top:-7px;height:7px;width:22%;border-radius:3px 3px 0 0;background:var(--bc)}
+  .box::before{left:18%} .box::after{right:18%}
+  .box .name{display:flex;align-items:center;gap:8px;font-weight:700;color:#fff;margin-bottom:10px}
+  .box .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--bc);color:var(--fg);font-size:13px}
+  .row{display:flex;gap:8px}
+  button{font:inherit;font-weight:700;font-size:13px;border-radius:7px;cursor:pointer;padding:10px 12px;flex:1;
+    border:1.5px solid var(--mint);background:var(--mint);color:#08110c;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+  button.close{background:transparent;color:var(--mint)}
+  button:active{transform:translateY(1px)}
+  button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+  .st{min-height:1.3em;margin:8px 0 0;font-size:11.5px;color:var(--muted)}
+  .all{margin-top:14px}
+  .all button{padding:12px}
+
+  .switch{display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+  .switch input{appearance:none;-webkit-appearance:none;flex:0 0 auto;width:48px;height:28px;border-radius:999px;margin:2px 0 0;
+    background:#2a3442;border:1.5px solid var(--line);position:relative;cursor:pointer;transition:background .15s}
+  .switch input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+  .switch input:checked{background:var(--mint)}
+  .switch input:checked::after{left:23px}
+  .switch input:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+  .switch b{color:#fff;font-size:14px}
+  .state{margin:10px 0 0;font-size:12.5px;font-weight:700}
+  .state.on{color:var(--mint)} .state.off{color:var(--muted)}
+
+  footer{margin-top:26px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
+  footer b{color:var(--mint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">I.C. Cocchia - Scandone</p>
+    <h1>Gestione box<span class="dot">.</span></h1>
+    <p>Apri e chiudi le scatole premio a comando: per la prova prima della partita e per inserire o togliere il premio. Rispondono solo le scatole accese e collegate alla rete.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="t-boxes">
+    <h2 id="t-boxes">Le scatole</h2>
+    <p class="hint">Il comando parte subito, ma la pagina non può sapere se la scatola l'ha ricevuto: controlla che si sia aperta o chiusa davvero.</p>
+    <div class="boxes" id="boxes"></div>
+    <div class="row all">
+      <button type="button" id="openAll">Apri tutte</button>
+      <button type="button" class="close" id="closeAll">Chiudi tutte</button>
+    </div>
+    <p class="st" id="allSt" role="status"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="t-device">
+    <h2 id="t-device">Apertura a fine partita</h2>
+    <p class="hint">Attivalo sul dispositivo dell'insegnante, quello con cui crei le partite. Quando una partita a squadre finisce, quel dispositivo apre tutte le scatole insieme. Sugli altri dispositivi, e per chiunque usi i giochi fuori dalla scuola, le scatole non vengono mai toccate. L'impostazione vale solo per questo dispositivo e questo browser.</p>
+    <label class="switch">
+      <input type="checkbox" id="enable" role="switch">
+      <span><b>Questo dispositivo apre le scatole a fine partita</b></span>
+    </label>
+    <p class="state" id="enableSt" role="status"></p>
+  </section>
+
+  <footer>
+    <p>Realizzato da <b>Andrea Gramazio</b> per STEM in Brick</p>
+  </footer>
+</div>
+
+<script>
+var BASE = 'https://didatticadigitale.com/arcipelago/avee00500b/';
+var BOXES = [
+  { id:'arancio', n:1, nome:'Arancio', colore:'#ff8a00', testo:'#1b1f3b' },
+  { id:'blu1',    n:2, nome:'Blu 1',   colore:'#1f4fd8', testo:'#ffffff' },
+  { id:'blu2',    n:3, nome:'Blu 2',   colore:'#4cc9f0', testo:'#1b1f3b' },
+  { id:'giallo',  n:4, nome:'Giallo',  colore:'#ffd23f', testo:'#1b1f3b' },
+  { id:'rosso',   n:5, nome:'Rosso',   colore:'#ef3e36', testo:'#ffffff' }
+];
+var KEY = 'stem-box-abilitato';
+
+function send(id, cmd){
+  return fetch(BASE + id + '_' + cmd + '.php', { mode:'no-cors', cache:'no-store' }).then(function(){ return true; }, function(){ return false; });
+}
+function now(){ var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2); }
+function msg(ok, cmd){ return ok ? (cmd === 'open' ? 'Apertura' : 'Chiusura') + ' inviata alle ' + now() + '.' : 'Non riesco a raggiungere il server delle scatole.'; }
+
+var wrap = document.getElementById('boxes');
+BOXES.forEach(function(b){
+  var el = document.createElement('div');
+  el.className = 'box';
+  el.style.setProperty('--bc', b.colore); el.style.setProperty('--fg', b.testo);
+  el.innerHTML = '<div class="name"><span class="n">' + b.n + '</span>' + b.nome + '</div>' +
+    '<div class="row"><button type="button" data-cmd="open">Apri</button><button type="button" class="close" data-cmd="close">Chiudi</button></div>' +
+    '<p class="st" role="status"></p>';
+  var st = el.querySelector('.st');
+  el.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var cmd = btn.dataset.cmd;
+      st.textContent = (cmd === 'open' ? 'Apro' : 'Chiudo') + '…';
+      send(b.id, cmd).then(function(ok){ st.textContent = msg(ok, cmd); });
+    });
+  });
+  wrap.appendChild(el);
+});
+
+function all(cmd){
+  var st = document.getElementById('allSt');
+  st.textContent = (cmd === 'open' ? 'Apro' : 'Chiudo') + ' tutte le scatole…';
+  Promise.all(BOXES.map(function(b){ return send(b.id, cmd); })).then(function(r){
+    st.textContent = r.every(Boolean) ? (cmd === 'open' ? 'Apertura' : 'Chiusura') + ' inviata a tutte le scatole alle ' + now() + '.' : 'Non riesco a raggiungere una o più scatole.';
+  });
+}
+document.getElementById('openAll').addEventListener('click', function(){ all('open'); });
+document.getElementById('closeAll').addEventListener('click', function(){ all('close'); });
+
+var en = document.getElementById('enable'), enSt = document.getElementById('enableSt');
+function readFlag(){ try { return localStorage.getItem(KEY) === 'si'; } catch(e){ return false; } }
+function showFlag(){
+  var on = readFlag(); en.checked = on;
+  enSt.className = 'state ' + (on ? 'on' : 'off');
+  enSt.textContent = on ? 'Attivo: a fine partita questo dispositivo apre tutte le scatole.' : 'Non attivo: questo dispositivo non apre le scatole.';
+}
+en.addEventListener('change', function(){
+  try { if (en.checked) localStorage.setItem(KEY, 'si'); else localStorage.removeItem(KEY); }
+  catch(e){ enSt.className = 'state off'; enSt.textContent = 'Questo browser non permette di salvare l’impostazione (forse è in navigazione anonima).'; en.checked = false; return; }
+  showFlag();
+});
+showFlag();
+</script>
+</body>
+</html>

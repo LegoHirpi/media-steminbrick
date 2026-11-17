@@ -121,6 +121,8 @@
   footer{margin-top:44px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
   footer .made{color:#fff}
   footer .made b{color:var(--mint)}
+  footer .boxlink a{color:var(--muted);text-decoration:none;border-bottom:1px dashed rgba(139,160,160,.5)}
+  footer .boxlink a:hover{color:var(--mint);border-bottom-color:var(--mint)}
 </style>
 </head>
 <body>
@@ -136,7 +138,7 @@
       <b>STEM in <span>brick</span></b>
     </div>
     <h1>Giochi a squadre<span class="dot">.</span></h1>
-    <p>Matematica e scienze in realtà aumentata, sullo schermo e con la LIM: le squadre giocano in contemporanea con i tablet, l'insegnante segue la classifica in tempo reale e solo chi fa più punti apre le scatole premio.</p>
+    <p>Matematica e scienze in realtà aumentata, sullo schermo e con la LIM: le squadre giocano in contemporanea con i tablet, l'insegnante segue la classifica in tempo reale e solo chi fa più punti vede la schermata di vittoria.</p>
   </header>
 
   <div id="filters" class="filters"></div>
@@ -147,11 +149,11 @@
   <section class="how" aria-labelledby="how-title">
     <h2 id="how-title">Come si gioca<span class="dot">.</span></h2>
     <ol class="steps">
-      <li><b>L'insegnante crea la partita.</b> Apre il gioco, tocca «Sono l'insegnante: crea una partita», sceglie quali scatole premio far aprire e ottiene un codice di 4 cifre. Va bene anche il telefono o il computer collegato alla LIM.</li>
+      <li><b>L'insegnante crea la partita.</b> Apre il gioco, tocca «Sono l'insegnante: crea una partita» e ottiene un codice di 4 cifre. Va bene anche il telefono o il computer collegato alla LIM.</li>
       <li><b>Le squadre entrano.</b> Su ogni tablet si apre lo stesso gioco, si inseriscono il codice e il nome della squadra (meglio un nome di fantasia).</li>
       <li><b>Si prepara il gioco.</b> Nei giochi in realtà aumentata ogni squadra posiziona il gioco sul pavimento o sul banco, oppure gioca sullo schermo; negli altri basta premere «Siamo pronti!».</li>
       <li><b>Via!</b> Quando tutti sono pronti l'insegnante dà il via: le squadre affrontano le stesse prove, e ogni errore toglie punti.</li>
-      <li><b>Vince il punteggio migliore.</b> Alla fine solo la squadra prima in classifica vede la schermata di vittoria e apre la scatola; le altre vedono la propria posizione.</li>
+      <li><b>Vince il punteggio migliore.</b> Alla fine solo la squadra prima in classifica vede la schermata di vittoria; le altre vedono la propria posizione.</li>
       <li><b>Allenamento da soli.</b> Ogni gioco ha anche la modalità «Allenamento da soli», senza codice e senza insegnante: il dispositivo ricorda il record. Per la realtà aumentata serve un tablet Android con Chrome e supporto ARCore; altrimenti si gioca sullo schermo.</li>
     </ol>
   </section>
@@ -159,6 +161,7 @@
   <footer>
     <p class="made">Realizzato da <b>Andrea Gramazio</b> per STEM in Brick</p>
     <p><span class="count" id="tot"></span> giochi mostrati su <span id="totAll"></span> &middot; si aprono in una nuova scheda, a schermo intero, come serve per la realtà aumentata.</p>
+    <p class="boxlink"><a href="https://steminbrick.com/wp-content/uploads/giochi/gestione-box.html" target="_blank" rel="noopener">Gestione box I.C. Cocchia - Scandone</a></p>
   </footer>
 </div>
 

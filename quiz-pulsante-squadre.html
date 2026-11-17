@@ -321,7 +321,7 @@
         <h1>Nuova partita</h1>
         <p class="lead">Crea la partita e comunica il codice alle squadre.</p>
         <div class="opts">
-          <p>Per quali gradi?</p><div class="boxsel" id="tGradi"></div><p>Discipline e argomenti</p><div id="tCats"></div><p class="boxhint" id="tAvail"></p><label class="field">Quante domande pescare? <select id="tNum"><option>6</option><option selected>8</option><option>10</option><option>12</option><option>16</option></select></label><p>Quali scatole premio apre la squadra vincitrice?</p><div class="boxsel" id="tBoxPick"></div><p class="boxhint">Toccale per sceglierle: anche più di una.</p>
+          <p>Per quali gradi?</p><div class="boxsel" id="tGradi"></div><p>Discipline e argomenti</p><div id="tCats"></div><p class="boxhint" id="tAvail"></p><label class="field">Quante domande pescare? <select id="tNum"><option>6</option><option selected>8</option><option>10</option><option>12</option><option>16</option></select></label>
         </div>
         <button class="btn" id="btnCreate">Crea partita</button>
         <button class="linkbtn" id="btnTBack">Torna indietro</button>
@@ -346,13 +346,7 @@
         <button class="btn" id="btnGo" disabled>Via!</button>
         <button class="btn secondary" id="btnStop" hidden>Termina la partita</button>
         <button class="btn secondary" id="btnNew" hidden>Nuova partita</button>
-        <div class="teacher">
-          Scatole premio: scegli quali comandare<br>
-          <div class="boxsel" id="tBoxSel"></div>
-          <button id="btnClose">Chiudi le scatole scelte</button>
-          <button id="btnReopen">Apri le scatole scelte</button>
-          <p id="tBoxStatus"></p>
-        </div>
+        <p class="teacher" id="tBoxStatus" hidden></p>
       </div>
     </div>
   </section>
@@ -426,13 +420,7 @@ const CONFIG = {
   firebaseUrl: 'https://stem-in-brick-default-rtdb.europe-west1.firebasedatabase.app',
   gioco: 'quiz',    // identifica il gioco: un codice di un altro gioco non viene accettato
   boxBase: 'https://didatticadigitale.com/arcipelago/avee00500b/',   // i comandi sono <colore>_open.php e <colore>_close.php
-  scatole: [
-    { id:'arancio', n:1, nome:'Arancio', colore:'#ff8a00', testo:'#1b1f3b' },
-    { id:'blu1',    n:2, nome:'Blu 1',   colore:'#1f4fd8', testo:'#ffffff' },
-    { id:'blu2',    n:3, nome:'Blu 2',   colore:'#4cc9f0', testo:'#1b1f3b' },
-    { id:'giallo',  n:4, nome:'Giallo',  colore:'#ffd23f', testo:'#1b1f3b' },
-    { id:'rosso',   n:5, nome:'Rosso',   colore:'#ef3e36', testo:'#ffffff' }
-  ],
+  scatole: ['arancio', 'blu1', 'blu2', 'giallo', 'rosso'],   // aperte tutte insieme a fine partita, solo dai dispositivi abilitati
   tempo: 20,           // secondi: chi risponde prima prende più bonus
   puntiRisposta: 10,   // punti per la risposta giusta
   bonusVelocita: 10,   // bonus massimo per la velocità
@@ -3549,12 +3537,7 @@ function showResult(g){
     $('endIcon').textContent = '🏆'; $('endTitle').textContent = 'Vittoria!';
     $('endText').textContent = 'Avete il punteggio migliore: ' + (me.punti || 0) + ' punti.';
     sfx('win');
-    if (boxesOf(g).length && !state.boxOpened){
-      state.boxOpened = true;
-      $('boxStatus').textContent = 'Sto aprendo la scatola…';
-      speak('Vittoria! Correte alla scatola!');
-      openBoxes(boxesOf(g), 'open').then(ok => { $('boxStatus').textContent = ok ? boxesMsg(boxesOf(g)) : 'Non riesco a raggiungere la scatola.'; });
-    } else speak('Vittoria!');
+    speak('Vittoria!');
   } else {
     const winner = rank[0];
     $('endIcon').textContent = medals[pos] || '⭐';
@@ -3732,10 +3715,9 @@ async function createGame(){
       if (!(await db.get(c))) code = c;
     }
     if (!code) throw new Error('nessun codice libero');
-    const scat = pickedBoxes('tBoxPick');
-    await db.put(code, { gioco:CONFIG.gioco, stato:'attesa', seed:Math.floor(Math.random() * 2147483647), categorie:pickedCats(), gradi:pickedGrades(), nDomande:+$('tNum').value, scatola:scat.length > 0, scatole:scat, creata:TS });
-    syncBoxSel(scat);
-    state.teacher = { code, game:null };
+    await db.put(code, { gioco:CONFIG.gioco, stato:'attesa', seed:Math.floor(Math.random() * 2147483647), categorie:pickedCats(), gradi:pickedGrades(), nDomande:+$('tNum').value, creata:TS });
+    state.teacher = { boxDone:false, code, game:null };
+    $('tBoxStatus').hidden = true;
     $('tCode').textContent = code; $('tSetup').hidden = true; $('tPanel').hidden = false;
     $('btnGo').hidden = false; $('btnStop').hidden = true; $('btnNew').hidden = true;
     st.textContent = 'Le squadre possono entrare con questo codice.';
@@ -3764,6 +3746,7 @@ function renderTeacher(g){
     $('tState').textContent = n ? 'Partita finita! Ha vinto: ' + rank[0].nome + '.' : 'Partita finita.';
     $('btnGo').hidden = true; $('btnStop').hidden = true; $('btnNew').hidden = false;
     stopTeacherPolling();
+    openAllBoxesAtEnd();
   }
 }
 
@@ -3782,7 +3765,7 @@ function startSolo(){
   state.resultShown = false; state.finished = false; state.started = false; state.boxOpened = false;
   $('lobbyCode').textContent = 'Allenamento';
   $('lobbyName').textContent = 'Gioco singolo';
-  $('lobbyLead').textContent = 'Si parte appena siete pronti. In allenamento i punti restano su questo dispositivo e la scatola premio non si apre.';
+  $('lobbyLead').textContent = 'Si parte appena siete pronti. In allenamento i punti restano su questo dispositivo.';
   $('lobbyTeams').closest('.opts').hidden = true;
   $('support').textContent = '';
   showScreen('lobbyScreen');
@@ -3809,7 +3792,6 @@ $('btnTeacher').addEventListener('click', () => { $('tSetup').hidden = false; $(
 $('btnTBack').addEventListener('click', showStart);
 $('btnCreate').addEventListener('click', () => {
   if (!pickedCats().length || !pickedGrades().length || !countAvail()){ alert('Con questi filtri non ci sono domande: scegli almeno un grado e un argomento.'); return; }
-  if (!pickedBoxes('tBoxPick').length && !confirm('Non hai scelto nessuna scatola: la squadra vincitrice non aprirà nessun premio. Creare la partita lo stesso?')) return;
   createGame();
 });
 $('btnGo').addEventListener('click', () => { db.patch(state.teacher.code, Object.assign({ stato:'gioco', inizio:TS }, GO_FIELDS)).catch(e => alert(e.message)); });
@@ -3829,48 +3811,21 @@ $('btnMove').addEventListener('click', () => {
   say('Inquadra il punto dove vuoi lo zero e tocca lo schermo quando vedi il cerchio giallo.', { silent:true });
 });
 $('btnAgain').addEventListener('click', () => { state.resultShown = false; const s = renderer.xr.getSession(); if (s) s.end(); showStart(); });
-$('btnClose').addEventListener('click', () => boxCmd('close'));
-$('btnReopen').addEventListener('click', () => boxCmd('open'));
 function callBox(url){ return fetch(url, { mode:'no-cors', cache:'no-store' }).then(() => true).catch(() => false); }
 
-/* ===================== SCATOLE PREMIO ===================== */
-const boxById = id => CONFIG.scatole.find(b => b.id === id);
-/* scatole scelte dall'insegnante per questa partita (le partite vecchie usavano solo la rossa) */
-function boxesOf(g){ if (Array.isArray(g.scatole)) return g.scatole.filter(boxById); return g.scatola ? ['rosso'] : []; }
-function openBoxes(ids, cmd){
-  return Promise.all(ids.map(id => callBox(CONFIG.boxBase + id + '_' + cmd + '.php'))).then(r => r.length > 0 && r.every(Boolean));
+/* ===================== SCATOLE PREMIO =====================
+   Le scatole si aprono tutte insieme a fine partita, dal pannello dell'insegnante,
+   solo sui dispositivi abilitati dalla pagina di gestione delle scatole
+   (si accendono solo le scatole in uso: le altre restano inerti).
+   Su tutti gli altri dispositivi il gioco non contatta nessuna scatola. */
+function boxEnabled(){ try { return localStorage.getItem('stem-box-abilitato') === 'si'; } catch(e){ return false; } }
+function openAllBoxesAtEnd(){
+  if (!boxEnabled() || !state.teacher || state.teacher.boxDone) return;
+  state.teacher.boxDone = true;
+  const st = $('tBoxStatus'); st.hidden = false; st.textContent = 'Apro le scatole premio…';
+  Promise.all(CONFIG.scatole.map(id => callBox(CONFIG.boxBase + id + '_open.php')))
+    .then(r => { st.textContent = r.every(Boolean) ? 'Comando di apertura inviato alle scatole premio.' : 'Non riesco a raggiungere una o più scatole.'; });
 }
-function boxNames(ids){
-  const n = ids.map(id => boxById(id).n + ' (' + boxById(id).nome + ')');
-  return n.length > 1 ? n.slice(0, -1).join(', ') + ' e ' + n[n.length - 1] : (n[0] || '');
-}
-function boxesMsg(ids){
-  return ids.length > 1 ? 'Si sono aperte le scatole ' + boxNames(ids) + ': i premi sono vostri!'
-                        : 'La scatola ' + boxNames(ids) + ' si è aperta: il premio è vostro!';
-}
-function buildBoxPicker(el, preset){
-  el.innerHTML = CONFIG.scatole.map(b => {
-    const on = preset.includes(b.id);
-    return '<button type="button" class="boxchip' + (on ? ' on' : '') + '" data-id="' + b.id + '" aria-pressed="' + on +
-           '" style="--bc:' + b.colore + ';--fg:' + b.testo + '"><span>' + b.n + '</span>' + b.nome + '</button>';
-  }).join('');
-  el.querySelectorAll('.boxchip').forEach(c => c.addEventListener('click', () => {
-    const on = !c.classList.contains('on'); c.classList.toggle('on', on); c.setAttribute('aria-pressed', on);
-  }));
-}
-function pickedBoxes(elId){ return [...document.querySelectorAll('#' + elId + ' .boxchip.on')].map(c => c.dataset.id); }
-function syncBoxSel(ids){ buildBoxPicker($('tBoxSel'), ids); }
-function boxCmd(cmd){
-  const ids = pickedBoxes('tBoxSel');
-  if (!ids.length){ $('tBoxStatus').textContent = 'Seleziona almeno una scatola.'; return; }
-  $('tBoxStatus').textContent = (cmd === 'open' ? 'Apro ' : 'Chiudo ') + (ids.length > 1 ? 'le scatole ' : 'la scatola ') + boxNames(ids) + '…';
-  openBoxes(ids, cmd).then(ok => {
-    $('tBoxStatus').textContent = ok ? 'Comando di ' + (cmd === 'open' ? 'apertura' : 'chiusura') + ' inviato a ' + boxNames(ids) + '.'
-                                     : 'Non riesco a raggiungere una o più scatole.';
-  });
-}
-buildBoxPicker($('tBoxPick'), []);
-buildBoxPicker($('tBoxSel'), []);
 
 (function checkSupport(){
   if (!db.ok()) $('support').textContent = 'Attenzione: manca l\u2019indirizzo di Firebase nella configurazione del gioco.';
