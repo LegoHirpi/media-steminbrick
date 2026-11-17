@@ -141,6 +141,7 @@
 
   .shapes{display:flex;justify-content:center;gap:14px;margin-bottom:8px}
   .shapes svg{width:58px;height:58px}
+  #msg{cursor:pointer}
 </style>
 </head>
 <body>
@@ -504,7 +505,7 @@ function sfx(kind, n){
   else if (kind === 'go') [392, 392, 784].forEach((f, i) => tone(f, 0.25, 'square', i * 0.35, 0.1));
 }
 const _utts = [];
-let _pendingFin = null, _speakTimer = null;
+let _pendingFin = null, _speakTimer = null, _skipFin = null;
 /* ---- voce naturale online (Google Cloud Text-to-Speech tramite il Worker); se non risponde si usa la voce del tablet ---- */
 const VOCE_CLOUD = {
   url: 'https://voce-algebrick.gramazio91.workers.dev'    // indirizzo del Cloudflare Worker, senza barra finale
@@ -545,7 +546,7 @@ function speakDevice(text, fin){
 function speak(text){
   return new Promise(res => {
     if (!state.voice) return res();
-    let done = false; const fin = () => { if (!done){ done = true; res(); } };
+    let done = false; const fin = () => { if (!done){ done = true; if (_skipFin === fin) _skipFin = null; res(); } }; _skipFin = fin;
     text = String(text).replace(/…/g, '.');
     // la frase nuova interrompe subito quella vecchia: così la voce non resta indietro rispetto al gioco
     if (_pendingFin) _pendingFin();
@@ -583,6 +584,14 @@ function say(text, opts){
   return speak(text);
 }
 function stopVoice(){ stopCloud(); try { speechSynthesis.cancel(); } catch(e) {} }
+/* toccando il fumetto il mago smette di parlare e il gioco va avanti subito */
+function skipSpeech(){
+  const f = _skipFin; _skipFin = null;
+  _pendingFin = null; clearTimeout(_speakTimer);
+  stopCloud(); try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e) {}
+  if (f) f();
+}
+$('msg').addEventListener('click', skipSpeech);
 
 /* ===================== INTERFACCIA E PUNTEGGIO ===================== */
 const SCREENS = ['startScreen', 'lobbyScreen', 'teacherScreen', 'endScreen'];

@@ -125,34 +125,77 @@
   #musicBtn:focus-visible{outline:3px solid var(--giallo);outline-offset:2px}
 
   /* ---- la piramide di mattoncini ---- */
-  #puzzle{padding:80px 12px 240px}
-  #puzzle .sheet{width:min(720px,100%)}
-  .pyr{display:flex;flex-direction:column;align-items:center;gap:18px;margin:14px auto 0}
+  #puzzle{padding:78px 12px 150px}
+  #puzzle .sheet{width:min(980px,100%)}
+  .play{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .pyr{display:flex;flex-direction:column;align-items:center;gap:18px;margin:16px auto 0}
   .prow{display:flex;gap:10px;justify-content:center}
-  .brick{--bw:clamp(88px,27vw,156px);--bc:#1f4fd8;--fc:#ffffff;width:var(--bw);min-height:calc(var(--bw) * .58);position:relative;
+  .brick{--bw:clamp(84px,25vw,150px);--bc:#1f4fd8;--fc:#ffffff;width:var(--bw);min-height:calc(var(--bw) * .56);position:relative;
     border:3px solid #1b1f3b;border-radius:10px;background:var(--bc);color:var(--fc);display:flex;align-items:center;justify-content:center;
-    font-weight:700;font-size:clamp(1.3rem,4.4vw,2rem);padding:6px 4px;
+    font:inherit;font-weight:700;font-size:clamp(1.25rem,4.2vw,1.9rem);padding:6px 4px;margin:0;
     box-shadow:inset 0 -7px 0 rgba(0,0,0,.18),0 4px 0 rgba(27,31,59,.25);transition:background .2s,color .2s}
   .brick::before,.brick::after{content:"";position:absolute;top:-12px;width:24%;height:10px;border:3px solid #1b1f3b;border-bottom:0;
     border-radius:6px 6px 0 0;background:var(--bc)}
   .brick::before{left:15%} .brick::after{right:15%}
   .brick.r1{--bc:#ff8a00;--fc:#1b1f3b}
   .brick.r2{--bc:#ef3e36;--fc:#ffffff}
+  button.brick{cursor:pointer}
   .brick.unk{--bc:#ffffff;--fc:#8a91b4;border-style:dashed}
   .brick.unk::before,.brick.unk::after{border-style:dashed}
+  .brick.unk:hover{--bc:#fff6d6}
+  .brick.unk:focus-visible{outline:4px solid var(--blu);outline-offset:3px}
   .brick.cur{--bc:#ffd23f;--fc:#1b1f3b;border-style:solid;animation:cur 1.1s ease-in-out infinite}
   .brick.cur::before,.brick.cur::after{border-style:solid}
   .brick.rel{outline:5px solid #1fa463;outline-offset:3px}
   .brick.pop{animation:pop .5s}
+  .brick.nope{animation:shake .35s}
   @keyframes cur{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
   @keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
-  .pyrule{margin:0 auto;max-width:44ch;color:var(--muted);font-weight:600;font-size:1rem}
-  .formula{margin:18px auto 0;display:inline-flex;align-items:center;gap:.4em;flex-wrap:wrap;justify-content:center;
-    background:var(--card);border:3px solid var(--ink);border-radius:14px;padding:6px 16px;font-weight:700;font-size:clamp(1.3rem,4vw,1.8rem);min-height:1.9em}
-  .formula:empty{visibility:hidden}
-  .formula .q{color:#1b1f3b;background:#ffd23f;border:2px solid #1b1f3b;border-radius:8px;padding:0 .35em}
+  .pyrule{margin:0 auto 8px;max-width:60ch;color:var(--muted);font-weight:600;font-size:1rem}
+  .work{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .work[hidden]{display:none}
+  .formula{display:inline-flex;align-items:center;gap:.35em;flex-wrap:wrap;justify-content:center;
+    background:var(--card);border:3px solid var(--ink);border-radius:14px;padding:8px 16px;font-weight:700;font-size:clamp(1.3rem,4vw,1.8rem);min-height:2.2em}
   .formula .op{color:var(--muted)}
-  @media (prefers-reduced-motion: reduce){ .ans.no,.brick.cur,.brick.pop,.wiz.talk{animation:none} .btn{transition:none} }
+  /* il mattoncino vuoto dove si scrive il risultato */
+  .entry{position:relative;display:inline-flex;align-items:center;gap:.08em;min-width:2.6em;min-height:1.9em;padding:.12em .3em;margin-top:8px;
+    background:#fff;color:#1b1f3b;border:3px solid #1b1f3b;border-radius:9px;justify-content:center}
+  .entry::before,.entry::after{content:"";position:absolute;top:-9px;width:22%;height:7px;border:3px solid #1b1f3b;border-bottom:0;border-radius:5px 5px 0 0;background:#fff}
+  .entry::before{left:16%} .entry::after{right:16%}
+  .entry.nope{animation:shake .35s}
+  .entry .sgn{padding-right:.04em}
+  .entry .stack{display:inline-flex;flex-direction:column;align-items:center}
+  .entry .bar{align-self:stretch;height:.1em;background:currentColor;margin:.06em 0}
+  .slot{font:inherit;font-weight:700;color:inherit;background:transparent;border:2px dashed transparent;border-radius:6px;min-width:1.2em;padding:0 .12em;cursor:pointer;line-height:1.15}
+  .stack .slot{font-size:.8em}
+  .slot.act{border-color:#1f4fd8;background:#e6edff}
+  .slot:empty::after{content:"\2007";}
+  /* tastierino */
+  .pad{display:grid;grid-template-columns:repeat(4,64px);gap:8px}
+  .key{font:inherit;font-weight:700;font-size:1.5rem;height:56px;border:3px solid #1b1f3b;border-radius:12px;background:#fff;color:#1b1f3b;
+    cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25);padding:0}
+  .key:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+  .key:focus-visible{outline:3px solid var(--blu);outline-offset:2px}
+  .key.fn{background:#e6edff;font-size:1.25rem}
+  .key.ok{background:var(--verde);color:#fff;grid-column:span 2}
+  .key.zero{grid-column:span 2}
+  .key.off{visibility:hidden}
+  @media (min-width:900px) and (min-aspect-ratio:1/1){
+    .play{flex-direction:row;justify-content:center;align-items:center;gap:36px}
+    .pyr{margin:16px 0 0}
+  }
+  @media (max-width:560px){ #puzzle{padding-top:112px} .pyrule{font-size:.9rem} .tray .ans{font-size:1.2rem;min-width:58px;min-height:50px;padding:4px 10px} }
+  @media (max-height:760px){ .pad{grid-template-columns:repeat(4,58px)} .key{height:48px;font-size:1.3rem} }
+  @media (prefers-reduced-motion: reduce){ .brick.cur,.brick.pop,.brick.nope,.entry.nope,.wiz.talk{animation:none} .btn{transition:none} }
+  #msg{cursor:pointer}
+  .tray{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:520px}
+  .tray[hidden],.formula[hidden]{display:none}
+  .tray .ans{font-size:1.4rem;min-width:70px;min-height:56px;padding:6px 14px}
+  .tile{touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+  .tile.sel{outline:4px solid var(--blu);outline-offset:3px;background:#e6edff}
+  .tile.lifted{opacity:.35}
+  .tile.ghost{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-50%) rotate(-4deg);box-shadow:0 10px 18px rgba(0,0,0,.3);cursor:grabbing}
+  .brick.over{outline:5px solid var(--blu);outline-offset:3px;--bc:#e6edff}
 
   /* numeri: frazioni in colonna e radici quadrate */
   .num{display:inline-flex;align-items:center;gap:.06em;white-space:nowrap;line-height:1}
@@ -160,8 +203,8 @@
   .fr > span:first-child{border-bottom:.1em solid currentColor;padding:0 .14em .07em}
   .fr > span:last-child{padding:.07em .14em 0}
   .rt{display:inline-flex;align-items:stretch}
-  .rs{font-size:1.25em;line-height:1;display:flex;align-items:flex-end;margin-right:-.06em;transform:scaleY(1.15);transform-origin:bottom}
-  .rad{border-top:.09em solid currentColor;margin-top:.02em;padding:.1em .1em 0 .08em;display:inline-flex;align-items:center}
+  .rs{font-size:1.05em;line-height:1;align-self:center;margin-right:-.04em}
+  .rad{border-top:.09em solid currentColor;padding:.08em .08em 0 .06em;display:inline-flex;align-items:center}
 </style>
 </head>
 <body>
@@ -242,8 +285,7 @@
           <rect x="33" y="48" width="56" height="32" rx="6" fill="#ff8a00"/><rect x="91" y="48" width="56" height="32" rx="6" fill="#ff8a00"/>
           <rect x="4" y="88" width="56" height="32" rx="6" fill="#1f4fd8"/><rect x="62" y="88" width="56" height="32" rx="6" fill="#1f4fd8"/><rect x="120" y="88" width="56" height="32" rx="6" fill="#1f4fd8"/>
         </g>
-        <g font-size="18"><text x="90" y="31" fill="#fff">72</text><text x="61" y="71" fill="#1b1f3b">6</text><text x="119" y="71" fill="#1b1f3b">12</text>
-          <text x="32" y="111" fill="#fff">2</text><text x="90" y="111" fill="#fff">3</text><text x="148" y="111" fill="#fff">4</text></g>
+<g font-size="18"><text x="90" y="31" fill="#fff">72</text><text x="61" y="71" fill="#1b1f3b">6</text><text x="119" y="71" fill="#1b1f3b">12</text><text x="32" y="111" fill="#fff">2</text><text x="90" y="111" fill="#fff">3</text><text x="148" y="111" fill="#fff">4</text></g>
       </svg>
       <h1>Piramidi di moltiplicazioni</h1>
       <p class="lead">Sfida a squadre: ogni mattoncino è il prodotto dei due su cui appoggia. Completate le piramidi!</p>
@@ -340,9 +382,15 @@
   <!-- La piramide -->
   <section class="screen" id="puzzle" hidden>
     <div class="sheet">
-      <p class="pyrule">Ogni mattoncino è il prodotto dei due mattoncini su cui appoggia.</p>
-      <div class="pyr" id="pyr" aria-live="polite"></div>
-      <div class="formula" id="formula" aria-hidden="true"></div>
+      <p class="pyrule" id="pyrule"></p>
+      <div class="play">
+        <div class="pyr" id="pyr"></div>
+        <div class="work" id="work" hidden>
+          <div class="formula" id="formula"></div>
+          <div class="pad" id="pad" role="group" aria-label="Tastierino"></div>
+          <div class="tray" id="tray" role="group" aria-label="Numeri da trascinare"></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -394,16 +442,15 @@
 /* ===================== CONFIGURAZIONE ===================== */
 const CONFIG = {
   firebaseUrl: 'https://stem-in-brick-default-rtdb.europe-west1.firebasedatabase.app',
+  operazione: 'molt',   // 'molt' = piramidi di moltiplicazioni, 'add' = piramidi di addizioni
   gioco: 'piramidi',     // identifica il gioco: un codice di un altro gioco non viene accettato
   boxBase: 'https://didatticadigitale.com/arcipelago/avee00500b/',   // i comandi sono <colore>_open.php e <colore>_close.php
   scatole: ['arancio', 'blu1', 'blu2', 'giallo', 'rosso'],   // aperte tutte insieme a fine partita, solo dai dispositivi abilitati
   piramidiPerLivello: 2,  // piramidi da completare in ogni livello
   puntiRisposta: 10,      // punti per ogni mattoncino trovato
   penalitaErrore: 2,      // punti tolti per ogni errore
-  limiti: {               // numeri mai troppo grandi
-    interi: { mattoncino:60, cima:200 },       // ℕ e ℤ: valore assoluto massimo dei mattoncini intermedi e della cima
-    frazioni: { numeratore:60, denominatore:36, valore:60 }   // ℚ⁺ e ℚ
-  },
+  numeriSbagliati: 5,     // livello 2: numeri sbagliati mescolati a quelli giusti da trascinare
+  cifreMax: 4,            // cifre che si possono scrivere nel numeratore e nel denominatore
   pollMs: 2000            // ogni quanto i tablet controllano la partita
 };
 
@@ -415,6 +462,87 @@ const INSIEMI = {
   Q:  { sym:'ℚ',  nome:'Razionali',         desc:'Frazioni e interi, anche negativi, e qualche radice quadrata' }
 };
 const insiemeOf = k => INSIEMI[k] ? k : 'N';
+
+/* le due operazioni: tutto ciò che cambia tra le piramidi di moltiplicazioni e quelle di addizioni */
+const OPS = {
+  molt: {
+    key:'molt', sym:'×', inv:':',
+    f:(a, b) => rmul(a, b), finv:(a, b) => rdiv(a, b),
+    pool:{ intMin:2, intMax:9, intMaxFr:6, numMax:6, denMax:5 },
+    lim:{ interi:{ mattoncino:60, cima:200 }, frazioni:{ numeratore:60, denominatore:36, valore:60 } },
+    riserva:[2, 3, 4, 6, 12, 72],
+    regola:'Ogni mattoncino è il prodotto dei due mattoncini su cui appoggia.',
+    via:'Via! In ogni piramide, ogni mattoncino è il prodotto dei due mattoncini su cui appoggia.',
+    intro:[
+      'Livello 1. Conoscete i mattoncini in basso: salite moltiplicando e scegliete la risposta giusta.',
+      'Livello 2. Sotto ci sono tanti numeri, ma solo alcuni sono giusti: trascinateli nei mattoncini giusti. Se manca un fattore, si trova con una divisione.',
+      'Livello 3. Ora i risultati si scrivono! Toccate un mattoncino che sapete calcolare e usate il tastierino.',
+      'Ultimo livello. Conoscete soprattutto i mattoncini in alto: scendete dividendo e scrivete i risultati.'
+    ],
+    dirTxt:'Calcolate il prodotto dei due mattoncini segnati in verde.', dirSpeech:'Calcolate il prodotto.',
+    invTxt:'Il mattoncino in alto è il prodotto: il fattore che manca è il quoziente.', invSpeech:'Calcolate il quoziente.',
+    errori(step, v, c){
+      const one = R(1);
+      if (step.kind === 'dir'){ const A = v[step.a], B = v[step.b];
+        return [radd(A, B), rdiv(A, B), rmul(radd(A, one), B), rmul(A, rsub(B, one)), rmul(A, radd(B, one)), R(A.n * B.n, A.d + B.d), R(A.n * B.d, A.d * B.n)]; }
+      const P = v[step.p], K = v[step.k];
+      return [rmul(P, K), rdiv(K, P), rsub(P, K), radd(c, one), rsub(c, one), R(c.d, c.n)];
+    },
+    aiuto(step, v, w, c, frac){
+      if (step.kind === 'dir'){
+        if (req(w, rneg(c))) return 'Attenzione al segno! Più per meno fa meno, meno per meno fa più.';
+        if (req(w, radd(v[step.a], v[step.b]))) return 'Avete sommato: qui bisogna moltiplicare.';
+        if (frac) return 'Con le frazioni si moltiplica numeratore per numeratore e denominatore per denominatore.';
+        return 'Quasi! Ricontrollate la moltiplicazione.';
+      }
+      if (req(w, rmul(v[step.p], v[step.k]))) return 'Avete moltiplicato: il fattore che manca è il quoziente tra il mattoncino in alto e il fattore che conoscete.';
+      if (req(w, rdiv(v[step.k], v[step.p]))) return 'Attenzione all’ordine: si divide il mattoncino in alto per il fattore che conoscete, non il contrario.';
+      if (req(w, rneg(c))) return 'Attenzione al segno! Più diviso meno fa meno, meno diviso meno fa più.';
+      if (frac) return 'Per dividere per una frazione si moltiplica per la sua inversa.';
+      return 'Quasi! Dividete il mattoncino in alto per il fattore che conoscete.';
+    }
+  },
+  add: {
+    key:'add', sym:'+', inv:'−',
+    f:(a, b) => radd(a, b), finv:(a, b) => rsub(a, b),
+    pool:{ intMin:1, intMax:20, intMaxFr:9, numMax:11, denMax:6 },
+    lim:{ interi:{ mattoncino:60, cima:100 }, frazioni:{ numeratore:99, denominatore:30, valore:30 } },
+    riserva:[2, 3, 4, 5, 7, 12],
+    regola:'Ogni mattoncino è la somma dei due mattoncini su cui appoggia.',
+    via:'Via! In ogni piramide, ogni mattoncino è la somma dei due mattoncini su cui appoggia.',
+    intro:[
+      'Livello 1. Conoscete i mattoncini in basso: salite sommando e scegliete la risposta giusta.',
+      'Livello 2. Sotto ci sono tanti numeri, ma solo alcuni sono giusti: trascinateli nei mattoncini giusti. Se manca un addendo, si trova con una sottrazione.',
+      'Livello 3. Ora i risultati si scrivono! Toccate un mattoncino che sapete calcolare e usate il tastierino.',
+      'Ultimo livello. Conoscete soprattutto i mattoncini in alto: scendete sottraendo e scrivete i risultati.'
+    ],
+    dirTxt:'Calcolate la somma dei due mattoncini segnati in verde.', dirSpeech:'Calcolate la somma.',
+    invTxt:'Il mattoncino in alto è la somma: l’addendo che manca è la differenza.', invSpeech:'Calcolate la differenza.',
+    errori(step, v, c){
+      const one = R(1), ten = R(10);
+      if (step.kind === 'dir'){ const A = v[step.a], B = v[step.b];
+        return [rmul(A, B), rsub(A, B), rsub(B, A), R(A.n + B.n, A.d + B.d), radd(c, one), rsub(c, one), radd(c, ten)]; }
+      const P = v[step.p], K = v[step.k];
+      return [radd(P, K), rsub(K, P), radd(c, one), rsub(c, one), P.d !== K.d && P.d > K.d ? R(P.n - K.n, P.d - K.d) : rsub(c, ten)];
+    },
+    aiuto(step, v, w, c, frac){
+      if (step.kind === 'dir'){
+        if (req(w, rmul(v[step.a], v[step.b]))) return 'Avete moltiplicato: qui bisogna sommare.';
+        if (req(w, rneg(c))) return 'Attenzione ai segni! Con segni diversi si sottrae e si tiene il segno del numero più grande senza segno.';
+        if (!isInt(v[step.a]) || !isInt(v[step.b])){
+          if (req(w, R(v[step.a].n + v[step.b].n, v[step.a].d + v[step.b].d))) return 'I denominatori non si sommano: prima si portano le frazioni allo stesso denominatore.';
+          return 'Con le frazioni serve il denominatore comune: il minimo comune multiplo dei denominatori.';
+        }
+        return 'Quasi! Ricontrollate la somma.';
+      }
+      if (req(w, radd(v[step.p], v[step.k]))) return 'Avete sommato: l’addendo che manca è la differenza tra il mattoncino in alto e quello che conoscete.';
+      if (req(w, rsub(v[step.k], v[step.p]))) return 'Attenzione all’ordine: il mattoncino in alto meno quello che conoscete, non il contrario.';
+      if (frac) return 'Con le frazioni serve il denominatore comune: il minimo comune multiplo dei denominatori.';
+      return 'Quasi! Fate il mattoncino in alto meno quello che conoscete.';
+    }
+  }
+};
+const OP = OPS[CONFIG.operazione] || OPS.molt;
 
 /* ===================== FIREBASE (REST) ===================== */
 const TS = { '.sv':'timestamp' };
@@ -491,11 +619,12 @@ function numLabel(a){
 }
 
 /* ===================== GENERATORE DI PIRAMIDI =====================
-   Mattoncini: 0, 1, 2 in basso; 3 = 0·1 e 4 = 1·2 al centro; 5 = 3·4 in cima. */
+   Mattoncini: 0, 1, 2 in basso; 3 = 0∘1 e 4 = 1∘2 al centro; 5 = 3∘4 in cima
+   (∘ è la moltiplicazione o l'addizione, secondo il gioco). */
 const ROWS = [[5], [3, 4], [0, 1, 2]];
 const ROW_OF = [0, 0, 0, 1, 1, 2];
-const REL = [[3, 0, 1], [4, 1, 2], [5, 3, 4]];   // [prodotto, fattore, fattore]
-/* tutte le piramidi con 3 mattoncini noti che si risolvono un passo alla volta, raggruppate per numero di fattori da trovare (0-3) */
+const REL = [[3, 0, 1], [4, 1, 2], [5, 3, 4]];   // [risultato, primo termine, secondo termine]
+/* tutte le piramidi con 3 mattoncini noti che si risolvono un passo alla volta, raggruppate per numero di operazioni inverse (0-3) */
 const PLANS = (() => {
   const out = [[], [], [], []];
   for (let m = 0; m < 64; m++){
@@ -504,27 +633,30 @@ const PLANS = (() => {
     let prog = true;
     while (prog){
       prog = false;
-      for (const [p, a, b] of REL) if (!known.has(p) && known.has(a) && known.has(b)){ known.add(p); steps.push({ u:p, kind:'prodotto', a, b }); prog = true; }
+      for (const [p, a, b] of REL) if (!known.has(p) && known.has(a) && known.has(b)){ known.add(p); steps.push({ u:p, kind:'dir', a, b }); prog = true; }
       if (prog) continue;
       for (const [p, a, b] of REL){
-        if (known.has(p) && known.has(a) && !known.has(b)){ known.add(b); steps.push({ u:b, kind:'fattore', p, k:a }); prog = true; break; }
-        if (known.has(p) && known.has(b) && !known.has(a)){ known.add(a); steps.push({ u:a, kind:'fattore', p, k:b }); prog = true; break; }
+        if (known.has(p) && known.has(a) && !known.has(b)){ known.add(b); steps.push({ u:b, kind:'inv', p, k:a }); prog = true; break; }
+        if (known.has(p) && known.has(b) && !known.has(a)){ known.add(a); steps.push({ u:a, kind:'inv', p, k:b }); prog = true; break; }
       }
     }
-    if (known.size === 6) out[steps.filter(s => s.kind === 'fattore').length].push({ giv, steps });
+    if (known.size === 6) out[steps.filter(s => s.kind === 'inv').length].push({ giv, steps });
   }
   return out;
 })();
-const TOT = PLANS.length;   // 4 livelli: 0, 1, 2 e 3 fattori da trovare
-
-function poolFor(set){
-  const ints = set === 'N' || set === 'Z' ? [2, 3, 4, 5, 6, 7, 8, 9] : [2, 3, 4, 5, 6];
-  let p = ints.map(n => R(n));
-  if (set === 'QP' || set === 'Q')
-    for (let d = 2; d <= 5; d++) for (let n = 1; n <= 6; n++) if (n !== d && gcd(n, d) === 1) p.push(R(n, d));
-  return p;
+const TOT = PLANS.length;   // 4 livelli: 0, 1, 2 e 3 operazioni inverse
+/* il passo che oggi permette di calcolare il mattoncino i (o null se mancano dei numeri) */
+function deducible(i, known){
+  for (const [p, a, b] of REL) if (p === i && known.has(a) && known.has(b)) return { u:i, kind:'dir', a, b };
+  for (const [p, a, b] of REL){
+    if (a === i && known.has(p) && known.has(b)) return { u:i, kind:'inv', p, k:b };
+    if (b === i && known.has(p) && known.has(a)) return { u:i, kind:'inv', p, k:a };
+  }
+  return null;
 }
+
 const signed = set => set === 'Z' || set === 'Q';
+const fracSet = set => set === 'QP' || set === 'Q';
 function inSet(a, set){
   if (a.n === 0) return false;
   if (set === 'N') return isInt(a) && a.n > 0;
@@ -532,28 +664,32 @@ function inSet(a, set){
   if (set === 'QP') return a.n > 0;
   return true;
 }
+function poolFor(set){
+  const P = OP.pool, ints = [];
+  for (let n = P.intMin; n <= (fracSet(set) ? P.intMaxFr : P.intMax); n++) ints.push(R(n));
+  if (fracSet(set))
+    for (let d = 2; d <= P.denMax; d++) for (let n = 1; n <= P.numMax; n++) if (n % d && gcd(n, d) === 1) ints.push(R(n, d));
+  return ints;
+}
 function withinLimits(v, i, set){
-  if (set === 'N' || set === 'Z'){
-    const L = CONFIG.limiti.interi;
-    return isInt(v) && Math.abs(v.n) <= (i === 5 ? L.cima : L.mattoncino);
-  }
-  const L = CONFIG.limiti.frazioni;
+  if (!fracSet(set)){ const L = OP.lim.interi; return isInt(v) && Math.abs(v.n) <= (i === 5 ? L.cima : L.mattoncino); }
+  const L = OP.lim.frazioni;
   return Math.abs(v.n) <= L.numeratore && v.d <= L.denominatore && Math.abs(v.n / v.d) <= L.valore;
 }
 /* sceglie a caso i tre mattoncini in basso finché tutti e sei i numeri sono diversi e non troppo grandi */
 function genValues(set, rnd){
   const pool = poolFor(set);
-  for (let t = 0; t < 5000; t++){
+  for (let t = 0; t < 6000; t++){
     let b = [pick(pool, rnd), pick(pool, rnd), pick(pool, rnd)];
     if (signed(set)) b = b.map(x => rnd() < 0.45 ? rneg(x) : x);
-    const v = [b[0], b[1], b[2], rmul(b[0], b[1]), rmul(b[1], b[2])]; v.push(rmul(v[3], v[4]));
+    const v = [b[0], b[1], b[2], OP.f(b[0], b[1]), OP.f(b[1], b[2])]; v.push(OP.f(v[3], v[4]));
     if (new Set(v.map(rkey)).size !== 6) continue;
-    if (v.some((x, i) => !inSet(x, set) || !withinLimits(x, i, set) || (x.d === 1 && Math.abs(x.n) === 1 && i < 3))) continue;
-    if (signed(set) && !b.some(x => x.n < 0)) continue;                     // almeno un numero negativo
-    if ((set === 'QP' || set === 'Q') && !b.some(x => !isInt(x))) continue; // almeno una frazione in basso
+    if (v.some((x, i) => !inSet(x, set) || !withinLimits(x, i, set) || (OP.key === 'molt' && i < 3 && x.d === 1 && Math.abs(x.n) === 1))) continue;
+    if (signed(set) && !b.some(x => x.n < 0)) continue;             // almeno un numero negativo
+    if (fracSet(set) && !b.some(x => !isInt(x))) continue;          // almeno una frazione in basso
     return v;
   }
-  return [R(2), R(3), R(4), R(6), R(12), R(72)];
+  return OP.riserva.map(x => R(x));
 }
 /* in ℚ alcuni mattoncini noti si mostrano come radice quadrata di un quadrato perfetto (es. √49 = 7) */
 function chooseRoots(giv, v, set, rnd){
@@ -579,25 +715,27 @@ function buildRound(set, seed){
   }
   return round;
 }
-
-/* quattro risposte diverse: quella giusta e tre errori tipici */
+/* risultato giusto del passo ed errori tipici (servono per le risposte sbagliate del livello 1 e del livello 2) */
+function stepCorrect(step, v){ return step.kind === 'dir' ? OP.f(v[step.a], v[step.b]) : OP.finv(v[step.p], v[step.k]); }
+function typicalErrors(step, v){ return OP.errori(step, v, stepCorrect(step, v)); }
+const plausible = (x, set) => inSet(x, set) && Math.abs(x.n) <= 999 && x.d <= 99;
 function choices(step, v, set, rnd){
-  let correct, typical = [];
-  const one = R(1);
-  if (step.kind === 'prodotto'){
-    const A = v[step.a], B = v[step.b]; correct = rmul(A, B);
-    typical = [radd(A, B), rdiv(A, B), rmul(radd(A, one), B), rmul(A, rsub(B, one)), rmul(A, radd(B, one)), R(A.n * B.n, A.d + B.d), R(A.n * B.d, A.d * B.n)];
-  } else {
-    const P = v[step.p], K = v[step.k]; correct = rdiv(P, K);
-    typical = [rmul(P, K), rdiv(K, P), rsub(P, K), radd(correct, one), rsub(correct, one), R(correct.d, correct.n)];
-  }
-  const ok = x => inSet(x, set) && !req(x, correct) && Math.abs(x.n) <= 999 && x.d <= 99;
+  const correct = stepCorrect(step, v);
   const out = [], seen = new Set([rkey(correct)]);
-  const add = x => { if (out.length < 3 && ok(x) && !seen.has(rkey(x))){ seen.add(rkey(x)); out.push(x); } };
+  const add = x => { if (out.length < 3 && plausible(x, set) && !seen.has(rkey(x))){ seen.add(rkey(x)); out.push(x); } };
   if (signed(set)) add(rneg(correct));        // l'errore di segno è il più frequente
-  shuffle(typical, rnd).forEach(add);
+  shuffle(typicalErrors(step, v), rnd).forEach(add);
   for (let k = 1; out.length < 3 && k < 40; k++){ add(R(correct.n + k * correct.d, correct.d)); add(R(correct.n - k * correct.d, correct.d)); add(R(correct.n + k, correct.d)); }
   return { correct, options:shuffle([correct].concat(out), rnd) };
+}
+/* livello 2: i numeri giusti per i mattoncini da trovare, mescolati con alcuni sbagliati */
+function dragTiles(pz, set, rnd){
+  const right = pz.steps.map(s => pz.v[s.u]), seen = new Set(pz.v.map(rkey)), wrong = [];
+  const add = x => { if (wrong.length < CONFIG.numeriSbagliati && plausible(x, set) && !seen.has(rkey(x))){ seen.add(rkey(x)); wrong.push(x); } };
+  const pools = pz.steps.map(s => { const e = shuffle(typicalErrors(s, pz.v), rnd); if (signed(set)) e.unshift(rneg(pz.v[s.u])); return e; });
+  for (let r = 0; r < 8 && wrong.length < CONFIG.numeriSbagliati; r++) pools.forEach(p => { if (p[r]) add(p[r]); });
+  for (let k = 1; wrong.length < CONFIG.numeriSbagliati && k < 40; k++) right.forEach(c => add(R(c.n + k * c.d, c.d)));
+  return shuffle(right.concat(wrong), rnd);
 }
 
 /* ===================== AUDIO E VOCE ===================== */
@@ -620,7 +758,7 @@ function sfx(kind){
   else if (kind === 'go') [392, 392, 784].forEach((f, i) => tone(f, 0.25, 'square', i * 0.35, 0.1));
 }
 const _utts = [];
-let _pendingFin = null, _speakTimer = null;
+let _pendingFin = null, _speakTimer = null, _skipFin = null;
 /* ---- voce naturale online (Google Cloud Text-to-Speech tramite il Worker) ---- */
 const VOCE_CLOUD = {
   url: 'https://voce-algebrick.gramazio91.workers.dev'    // indirizzo del Cloudflare Worker, senza barra finale
@@ -661,7 +799,7 @@ function speakDevice(text, fin){
 function speak(text){
   return new Promise(res => {
     if (!state.voice) return res();
-    let done = false; const fin = () => { if (!done){ done = true; res(); } };
+    let done = false; const fin = () => { if (!done){ done = true; if (_skipFin === fin) _skipFin = null; res(); } }; _skipFin = fin;
     text = String(text).replace(/…/g, '.');
     // la frase nuova interrompe subito quella vecchia: così la voce non resta indietro rispetto al gioco
     if (_pendingFin) _pendingFin();
@@ -699,6 +837,14 @@ function say(text, opts){
   return speak(opts.speech || text);
 }
 function stopVoice(){ stopCloud(); try { speechSynthesis.cancel(); } catch(e) {} }
+/* toccando il fumetto il mago smette di parlare e il gioco va avanti subito */
+function skipSpeech(){
+  const f = _skipFin; _skipFin = null;
+  _pendingFin = null; clearTimeout(_speakTimer);
+  stopCloud(); try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e) {}
+  if (f) f();
+}
+$('msg').addEventListener('click', skipSpeech);
 
 /* ===================== INTERFACCIA ===================== */
 const SCREENS = ['startScreen', 'lobbyScreen', 'teacherScreen', 'endScreen', 'puzzle'];
@@ -707,7 +853,7 @@ function updateHud(){
   $('gems').textContent = 'Livello ' + Math.min(state.level + 1, TOT) + ' di ' + TOT + '  ' + '★'.repeat(state.level) + '☆'.repeat(TOT - state.level);
   $('points').textContent = points() + ' punti';
 }
-function clearAnswers(){ $('answers').innerHTML = ''; }
+function clearAnswers(){ $('answers').innerHTML = ''; $('answers').className = ''; }
 function addError(){ state.errors++; updateHud(); report(); }
 function gainP(){ state.score += CONFIG.puntiRisposta; updateHud(); report(); }
 function report(extra){
@@ -728,44 +874,39 @@ function savedSet(){ try { return insiemeOf(localStorage.getItem('stem-piramidi-
 function saveSet(k){ try { localStorage.setItem('stem-piramidi-insieme', k); } catch(e) {} }
 const setLine = k => 'Insieme: <b>' + INSIEMI[k].sym + '</b> · ' + INSIEMI[k].desc.charAt(0).toLowerCase() + INSIEMI[k].desc.slice(1);
 
-/* ---- disegno della piramide ---- */
-function renderPyr(pz, known, cur){
-  const rel = cur ? (cur.kind === 'prodotto' ? [cur.a, cur.b] : [cur.p, cur.k]) : [];
+/* ===================== DISEGNO DELLA PIRAMIDE ===================== */
+let play = null;   // piramide in corso nei livelli 2-4: { id, pz, set, known, mode, sel, entry, resolve }
+function renderPyr(pz, known, cur, interactive){
+  const rel = cur ? (cur.kind === 'dir' ? [cur.a, cur.b] : [cur.p, cur.k]) : [];
   $('pyr').innerHTML = ROWS.map(row => '<div class="prow">' + row.map(i => {
     const isKnown = known.has(i), cls = ['brick', 'r' + ROW_OF[i]];
     if (!isKnown) cls.push(cur && cur.u === i ? 'cur' : 'unk');
     if (rel.includes(i)) cls.push('rel');
     const label = isKnown ? numText(pz.v[i], pz.roots.has(i)) : 'mattoncino da trovare';
-    return '<div class="' + cls.join(' ') + '" id="b' + i + '" role="img" aria-label="' + esc(label) + '">' +
-      (isKnown ? numHTML(pz.v[i], pz.roots.has(i)) : '?') + '</div>';
+    const tag = !isKnown && interactive ? 'button' : 'div';
+    return '<' + tag + (tag === 'button' ? ' type="button"' : '') + ' class="' + cls.join(' ') + '" id="b' + i + '" data-i="' + i + '" aria-label="' + esc(label) + '">' +
+      (isKnown ? numHTML(pz.v[i], pz.roots.has(i)) : '?') + '</' + tag + '>';
   }).join('') + '</div>').join('');
 }
-function showFormula(pz, cur, known){
-  const f = $('formula');
-  if (!cur){ f.innerHTML = ''; return; }
-  const n = i => known.has(i) ? numHTML(pz.v[i], pz.roots.has(i)) : '<span class="q">?</span>';
-  const paren = (i, html) => '<span>' + ((known.has(i) && pz.v[i].n < 0) ? '(' + html + ')' : html) + '</span>';
-  f.innerHTML = cur.kind === 'prodotto'
-    ? paren(cur.a, n(cur.a)) + '<span class="op">×</span>' + paren(cur.b, n(cur.b)) + '<span class="op">=</span>' + n(cur.u)
-    : paren(cur.k, n(cur.k)) + '<span class="op">×</span>' + n(cur.u) + '<span class="op">=</span>' + n(cur.p);
+/* l'operazione diretta (prodotto o somma) o inversa (quoziente o differenza), con al posto del risultato il segno ? o il mattoncino vuoto */
+function formulaHTML(pz, st, result){
+  const n = i => numHTML(pz.v[i], pz.roots.has(i));
+  const first = i => '<span>' + n(i) + '</span>';
+  const second = i => '<span>' + (pz.v[i].n < 0 ? '(' + n(i) + ')' : n(i)) + '</span>';
+  const op = s => '<span class="op">' + s + '</span>';
+  return st.kind === 'dir' ? first(st.a) + op(OP.sym) + second(st.b) + op('=') + result
+                           : first(st.p) + op(OP.inv) + second(st.k) + op('=') + result;
 }
-/* suggerimento dopo un errore, scelto in base allo sbaglio */
-function hintFor(step, v, wrong, correct){
-  const frac = [step.a, step.b, step.p, step.k, step.u].some(i => i !== undefined && !isInt(v[i]));
-  if (req(wrong, rneg(correct))) return 'Attenzione al segno! Più per meno fa meno, meno per meno fa più.';
-  if (step.kind === 'prodotto'){
-    if (req(wrong, radd(v[step.a], v[step.b]))) return 'Avete sommato: qui bisogna moltiplicare.';
-    if (frac) return 'Con le frazioni si moltiplica numeratore per numeratore e denominatore per denominatore. Poi si semplifica.';
-    return 'Quasi! Ricontrollate la moltiplicazione.';
-  }
-  if (req(wrong, rmul(v[step.p], v[step.k]))) return 'Avete moltiplicato: il fattore che manca si trova dividendo il prodotto per il fattore che conoscete.';
-  if (req(wrong, rdiv(v[step.k], v[step.p]))) return 'Attenzione all’ordine: si divide il prodotto per il fattore che conoscete, non il contrario.';
-  if (frac) return 'Per dividere per una frazione si moltiplica per la sua inversa.';
-  return 'Quasi! Dividete il prodotto per il fattore che conoscete.';
-}
+function showWork(html, pad, tray){ $('work').hidden = !html && !tray; $('formula').hidden = !html; $('formula').innerHTML = html || ''; $('pad').hidden = !pad; if (!pad) $('pad').innerHTML = ''; $('tray').hidden = !tray; if (!tray) $('tray').innerHTML = ''; }
+function popBrick(i){ const el = $('b' + i); if (el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } }
+function shakeEl(el){ if (el){ el.classList.remove('nope'); void el.offsetWidth; el.classList.add('nope'); } }
+const hasFrac = (step, v) => [step.a, step.b, step.p, step.k, step.u].some(i => i !== undefined && !isInt(v[i]));
+const hintFor = (step, v, w) => OP.aiuto(step, v, w, v[step.u], hasFrac(step, v));
+
+/* ===================== LIVELLO 1: UNA OPERAZIONE ALLA VOLTA, RISPOSTA MULTIPLA ===================== */
 function askChoice(options, correct, onWrong){
   return new Promise(resolve => {
-    const box = $('answers'); clearAnswers();
+    const box = $('answers'); clearAnswers(); box.className = '';
     options.forEach(opt => {
       const b = document.createElement('button'); b.className = 'ans'; b.type = 'button';
       b.innerHTML = numHTML(opt); b.setAttribute('aria-label', numLabel(opt));
@@ -783,35 +924,189 @@ function askChoice(options, correct, onWrong){
     });
   });
 }
-
-/* ===================== I QUATTRO LIVELLI ===================== */
-const LEVEL_INTRO = [
-  'Livello 1. Conoscete i mattoncini in basso: salite moltiplicando!',
-  'Livello 2. Ora a volte manca un fattore: per trovarlo dividete il prodotto per il fattore che conoscete.',
-  'Livello 3. I fattori da trovare sono di più: ragionate con calma!',
-  'Ultimo livello. Conoscete soprattutto i mattoncini in alto: scendete dividendo!'
-];
-async function playPyramid(id, pz, rnd, set){
+async function playChoice(id, pz, rnd, set){
   const known = new Set(pz.giv);
-  renderPyr(pz, known, null); showFormula(pz, null, known);
   for (const step of pz.steps){
-    renderPyr(pz, known, step); showFormula(pz, step, known);
+    renderPyr(pz, known, step, false);
+    showWork(formulaHTML(pz, step, '<span class="entry">?</span>'), false);
     const ch = choices(step, pz.v, set, rnd);
-    say(step.kind === 'prodotto' ? 'Calcolate il prodotto dei due mattoncini segnati in verde.' : 'Il mattoncino in alto è il prodotto: trovate il fattore che manca.',
-        { speech: step.kind === 'prodotto' ? 'Calcolate il prodotto.' : 'Trovate il fattore mancante.' });
-    await askChoice(ch.options, ch.correct, wrong => say(hintFor(step, pz.v, wrong, ch.correct), { warn:true }));
+    say(step.kind === 'dir' ? OP.dirTxt : OP.invTxt, { speech: step.kind === 'dir' ? OP.dirSpeech : OP.invSpeech });
+    await askChoice(ch.options, ch.correct, w => say(hintFor(step, pz.v, w), { warn:true }));
     if (!alive(id)) return;
     known.add(step.u); gainP(); sfx('pop');
-    renderPyr(pz, known, null); showFormula(pz, null, known);
-    const el = $('b' + step.u); if (el) el.classList.add('pop');
+    renderPyr(pz, known, null, false); showWork(null); popBrick(step.u);
     await wait(450); if (!alive(id)) return;
   }
-  sfx('ok');
 }
+
+/* ===================== LIVELLO 2: TRASCINARE I NUMERI GIUSTI ===================== */
+function playDrag(id, pz, rnd, set){
+  return new Promise(resolve => {
+    play = { id, pz, set, known:new Set(pz.giv), mode:'drag', resolve, sel:null };
+    renderPyr(pz, play.known, null, true); clearAnswers(); showWork(null, false, true);
+    const box = $('tray');
+    dragTiles(pz, set, rnd).forEach(v => {
+      const t = document.createElement('button'); t.type = 'button'; t.className = 'ans tile';
+      t.innerHTML = numHTML(v); t.setAttribute('aria-label', numLabel(v)); t._v = v;
+      box.appendChild(t);
+    });
+    say('Trascinate i numeri giusti nei mattoncini con il punto interrogativo. Attenzione: alcuni numeri sono sbagliati!',
+        { speech:'Trascinate i numeri giusti nei mattoncini. Attenzione: alcuni sono sbagliati!' });
+  });
+}
+function dropTile(tile, i){
+  if (!play || play.mode !== 'drag' || play.known.has(i) || !alive(play.id)) return;
+  const pz = play.pz, v = tile._v;
+  if (req(v, pz.v[i])){
+    play.known.add(i); tile.remove(); gainP(); sfx('pop');
+    renderPyr(pz, play.known, null, true); popBrick(i);
+    if (play.known.size === 6){ const r = play.resolve; play = null; showWork(null); setTimeout(r, 600); }
+    else say('Esatto! Continuate così.', { silent:true });
+  } else {
+    sfx('no'); addError(); shakeEl($('b' + i)); shakeEl(tile);
+    const st = deducible(i, play.known);
+    say(st ? hintFor(st, pz.v, v) : 'Quel numero non va in quel mattoncino.', { warn:true });
+  }
+  if (play) play.sel = null;
+  document.querySelectorAll('.tile.sel').forEach(x => x.classList.remove('sel'));
+}
+/* trascinamento con il dito o con il mouse; in alternativa si tocca il numero e poi il mattoncino */
+let drag = null;
+$('tray').addEventListener('pointerdown', ev => {
+  const t = ev.target.closest('.tile'); if (!t || !play || play.mode !== 'drag') return;
+  drag = { t, x:ev.clientX, y:ev.clientY, ghost:null, id:ev.pointerId };
+  try { t.setPointerCapture(ev.pointerId); } catch(e) {}
+});
+document.addEventListener('pointermove', ev => {
+  if (!drag || ev.pointerId !== drag.id) return;
+  if (!drag.ghost && Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) > 8){
+    const g = drag.t.cloneNode(true); g.className = 'ans tile ghost';
+    const r = drag.t.getBoundingClientRect(); g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+    document.body.appendChild(g); drag.ghost = g; drag.t.classList.add('lifted');
+  }
+  if (drag.ghost){
+    drag.ghost.style.left = ev.clientX + 'px'; drag.ghost.style.top = ev.clientY + 'px';
+    document.querySelectorAll('.brick.over').forEach(b => b.classList.remove('over'));
+    const b = dropTarget(ev.clientX, ev.clientY); if (b) b.classList.add('over');
+  }
+});
+function dropTarget(x, y){ const el = document.elementFromPoint(x, y); const b = el && el.closest('.brick.unk'); return b || null; }
+function endDrag(ev, cancel){
+  if (!drag || ev.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  document.querySelectorAll('.brick.over').forEach(b => b.classList.remove('over'));
+  d.t.classList.remove('lifted');
+  if (d.ghost){
+    d.ghost.remove();
+    const b = !cancel && dropTarget(ev.clientX, ev.clientY);
+    if (b) dropTile(d.t, +b.dataset.i);
+  } else if (!cancel){
+    // tocco semplice: seleziona il numero, poi si tocca il mattoncino
+    const on = !d.t.classList.contains('sel');
+    document.querySelectorAll('.tile.sel').forEach(x => x.classList.remove('sel'));
+    d.t.classList.toggle('sel', on); if (play) play.sel = on ? d.t : null;
+    if (on) say('Ora toccate il mattoncino dove va questo numero.', { silent:true });
+  }
+}
+document.addEventListener('pointerup', ev => endDrag(ev, false));
+document.addEventListener('pointercancel', ev => endDrag(ev, true));
+
+/* ===================== LIVELLI 3 E 4: SI SCRIVE IL RISULTATO ===================== */
+function playType(id, pz, rnd, set){
+  return new Promise(resolve => {
+    play = { id, pz, set, known:new Set(pz.giv), mode:'type', resolve, sel:null, entry:null };
+    renderPyr(pz, play.known, null, true); showWork(null); clearAnswers();
+    say('Toccate un mattoncino con il punto interrogativo che sapete già calcolare.', { speech:'Toccate un mattoncino che sapete già calcolare.' });
+  });
+}
+function selectBrick(i){
+  if (!play || play.mode !== 'type' || play.known.has(i) || !alive(play.id)) return;
+  const st = deducible(i, play.known);
+  if (!st){
+    shakeEl($('b' + i));
+    say('Per questo mattoncino mancano ancora dei numeri: sceglietene un altro.', { warn:true });
+    return;
+  }
+  play.sel = st; play.entry = { neg:false, num:'', den:'', frac:false, slot:'num' };
+  renderPyr(play.pz, play.known, st, true);
+  renderEntry(); renderPad();
+  say(st.kind === 'dir' ? OP.dirTxt : OP.invTxt, { speech: st.kind === 'dir' ? OP.dirSpeech : OP.invSpeech });
+}
+function renderEntry(){
+  const e = play.entry, slot = s => '<button type="button" class="slot' + (e.slot === s ? ' act' : '') + '" data-slot="' + s + '" aria-label="' + (s === 'num' ? (e.frac ? 'numeratore' : 'risultato') : 'denominatore') + '">' + e[s] + '</button>';
+  const box = '<span class="entry" id="entry">' + (e.neg ? '<span class="sgn">−</span>' : '') +
+    (e.frac ? '<span class="stack">' + slot('num') + '<span class="bar"></span>' + slot('den') + '</span>' : slot('num')) + '</span>';
+  showWork(formulaHTML(play.pz, play.sel, box), true);
+}
+function renderPad(){
+  const s = play.set, keys = ['7', '8', '9', 'back', '4', '5', '6', 'neg', '1', '2', '3', 'frac', '0', 'ok'];
+  const lab = { back:'⌫', neg:'±', frac:'a⁄b', ok:'OK' }, aria = { back:'Cancella', neg:'Cambia segno', frac:'Frazione: numeratore e denominatore', ok:'Conferma' };
+  $('pad').innerHTML = keys.map(k => {
+    const off = (k === 'neg' && !signed(s)) || (k === 'frac' && !fracSet(s));
+    const cls = 'key' + (k === 'ok' ? ' ok' : k === '0' ? ' zero' : lab[k] ? ' fn' : '') + (off ? ' off' : '');
+    return '<button type="button" class="' + cls + '" data-k="' + k + '"' + (aria[k] ? ' aria-label="' + aria[k] + '"' : '') + (off ? ' tabindex="-1" aria-hidden="true"' : '') + '>' + (lab[k] || k) + '</button>';
+  }).join('');
+  $('pad').hidden = false;
+}
+function padKey(k){
+  if (!play || play.mode !== 'type' || !play.sel) return;
+  const e = play.entry;
+  if (/^\d$/.test(k)){ if (e[e.slot].length < CONFIG.cifreMax) e[e.slot] = (e[e.slot] === '0' ? '' : e[e.slot]) + k; }
+  else if (k === 'back'){
+    if (e[e.slot]) e[e.slot] = e[e.slot].slice(0, -1);
+    else if (e.slot === 'den'){ e.frac = false; e.slot = 'num'; }
+    else if (e.neg) e.neg = false;
+  }
+  else if (k === 'neg'){ if (signed(play.set)) e.neg = !e.neg; }
+  else if (k === 'frac'){ if (!fracSet(play.set)) return; if (!e.frac){ e.frac = true; e.slot = 'den'; } else e.slot = e.slot === 'num' ? 'den' : 'num'; }
+  else if (k === 'ok') return submitEntry();
+  renderEntry();
+}
+function submitEntry(){
+  const e = play.entry, st = play.sel, pz = play.pz;
+  if (!e.num){ say('Scrivete prima il risultato con il tastierino.', { warn:true, silent:true }); return; }
+  if (e.frac && !e.den){ e.slot = 'den'; renderEntry(); say('Manca il denominatore.', { warn:true, silent:true }); return; }
+  const den = e.frac ? +e.den : 1;
+  if (den === 0){ say('Il denominatore non può essere zero.', { warn:true, silent:true }); return; }
+  const val = R((e.neg ? -1 : 1) * +e.num, den), right = pz.v[st.u];
+  if (req(val, right)){
+    const reduced = !e.frac || (gcd(+e.num, den) === 1 && den !== 1);
+    play.known.add(st.u); gainP(); sfx('pop');
+    play.sel = null; play.entry = null; showWork(null);
+    renderPyr(pz, play.known, null, true); popBrick(st.u);
+    if (play.known.size === 6){ const r = play.resolve; play = null; setTimeout(r, 600); }
+    else say(reduced ? 'Esatto! Scegliete il prossimo mattoncino.' : 'Esatto! Ridotto ai minimi termini è ' + numText(right) + '. Scegliete il prossimo mattoncino.', { silent:true });
+  } else {
+    sfx('no'); addError(); shakeEl($('entry'));
+    say(hintFor(st, pz.v, val), { warn:true });
+    play.entry = { neg:false, num:'', den:'', frac:e.frac, slot:'num' }; renderEntry();
+  }
+}
+$('pyr').addEventListener('click', ev => {
+  const b = ev.target.closest('.brick.unk, .brick.cur'); if (!b || !play) return;
+  const i = +b.dataset.i;
+  if (play.mode === 'type') selectBrick(i);
+  else if (play.mode === 'drag' && play.sel) dropTile(play.sel, i);
+});
+$('pad').addEventListener('click', ev => { const k = ev.target.closest('.key'); if (k && !k.classList.contains('off')) padKey(k.dataset.k); });
+$('formula').addEventListener('click', ev => {
+  const s = ev.target.closest('.slot'); if (!s || !play || !play.entry) return;
+  play.entry.slot = s.dataset.slot; renderEntry();
+});
+document.addEventListener('keydown', ev => {
+  if (!play || play.mode !== 'type' || !play.sel || ev.target.closest('input')) return;
+  const map = { Backspace:'back', Delete:'back', Enter:'ok', '-':'neg', '/':'frac', ':':'frac' };
+  const k = /^\d$/.test(ev.key) ? ev.key : map[ev.key];
+  if (!k) return;
+  ev.preventDefault(); padKey(k);
+});
+
+/* ===================== I QUATTRO LIVELLI ===================== */
+const LEVEL_PLAY = [playChoice, playDrag, playType, playType];
 
 /* ===================== PARTITA DELLA SQUADRA ===================== */
 function prepareGame(){
-  showScreen('puzzle'); $('pyr').innerHTML = ''; $('formula').innerHTML = '';
+  showScreen('puzzle'); $('pyr').innerHTML = ''; showWork(null);
   const g = state.net && state.net.game;
   if (g && g.stato === 'gioco') runGame();
   else { state.waitingStart = true; say('Siete pronti! Aspettate il via dell’insegnante.'); }
@@ -823,26 +1118,27 @@ async function runGame(){
   $('target').textContent = INSIEMI[set].sym + ' ' + INSIEMI[set].nome.toLowerCase();
   showScreen('puzzle');
   const round = buildRound(set, seed), rnd = rngFrom(seed + 17);
-  sfx('go'); await say('Via! In ogni piramide, ogni mattoncino è il prodotto dei due mattoncini su cui appoggia.'); if (!alive(id)) return;
+  sfx('go'); await say(OP.via); if (!alive(id)) return;
   for (let lv = 0; lv < TOT; lv++){
-    await say(LEVEL_INTRO[lv]); if (!alive(id)) return;
+    $('pyr').innerHTML = ''; showWork(null); clearAnswers();
+    await say(OP.intro[lv]); if (!alive(id)) return;
     for (let k = 0; k < round[lv].length; k++){
       if (k > 0){ await say('Ecco un’altra piramide.'); if (!alive(id)) return; }
-      await playPyramid(id, round[lv][k], rnd, set); if (!alive(id)) return;
-      await say('Piramide completata!'); if (!alive(id)) return;
+      await LEVEL_PLAY[lv](id, round[lv][k], rnd, set); if (!alive(id)) return;
+      sfx('ok'); await say('Piramide completata!'); if (!alive(id)) return;
     }
     state.level++; updateHud(); report(); sfx('win');
     if (state.level < TOT){ await say('Livello completato: avete guadagnato una stella!'); if (!alive(id)) return; }
   }
-  state.finished = true; clearAnswers(); showFormula(null, null, null);
+  state.finished = true; clearAnswers(); showWork(null);
   report({ finito:true, tempoFine:TS });
   say('Avete finito con ' + points() + ' punti! Aspettiamo le altre squadre…', { speech:'Avete finito! Aspettiamo le altre squadre.' });
 }
 
 function showResult(g){
   if (state.resultShown) return;
-  state.resultShown = true; state.runId++;
-  stopPolling(); clearAnswers();
+  state.resultShown = true; state.runId++; play = null;
+  stopPolling(); clearAnswers(); showWork(null);
   $('hud').hidden = true; $('bottom').hidden = true;
   const rank = ranking(g), pos = rank.findIndex(t => t.id === state.net.teamId), me = rank[pos] || {};
   const medals = ['🏆', '🥈', '🥉'], names = ['Primo', 'Secondo', 'Terzo', 'Quarto', 'Quinto', 'Sesto', 'Settimo', 'Ottavo'];
@@ -916,13 +1212,13 @@ function startPlay(){
     const k = pickedSet('soloSet'); saveSet(k); state.net.game.insieme = k;
   }
   state.runId++; state.started = false; state.level = 0; state.score = 0; state.errors = 0; state.waitingStart = false;
-  $('hud').hidden = false; $('bottom').hidden = false; updateHud();
+  $('hud').hidden = false; $('bottom').hidden = false; updateHud(); $('pyrule').textContent = OP.regola;
   const k = insiemeOf(state.net && state.net.game && state.net.game.insieme);
   $('target').textContent = INSIEMI[k].sym + ' ' + INSIEMI[k].nome.toLowerCase();
   prepareGame();
 }
 function showStart(){
-  state.runId++; state.net = null; state.teacher = null;
+  state.runId++; state.net = null; state.teacher = null; play = null; showWork(null);
   stopPolling(); stopTeacherPolling(); stopVoice();
   $('hud').hidden = true; $('bottom').hidden = true; clearAnswers();
   showScreen('startScreen');
@@ -998,8 +1294,8 @@ function startSolo(){
 }
 function showSoloResult(){
   if (state.resultShown || !state.net || !state.net.solo) return;
-  state.resultShown = true; state.runId++;
-  stopVoice(); clearAnswers();
+  state.resultShown = true; state.runId++; play = null;
+  stopVoice(); clearAnswers(); showWork(null);
   $('hud').hidden = true; $('bottom').hidden = true;
   const set = insiemeOf(state.net.game.insieme), p = points(), key = 'stem-record-' + CONFIG.gioco + '-' + set;
   let best = 0; try { best = +localStorage.getItem(key) || 0; } catch(e) {}
