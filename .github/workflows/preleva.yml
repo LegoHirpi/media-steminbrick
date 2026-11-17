@@ -1,0 +1,30 @@
+name: Preleva le app dal sito
+on:
+  push:
+    branches: [app]
+    paths: ['.github/workflows/preleva.yml']
+permissions:
+  contents: write
+jobs:
+  preleva:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scarica i file
+        run: |
+          set -e
+          B=https://steminbrick.com/wp-content/uploads
+          for p in 2026/11/vulcanologia 2026/10/quadrilateri 2026/10/sismologia 2026/10/tavola-periodica 2026/10/risorse 2026/10/chimica 2026/10/divisori 2026/10/segmentini 2026/10/triangolo-punti-notevoli 2026/10/parallelepipedo 2026/10/cinematica-lezioni-1-2-3 2026/10/cuore-mappa 2026/10/cardio-circolatorio-mappa 2026/10/apparato_respiratorio 2026/10/reni-mappa 2026/10/apparato-digerente-mappa 2026/08/multipli; do
+            n=$(basename $p)
+            curl -fsSL -A "Mozilla/5.0" "$B/$p.html" -o "$n.html"
+            echo "$n: $(wc -c < $n.html) byte"
+          done
+      - name: Salva nel repository
+        run: |
+          git config user.name "LegoHirpi"
+          git config user.email "noreply@steminbrick.com"
+          git rm -q --cached .github/workflows/preleva.yml
+          rm .github/workflows/preleva.yml
+          git add -A
+          git commit -m "App prelevate dal sito"
+          git push
