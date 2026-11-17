@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risorse digitali interattive – STEM in brick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --mint:#00e49a;
+    --orange:#e8862a;
+    --bg:#070b12;
+    --card:#111926;
+    --card2:#0d1420;
+    --line:rgba(0,228,154,.16);
+    --txt:#dfe8e6;
+    --muted:#8ba0a0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:transparent;            /* sfondo trasparente: si fonde con la pagina ospite */
+    color:var(--txt);
+    font-family:'Roboto Mono', ui-monospace, monospace;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  .wrap{position:relative;z-index:1;max-width:940px;margin:0 auto;padding:24px 18px 40px}
+
+  /* intestazione */
+  header.top{text-align:center;margin-bottom:22px}
+  .logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:12px}
+  .logo .mk{width:40px;height:26px;flex:0 0 auto}
+  .logo b{font-size:19px;letter-spacing:1px;color:#fff;font-weight:700}
+  .logo b span{color:var(--mint)}
+  header.top h1{margin:6px 0 8px;font-size:clamp(23px,4vw,32px);font-weight:700;color:#fff;letter-spacing:.5px}
+  header.top h1 .dot{color:var(--orange)}
+  header.top p{margin:0 auto;max-width:640px;color:var(--muted);font-size:14px;line-height:1.6}
+
+  /* filtri = mattoncini colorati */
+  .filters{display:flex;flex-wrap:wrap;gap:13px 9px;justify-content:center;max-width:800px;margin:6px auto 8px}
+  .chip{
+    position:relative;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.4px;
+    padding:9px 15px 8px;margin-top:5px;border-radius:6px;font-weight:700;overflow:visible;
+    border:1.5px solid var(--cc,#00e49a);
+    background:var(--cc,#00e49a);color:#08110c;
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);
+    transition:background .15s,color .15s,opacity .15s,transform .12s;
+    -webkit-user-select:none;user-select:none;
+  }
+  /* stud rettangolari: il numero dipende dalla larghezza del mattoncino (vedi JS) */
+  .chip .studs{position:absolute;top:-5px;left:7px;right:7px;height:6px;
+    display:flex;justify-content:space-evenly;pointer-events:none}
+  .chip .stud{width:15px;height:6px;border-radius:2px 2px 1px 1px;background:var(--cc,#00e49a)}
+  .chip.all{--cc:#ffffff;color:#0a0f16}
+  .chip.off{background:transparent;color:var(--cc,#8ba0a0);box-shadow:none}
+  .chip.off .stud{opacity:.5}
+  .chip:hover{transform:translateY(-1px)}
+  .chip:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+  .filters-hint{text-align:center;color:var(--muted);font-size:11.5px;margin:0 0 24px}
+
+  /* griglia a due colonne */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+
+  /* casella */
+  .card{
+    position:relative;
+    background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px 20px 20px;
+    box-shadow:0 10px 24px rgba(0,0,0,.35);
+    transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+    overflow:hidden;
+  }
+  .card::after{content:"";position:absolute;left:0;top:0;height:3px;width:100%;
+    background:var(--grad,var(--mint));opacity:.92}
+  .card:hover{transform:translateY(-3px);border-color:var(--accent,var(--mint));
+    box-shadow:0 16px 32px rgba(0,0,0,.5)}
+
+  .brick-mark{position:absolute;right:14px;top:16px;width:30px;height:21px;opacity:.55}
+
+  .card h3{margin:2px 64px 2px 0;font-size:19px;line-height:1.25;font-weight:700}
+  .card h3 a{
+    color:var(--mint);text-decoration:none;
+    background-image:linear-gradient(var(--mint),var(--mint));
+    background-size:0% 2px;background-position:0 100%;background-repeat:no-repeat;
+    transition:background-size .22s ease,color .15s ease;
+  }
+  .card h3 a .arr{font-size:14px;opacity:.75;margin-left:4px}
+  .card h3 a:hover{color:var(--orange);background-size:100% 2px;
+    background-image:linear-gradient(var(--orange),var(--orange))}
+  .card h3 a:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:3px}
+
+  .org{color:var(--muted);font-size:12px;letter-spacing:.3px;margin:3px 0 12px}
+  .desc{font-size:13.5px;line-height:1.6;color:#c6d2d1;margin:0}
+
+  .empty{grid-column:1 / -1;text-align:center;color:var(--muted);padding:46px 10px;font-size:14px}
+
+  footer{margin-top:50px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
+  footer .made{color:#fff}
+  footer .made b{color:var(--mint)}
+  footer .count{color:var(--orange)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <svg class="mk" viewBox="0 0 40 26" aria-hidden="true">
+        <rect x="7" y="1.6" width="11" height="6" rx="2" fill="#00e49a"/>
+        <rect x="22" y="1.6" width="11" height="6" rx="2" fill="#00e49a"/>
+        <rect x="3" y="7.5" width="34" height="16" rx="3" fill="#00e49a"/>
+        <rect x="3" y="7.5" width="34" height="16" rx="3" fill="#0a1f19" opacity=".22"/>
+      </svg>
+      <b>STEM in <span>brick</span></b>
+    </div>
+    <h1>Risorse digitali interattive<span class="dot">.</span></h1>
+    <p>Una raccolta di simulatori, laboratori virtuali, mappe e banche dati per fare Matematica e Scienze a scuola. Clicca sul <b style="color:#dfe8e6">titolo</b> di ogni casella per aprire la risorsa.</p>
+  </header>
+
+  <div id="filters" class="filters"></div>
+  <p class="filters-hint">Filtra per materia &middot; una stessa risorsa può comparire in più categorie</p>
+
+  <div id="app"></div>
+
+  <footer>
+    <p class="made">Realizzato da <b>Andrea Gramazio</b> per STEM in Brick</p>
+    <p><span class="count" id="tot"></span> risorse mostrate su <span id="totAll"></span> &middot; tutti i link si aprono in una nuova scheda</p>
+  </footer>
+</div>
+
+<script>
+/* ---- categorie e colori (una risorsa può appartenere a più categorie) ---- */
+var CATS = [
+  { name:"Matematica",          c:"#00e49a" },
+  { name:"Fisica",              c:"#35c2f0" },
+  { name:"Chimica",             c:"#ff6fae" },
+  { name:"Biologia",            c:"#5fcf5a" },
+  { name:"Scienze della Terra", c:"#e8862a" },
+  { name:"Astronomia",          c:"#c792ff" },
+  { name:"Dati",                c:"#a78bfa" },
+  { name:"STEM / Coding",       c:"#f4c430" }
+];
+var CMAP = {};
+for (var ci=0; ci<CATS.length; ci++){ CMAP[CATS[ci].name] = CATS[ci].c; }
+
+/* ---- risorse: ogni voce ha una o più categorie (cats) ---- */
+var ITEMS = [
+  { t:"GeoGebra", u:"https://www.geogebra.org/calculator", org:"GeoGebra", cats:["Matematica"],
+    d:"Calcolatrice grafica che unisce geometria, algebra, analisi, statistica e calcolo simbolico in un unico ambiente interattivo: ideale per costruire figure geometriche dinamiche, tracciare funzioni e verificare proprietà algebriche passo passo." },
+  { t:"Mathigon Polypad", u:"https://polypad.amplify.com/p", org:"Amplify / Desmos", cats:["Matematica"],
+    d:"Lavagna interattiva con manipolatori virtuali — poliedri 3D apribili in reti 2D, bilance algebriche, tessere di frazioni e dadi probabilistici — per lo sviluppo di solidi geometrici, le equazioni di primo grado sulla bilancia e il calcolo delle probabilità." },
+  { t:"nrich", u:"https://nrich.maths.org/", org:"Università di Cambridge", cats:["Matematica"],
+    d:"Progetto dell'Università di Cambridge dedicato al problem-solving e al pensiero matematico profondo: propone problemi aperti e giochi matematici per sviluppare ragionamento, creatività e argomentazione in alunni, genitori e docenti." },
+  { t:"Seeing Theory", u:"https://seeing-theory.brown.edu/", org:"Brown University", cats:["Matematica","Dati"],
+    d:"Introduzione visuale e interattiva alla probabilità e alla statistica sviluppata alla Brown University, per visualizzare la legge dei grandi numeri, il lancio di dadi e monete e le distribuzioni di frequenza." },
+  { t:"Macchine Matematiche", u:"http://www.macchinematematiche.org/", org:"UNIMORE", cats:["Matematica"],
+    d:"Laboratorio delle Macchine Matematiche (Università di Modena e Reggio Emilia): ricostruzioni virtuali e schede storiche di pantografi, curvigrafi e strumenti meccanici, per scoprire la storia degli strumenti matematici e studiare coniche, simmetrie e trasformazioni geometriche." },
+  { t:"Matika", u:"https://www.matika.in/it/", org:"Matika.in", cats:["Matematica"],
+    d:"Raccolta di esercizi, problemi e schede di matematica per la primaria e la secondaria di primo grado, con versione stampabile: utile per assegnare esercizi di aritmetica, geometria e frazioni, anche come schede da stampare." },
+  { t:"Desmos", u:"https://www.desmos.com/calculator", org:"Desmos", cats:["Matematica"],
+    d:"Calcolatrice grafica elegante e immediata, con moduli di geometria e attività di classe guidate (Desmos Classroom): per tracciare funzioni, esplorare trasformazioni e proporre esercizi interattivi agli alunni." },
+  { t:"Mathigon", u:"https://mathigon.org/", org:"Mathigon", cats:["Matematica"],
+    d:"«Libro di testo» interattivo in cui ogni concetto si scopre cliccando e manipolando: frazioni, poligoni, trasformazioni e probabilità spiegati passo passo, con percorsi adatti alla scuola media." },
+
+  { t:"PhET Interactive Simulations", u:"https://phet.colorado.edu/it/", org:"University of Colorado Boulder", cats:["Matematica","Fisica","Chimica","Biologia"],
+    d:"Centinaia di simulazioni gratuite di fisica, chimica, matematica e biologia, tradotte in italiano e basate sulla ricerca didattica: esperimenti virtuali su forze, circuiti, stati della materia, reazioni chimiche e leggi dei gas." },
+  { t:"Falstad – Physics Applets", u:"https://www.falstad.com/mathphysics.html", org:"Paul Falstad", cats:["Fisica"],
+    d:"Applet in tempo reale per la fisica: il simulatore di circuiti mostra corrente e potenziale come animazioni, mentre acustica e ottica permettono di manipolare onde stazionarie, effetto Doppler e interferenza. Perfetto per montare circuiti elettrici virtuali e studiare suono e luce in modo dinamico." },
+  { t:"MolView", u:"https://molview.org/", org:"MolView", cats:["Chimica"],
+    d:"Editor e visualizzatore di molecole: disegna una formula di struttura e la trasforma in un modello 3D di atomi e legami, con banca dati di composti. Permette di costruire molecole, passare dalla formula al modello 3D e osservare la geometria dei legami." },
+  { t:"Concord Consortium", u:"https://learn.concord.org/", org:"Concord Consortium", cats:["Chimica","Biologia","Scienze della Terra"],
+    d:"Ente di ricerca educativo no-profit: offre il Molecular Workbench (dinamica molecolare, passaggi di stato, legami chimici) e modelli su genetica, tettonica delle placche ed effetto serra, per simulare stati della materia e legami a livello molecolare ed esplorare la deriva dei continenti e il clima." },
+  { t:"RCSB PDB – Mol*", u:"https://www.rcsb.org/3d-view", org:"RCSB Protein Data Bank", cats:["Biologia","Chimica"],
+    d:"Portale mondiale delle macromolecole biologiche: esplora in 3D la struttura atomica di virus, enzimi, emoglobina e DNA a partire da dati cristallografici reali, per osservare la forma reale di proteine e DNA collegando struttura e funzione delle biomolecole." },
+  { t:"Learn.Genetics", u:"https://learn.genetics.utah.edu/", org:"University of Utah", cats:["Biologia"],
+    d:"Dall'Università dello Utah: esploratori come Cell Size and Scale (zoom continuo da un chicco di caffè fino a un atomo) e laboratori virtuali di estrazione del DNA, per confrontare le dimensioni di cellule, batteri e virus e simulare l'estrazione del DNA." },
+  { t:"BioInteractive", u:"https://www.biointeractive.org/", org:"HHMI", cats:["Biologia","Scienze della Terra"],
+    d:"Howard Hughes Medical Institute: simulazioni basate su veri set di dati su evoluzione delle popolazioni, nicchie ecologiche, ciclo del carbonio e biologia cellulare, per analizzare dati reali di ecologia ed evoluzione e studiare i cicli della materia." },
+  { t:"Algodoo", u:"http://www.algodoo.com/", org:"Algoryx", cats:["Fisica","STEM / Coding"],
+    d:"Sandbox di fisica 2D in cui costruire scene con gravità, galleggiamento, molle, leve e ingranaggi e vederle in movimento: ideale per esperimenti virtuali «in stile LEGO» su forze, equilibrio e macchine semplici." },
+  { t:"phyphox", u:"https://phyphox.org/", org:"RWTH Aachen University", cats:["Fisica"],
+    d:"Trasforma lo smartphone in un laboratorio portatile usando i sensori del telefono per misurare accelerazione, rotazione, suono e luce: permette di fare esperimenti reali su moto, pendolo e onde sonore." },
+  { t:"Chrome Music Lab", u:"https://musiclab.chromeexperiments.com/", org:"Google Chrome Experiments", cats:["Fisica","Matematica"],
+    d:"Esperimenti interattivi sulla fisica del suono: onde, frequenze, armonici e spettrogrammi da manipolare, per collegare suono, vibrazioni e matematica dei ritmi." },
+  { t:"Ptable", u:"https://ptable.com/", org:"Ptable", cats:["Chimica"],
+    d:"Tavola periodica interattiva in italiano: al passaggio del mouse mostra proprietà, stati della materia, orbitali e andamenti degli elementi, con viste su composti e reattività." },
+  { t:"Scratch", u:"https://scratch.mit.edu/", org:"MIT Media Lab", cats:["STEM / Coding"],
+    d:"Ambiente di coding a blocchi, riferimento per il pensiero computazionale alle medie: si creano storie, giochi e animazioni trascinando istruzioni, utile anche per modellare fenomeni scientifici." },
+  { t:"Tinkercad", u:"https://www.tinkercad.com/", org:"Autodesk", cats:["STEM / Coding","Fisica"],
+    d:"Progettazione 3D, elettronica e coding a blocchi direttamente nel browser: per disegnare oggetti da stampare in 3D e montare circuiti virtuali, molto affine al mondo LEGO e della robotica." },
+
+  { t:"Geoportale Nazionale", u:"http://www.pcn.minambiente.it/viewer/", org:"Min. Ambiente e Sicurezza Energetica", cats:["Scienze della Terra"],
+    d:"Servizio di cartografia tematica nazionale con ortofoto, carte geologiche, uso del suolo e dati ambientali sovrapponibili a strati: permette di leggere il territorio italiano, confrontare foto aeree di epoche diverse e studiare geologia e paesaggio." },
+  { t:"INGV – Terremoti e Vulcani", u:"https://terremoti.ingv.it/", org:"INGV", cats:["Scienze della Terra","Dati"],
+    d:"Istituto Nazionale di Geofisica e Vulcanologia: mappe GIS della sismicità italiana ed europea quasi in tempo reale, da cui scaricare dati reali su magnitudo e ipocentro e studiare il legame tra terremoti e margini di placca." },
+  { t:"ISPRA – IdroGEO", u:"https://idrogeo.isprambiente.it/", org:"ISPRA", cats:["Scienze della Terra"],
+    d:"Piattaforma per navigare il territorio italiano fino al singolo comune o edificio e analizzare la pericolosità da frane e alluvioni, utile per valutare i rischi idrogeologici del proprio comune e del proprio territorio." },
+  { t:"Earth Nullschool", u:"https://earth.nullschool.net/", org:"Cameron Beccario", cats:["Scienze della Terra","Dati"],
+    d:"Mappa globale 3D in tempo reale di venti, correnti oceaniche, temperature e inquinanti (CO₂, PM2.5, SO₂) dai supercalcoli di NOAA e NASA: permette di osservare la circolazione di aria e oceani e collegare clima, venti e inquinamento atmosferico." },
+  { t:"Copernicus Browser", u:"https://browser.dataspace.copernicus.eu/", org:"ESA / UE", cats:["Scienze della Terra","Dati"],
+    d:"Accesso libero alle immagini delle missioni europee Sentinel — nel visibile, nell'infrarosso (salute della vegetazione) e con confronto temporale tramite slider — per osservare negli anni il ritiro dei ghiacciai, le alluvioni e lo stato della vegetazione." },
+  { t:"Electricity Maps", u:"https://app.electricitymaps.com/map", org:"Electricity Maps", cats:["Scienze della Terra","Dati"],
+    d:"Mappa mondiale in tempo reale dell'origine dell'elettricità e delle emissioni di CO₂ per kWh, Paese per Paese: ideale per confrontare fonti energetiche e impronta di carbonio dell'elettricità nei diversi Paesi." },
+  { t:"Our World in Data", u:"https://ourworldindata.org/", org:"University of Oxford", cats:["Dati"],
+    d:"Migliaia di grafici e mappe interattive, esportabili e con asse temporale, su energia, demografia, biodiversità, clima e tecnologia: dati reali su popolazione, ambiente ed energia da leggere e manipolare per attività interdisciplinari." },
+  { t:"Gapminder", u:"https://www.gapminder.org/tools/", org:"Gapminder Foundation", cats:["Dati"],
+    d:"Grafici animati che mostrano l'evoluzione nel tempo di dati mondiali su popolazione, salute, reddito e ambiente (nello stile di Hans Rosling): per leggere i dati reali e correggere le idee sbagliate sul mondo." },
+  { t:"Google Earth – Voyager", u:"https://earth.google.com/web/", org:"Google", cats:["Scienze della Terra"],
+    d:"Esplorazione 3D del pianeta direttamente nel browser, con i percorsi tematici di Voyager già pronti su geografia, ambiente e scienze: per osservare rilievi, fiumi, città e fenomeni naturali dall'alto." },
+  { t:"Scale of the Universe", u:"https://scaleofuniverse.com/", org:"Cary & Michael Huang", cats:["Fisica","Biologia","Astronomia"],
+    d:"Zoom continuo che attraversa tutte le scale della natura, dal quark alle galassie: uno slider per confrontare le dimensioni di atomi, cellule, esseri viventi, pianeti e stelle e dare il senso dell'ordine di grandezza." },
+
+  { t:"NASA Eyes", u:"https://science.nasa.gov/eyes/", org:"NASA / JPL", cats:["Astronomia"],
+    d:"Suite di visualizzazione 3D nel browser del Jet Propulsion Laboratory: Eyes on the Solar System (viaggia accanto a sonde reali come Voyager o Juno), Eyes on Asteroids ed Eyes on Exoplanets, per esplorare il Sistema Solare, seguire sonde reali e studiare pianeti ed asteroidi." },
+  { t:"Stellarium Web", u:"https://stellarium-web.org/", org:"Stellarium", cats:["Astronomia"],
+    d:"Planetario online open-source ad alta precisione: simula il cielo da qualsiasi luogo e data, con atmosfera, griglie e costellazioni, per riconoscere stelle e costellazioni e studiare il moto apparente della volta celeste." },
+  { t:"Edu INAF – Sorvegliati Spaziali", u:"https://edu.inaf.it/", org:"INAF", cats:["Astronomia"],
+    d:"I portali didattici dell'Istituto Nazionale di Astrofisica: laboratori interattivi, calcolatori astronomici in italiano e modelli sul monitoraggio di asteroidi, con attività guidate in italiano su Sistema Solare, stelle e asteroidi near-Earth." },
+  { t:"100.000 Stars", u:"https://stars.chromeexperiments.com/", org:"Google Chrome Experiments", cats:["Astronomia"],
+    d:"Visualizzazione 3D navigabile delle stelle più vicine al Sole, con nomi e distanze e un volo fino alla scala della Via Lattea, per dare il senso delle distanze stellari e della posizione del Sole nella Galassia." },
+  { t:"Solar System Scope", u:"https://www.solarsystemscope.com/", org:"Solar System Scope", cats:["Astronomia"],
+    d:"Modello 3D del Sistema Solare, disponibile in italiano: mostra orbite, posizioni reali dei pianeti e la volta celeste, per studiare moti, distanze e scala del Sistema Solare." }
+];
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* gradiente CSS che mischia i colori delle categorie della casella */
+function gradCSS(cols){
+  if (cols.length === 1) return 'linear-gradient(90deg,'+cols[0]+','+cols[0]+')';
+  return 'linear-gradient(90deg,'+cols.join(',')+')';
+}
+
+/* mattoncino decorativo con i colori (mischiati) delle categorie */
+function brickSVG(cols, gid, cls){
+  cls = cls || 'brick-mark';
+  var defs = '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="1" y2="0">';
+  if (cols.length === 1){
+    defs += '<stop offset="0%" stop-color="'+cols[0]+'"/><stop offset="100%" stop-color="'+cols[0]+'"/>';
+  } else {
+    for (var i=0;i<cols.length;i++){
+      var off = Math.round(i/(cols.length-1)*100);
+      defs += '<stop offset="'+off+'%" stop-color="'+cols[i]+'"/>';
+    }
+  }
+  defs += '</linearGradient></defs>';
+  var fill = 'url(#'+gid+')';
+  return '<svg class="'+cls+'" viewBox="0 0 30 21" aria-hidden="true">'+defs
+    + '<rect x="4.5" y="1.1" width="9" height="4.8" rx="1.6" fill="'+fill+'"/>'
+    + '<rect x="16.5" y="1.1" width="9" height="4.8" rx="1.6" fill="'+fill+'"/>'
+    + '<rect x="2" y="5.6" width="26" height="13" rx="2.4" fill="'+fill+'"/>'
+    + '<rect x="2" y="5.6" width="26" height="13" rx="2.4" fill="#0a1510" opacity=".28"/></svg>';
+}
+
+function cardHTML(it, idx){
+  var cols = [];
+  for (var i=0;i<it.cats.length;i++){ cols.push(CMAP[it.cats[i]] || '#00e49a'); }
+  return '<article class="card" data-cats="'+esc(it.cats.join('|'))+'" '
+    + 'style="--grad:'+gradCSS(cols)+';--accent:'+cols[0]+'">'
+    + brickSVG(cols, 'bg'+idx)
+    + '<h3><a href="'+it.u+'" target="_blank" rel="noopener noreferrer">'+esc(it.t)+'<span class="arr">&#8599;</span></a></h3>'
+    + '<div class="org">'+esc(it.org)+'</div>'
+    + '<p class="desc">'+esc(it.d)+'</p>'
+    + '</article>';
+}
+
+/* ---- stato dei filtri ---- */
+var active = {};
+for (var ai=0; ai<CATS.length; ai++){ active[CATS[ai].name] = true; }
+
+function allActive(){
+  for (var i=0;i<CATS.length;i++){ if (!active[CATS[i].name]) return false; }
+  return true;
+}
+
+function applyFilter(){
+  var cards = document.querySelectorAll('.card');
+  var vis = 0, i, j;
+  for (i=0;i<cards.length;i++){
+    var cs = cards[i].getAttribute('data-cats').split('|');
+    var show = false;
+    for (j=0;j<cs.length;j++){ if (active[cs[j]]){ show = true; break; } }
+    cards[i].style.display = show ? '' : 'none';
+    if (show) vis++;
+  }
+  var chips = document.querySelectorAll('#filters .chip');
+  for (i=0;i<chips.length;i++){
+    var ch = chips[i];
+    var on;
+    if (ch.getAttribute('data-all') !== null){ on = allActive(); }
+    else { on = !!active[ch.getAttribute('data-cat')]; }
+    if (on) ch.classList.remove('off'); else ch.classList.add('off');
+  }
+  var emp = document.getElementById('empty');
+  if (emp) emp.style.display = (vis === 0) ? '' : 'none';
+  document.getElementById('tot').textContent = vis;
+}
+
+function onChip(e){
+  var b = e.currentTarget;
+  if (b.getAttribute('data-all') !== null){
+    var makeAll = !allActive();            // tutto attivo -> azzera; altrimenti attiva tutto
+    for (var i=0;i<CATS.length;i++){ active[CATS[i].name] = makeAll; }
+  } else {
+    var cat = b.getAttribute('data-cat');
+    active[cat] = !active[cat];
+  }
+  applyFilter();
+}
+
+/* aggiunge a ogni mattoncino un numero di stud proporzionale alla sua larghezza */
+function addStuds(){
+  var chips = document.querySelectorAll('#filters .chip');
+  for (var i=0;i<chips.length;i++){
+    var ch = chips[i];
+    var old = ch.querySelector('.studs');
+    if (old) ch.removeChild(old);
+    var w = ch.offsetWidth;
+    var n = Math.round((w - 10) / 24);          // ~1 stud ogni ~24px di mattoncino
+    if (n < 1) n = 1;
+    var box = document.createElement('span');
+    box.className = 'studs';
+    for (var k=0;k<n;k++){
+      var s = document.createElement('span');
+      s.className = 'stud';
+      box.appendChild(s);
+    }
+    ch.appendChild(box);
+  }
+}
+
+function buildFilters(){
+  var f = document.getElementById('filters');
+  var h = '<button type="button" class="chip all" data-all="1">Tutte</button>';
+  for (var i=0;i<CATS.length;i++){
+    h += '<button type="button" class="chip" style="--cc:'+CATS[i].c+'" data-cat="'+esc(CATS[i].name)+'">'+esc(CATS[i].name)+'</button>';
+  }
+  f.innerHTML = h;
+  var chips = f.querySelectorAll('.chip');
+  for (var k=0;k<chips.length;k++){ chips[k].addEventListener('click', onChip); }
+  addStuds();
+  // ricalcola quando il web font è pronto (la larghezza del testo può cambiare)
+  if (document.fonts && document.fonts.ready && document.fonts.ready.then){
+    document.fonts.ready.then(addStuds);
+  }
+  var rt;
+  window.addEventListener('resize', function(){
+    if (rt) clearTimeout(rt);
+    rt = setTimeout(addStuds, 180);
+  });
+}
+
+(function init(){
+  var html = '<div class="grid">';
+  for (var i=0;i<ITEMS.length;i++){ html += cardHTML(ITEMS[i], i); }
+  html += '<p id="empty" class="empty" style="display:none">Nessuna risorsa da mostrare: seleziona almeno una categoria qui sopra.</p>';
+  html += '</div>';
+  document.getElementById('app').innerHTML = html;
+  document.getElementById('totAll').textContent = ITEMS.length;
+  buildFilters();
+  applyFilter();
+})();
+</script>
+</body>
+</html>

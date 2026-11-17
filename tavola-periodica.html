@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tavola periodica a mattoncini – STEM in brick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --mint:#00e49a; --orange:#e8862a; --txt:#dfe8e6; --muted:#8ba0a0; }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:transparent;
+    color:var(--txt);
+    font-family:'Roboto Mono', ui-monospace, monospace;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1300px;margin:0 auto;padding:22px 14px 40px}
+
+  header.top{text-align:center;margin-bottom:16px}
+  .logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:10px}
+  .logo .mk{width:40px;height:26px}
+  .logo b{font-size:18px;letter-spacing:1px;color:#fff;font-weight:700}
+  .logo b span{color:var(--mint)}
+  header.top h1{margin:4px 0 6px;font-size:clamp(21px,3.6vw,30px);font-weight:700;color:#fff}
+  header.top h1 .dot{color:var(--orange)}
+  header.top p{margin:0 auto;max-width:600px;color:var(--muted);font-size:13px;line-height:1.55}
+
+  /* legenda = mattoncini */
+  .legend{display:flex;flex-wrap:wrap;gap:12px 8px;justify-content:center;max-width:860px;margin:14px auto 20px}
+  .lg{position:relative;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.3px;
+    margin-top:5px;padding:6px 12px;border-radius:5px;border:1.4px solid var(--c);
+    background:var(--c);color:#08110c;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);
+    -webkit-user-select:none;user-select:none;transition:transform .1s,opacity .15s}
+  .lg .studs{position:absolute;top:-4px;left:7px;right:7px;height:5px;display:flex;justify-content:space-evenly;pointer-events:none}
+  .lg .stud{width:14px;height:5px;border-radius:2px 2px 1px 1px;background:var(--c)}
+  .lg.off{background:transparent;color:var(--c);box-shadow:none}
+  .lg.off .stud{opacity:.5}
+  .lg:hover{transform:translateY(-1px)}
+
+  /* tavola */
+  .ptable-wrap{overflow-x:auto;padding-bottom:6px}
+  .ptable{display:grid;grid-template-columns:repeat(18,1fr);gap:5px;min-width:780px}
+  .spacer{grid-column:1 / -1;height:10px}
+
+  .el{position:relative;cursor:pointer;border-radius:5px;padding:3px 2px;min-height:46px;
+    background:var(--c);color:#08110c;border:1px solid rgba(0,0,0,.18);
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.16);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    transition:transform .1s ease, box-shadow .1s ease, opacity .15s ease}
+  .el::before,.el::after{content:"";position:absolute;top:-3px;width:26%;height:3.5px;
+    border-radius:1.5px 1.5px 1px 1px;background:var(--c)}
+  .el::before{left:16%}.el::after{right:16%}
+  .el .z{position:absolute;top:2px;left:4px;font-size:8px;font-weight:700;opacity:.82}
+  .el .sym{font-size:17px;font-weight:700;line-height:1}
+  .el .nm{font-size:6.6px;line-height:1.05;margin-top:2px;max-width:100%;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;padding:0 1px}
+  .el:hover{transform:translateY(-2px) scale(1.05);z-index:4;box-shadow:0 6px 14px rgba(0,0,0,.45)}
+  .el.dim{opacity:.16}
+
+  .lab{display:flex;align-items:center;justify-content:center;border-radius:5px;min-height:46px;
+    font-size:8.5px;font-weight:700;color:#08110c;background:var(--c);opacity:.8;text-align:center;padding:2px}
+
+  /* modale */
+  .overlay{position:fixed;inset:0;background:rgba(3,7,12,.74);display:none;
+    align-items:center;justify-content:center;z-index:50;padding:18px}
+  .overlay.open{display:flex}
+  .modal{position:relative;max-width:470px;width:100%;max-height:92vh;overflow:auto;
+    background:linear-gradient(180deg,#121a27,#0d1420);border:1px solid var(--c,#00e49a);
+    border-radius:16px;padding:22px 22px 20px;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+  .modal .x{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--muted);
+    font-size:22px;line-height:1;background:none;border:none;font-family:inherit}
+  .modal .x:hover{color:#fff}
+  .modal .head{display:flex;gap:14px;align-items:center;margin:2px 0 14px}
+  .modal .big{position:relative;width:66px;height:66px;flex:0 0 auto;border-radius:9px;
+    background:var(--c);color:#08110c;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:inset 0 -4px 0 rgba(0,0,0,.18)}
+  .modal .big::before,.modal .big::after{content:"";position:absolute;top:-4px;width:24%;height:5px;
+    border-radius:2px 2px 1px 1px;background:var(--c)}
+  .modal .big::before{left:16%}.modal .big::after{right:16%}
+  .modal .big .s{font-size:27px;font-weight:700;line-height:1}
+  .modal .big .zz{font-size:10px;font-weight:700}
+  .modal h3{margin:0;font-size:22px;color:#fff}
+  .modal .cat{font-size:12px;color:var(--c);font-weight:700;margin-top:3px}
+  .row{display:flex;gap:10px;margin:8px 0;font-size:13px;line-height:1.5}
+  .row .k{color:var(--muted);min-width:132px;flex:0 0 auto}
+  .row .v{color:#e7efed}
+  @media(max-width:520px){ .row{flex-direction:column;gap:1px;margin:10px 0} .row .k{min-width:0} }
+
+  footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
+  footer .made{color:#fff}
+  footer .made b{color:var(--mint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <svg class="mk" viewBox="0 0 40 26" aria-hidden="true">
+        <rect x="7" y="1.6" width="11" height="6" rx="2" fill="#00e49a"/>
+        <rect x="22" y="1.6" width="11" height="6" rx="2" fill="#00e49a"/>
+        <rect x="3" y="7.5" width="34" height="16" rx="3" fill="#00e49a"/>
+        <rect x="3" y="7.5" width="34" height="16" rx="3" fill="#0a1f19" opacity=".22"/>
+      </svg>
+      <b>STEM in <span>brick</span></b>
+    </div>
+    <h1>Tavola periodica a mattoncini<span class="dot">.</span></h1>
+    <p>Ogni colore è una categoria di elementi. Clicca su un mattoncino per vedere numero atomico, massa, isotopi più abbondanti, dove si trova in natura e le sue applicazioni.</p>
+  </header>
+
+  <div id="legend" class="legend"></div>
+
+  <div class="ptable-wrap">
+    <div id="ptable" class="ptable"></div>
+  </div>
+
+  <footer>
+    <p class="made">Realizzato da <b>Andrea Gramazio</b> per STEM in Brick</p>
+    <p>Le frequenze isotopiche sono le abbondanze naturali medie sulla Terra; [valore] = massa dell'isotopo più stabile per gli elementi radioattivi.</p>
+  </footer>
+</div>
+
+<!-- modale info elemento -->
+<div id="overlay" class="overlay">
+  <div id="modal" class="modal" role="dialog" aria-modal="true">
+    <button class="x" id="closeBtn" aria-label="Chiudi">&times;</button>
+    <div class="head">
+      <div class="big"><span class="zz" id="mZ"></span><span class="s" id="mSym"></span></div>
+      <div><h3 id="mName"></h3><div class="cat" id="mCat"></div></div>
+    </div>
+    <div class="row"><span class="k">Numero atomico (Z)</span><span class="v" id="mZ2"></span></div>
+    <div class="row"><span class="k">Massa atomica (A)</span><span class="v" id="mA"></span></div>
+    <div class="row"><span class="k">Isotopi principali</span><span class="v" id="mIso"></span></div>
+    <div class="row"><span class="k">Dove si trova</span><span class="v" id="mOcc"></span></div>
+    <div class="row"><span class="k">Applicazioni</span><span class="v" id="mApp"></span></div>
+  </div>
+</div>
+
+<script>
+/* ---- categorie e colori ---- */
+var CATS = [
+  { k:"alcalino",        n:"Metallo alcalino",         c:"#ff6b6b" },
+  { k:"alcterroso",      n:"Metallo alcalino-terroso", c:"#ff9f45" },
+  { k:"transizione",     n:"Metallo di transizione",   c:"#f4c430" },
+  { k:"posttransizione", n:"Metallo post-transizione", c:"#9be36b" },
+  { k:"semimetallo",     n:"Semimetallo",              c:"#4fd1c5" },
+  { k:"nonmetallo",      n:"Non metallo",              c:"#00e49a" },
+  { k:"alogeno",         n:"Alogeno",                  c:"#35c2f0" },
+  { k:"nobile",          n:"Gas nobile",               c:"#c792ff" },
+  { k:"lantanide",       n:"Lantanide",                c:"#ff8ac4" },
+  { k:"attinide",        n:"Attinide",                 c:"#b07bff" },
+  { k:"sconosciuto",     n:"Proprietà sconosciute",    c:"#9fb0b0" }
+];
+var CC = {}, CN = {};
+for (var i=0;i<CATS.length;i++){ CC[CATS[i].k]=CATS[i].c; CN[CATS[i].k]=CATS[i].n; }
+
+/* ---- elementi: z, simbolo, nome, massa(a), categoria(c), colonna(x), riga(y), isotopi(i), dove(o), applicazioni(p) ---- */
+var EL = [
+{z:1,s:"H",n:"Idrogeno",a:"1,008",c:"nonmetallo",x:1,y:1,i:"¹H 99,98% · ²H (deuterio) 0,02%",o:"Acqua (H₂O), idrocarburi, acidi; elemento più abbondante dell'universo",p:"Produzione di ammoniaca, raffinazione, celle a combustibile e carburante"},
+{z:2,s:"He",n:"Elio",a:"4,0026",c:"nobile",x:18,y:1,i:"⁴He ~100% · ³He in tracce",o:"Giacimenti di gas naturale; prodotto dal decadimento alfa",p:"Palloni, criogenia (risonanza magnetica), atmosfere inerti"},
+{z:3,s:"Li",n:"Litio",a:"6,94",c:"alcalino",x:1,y:2,i:"⁷Li 92,5% · ⁶Li 7,5%",o:"Spodumene, lepidolite, salamoie saline",p:"Batterie ricaricabili, vetri e ceramiche, farmaci"},
+{z:4,s:"Be",n:"Berillio",a:"9,012",c:"alcterroso",x:2,y:2,i:"⁹Be 100%",o:"Berillo (smeraldo, acquamarina), bertrandite",p:"Leghe rame-berillio, finestre per raggi X, aerospazio"},
+{z:5,s:"B",n:"Boro",a:"10,81",c:"semimetallo",x:13,y:2,i:"¹¹B 80% · ¹⁰B 20%",o:"Borace, kernite",p:"Vetri borosilicati (Pyrex), detergenti, fibre, agricoltura"},
+{z:6,s:"C",n:"Carbonio",a:"12,011",c:"nonmetallo",x:14,y:2,i:"¹²C 98,9% · ¹³C 1,1% · ¹⁴C in tracce",o:"Carbone, petrolio, calcare (CaCO₃), diamante, grafite",p:"Acciaio, plastiche, grafite e diamanti, datazione al ¹⁴C"},
+{z:7,s:"N",n:"Azoto",a:"14,007",c:"nonmetallo",x:15,y:2,i:"¹⁴N 99,6% · ¹⁵N 0,4%",o:"Atmosfera (78% come N₂), nitrati",p:"Fertilizzanti (ammoniaca), atmosfere inerti, azoto liquido"},
+{z:8,s:"O",n:"Ossigeno",a:"15,999",c:"nonmetallo",x:16,y:2,i:"¹⁶O 99,76% · ¹⁸O 0,20% · ¹⁷O 0,04%",o:"Aria (21%), acqua, silicati e ossidi delle rocce",p:"Respirazione, siderurgia, saldatura, ossidante"},
+{z:9,s:"F",n:"Fluoro",a:"18,998",c:"alogeno",x:17,y:2,i:"¹⁹F 100%",o:"Fluorite (CaF₂), criolite, apatite",p:"Dentifrici (fluoruri), Teflon, gas refrigeranti, UF₆"},
+{z:10,s:"Ne",n:"Neon",a:"20,180",c:"nobile",x:18,y:2,i:"²⁰Ne 90,5% · ²²Ne 9,2% · ²¹Ne 0,3%",o:"Tracce nell'atmosfera",p:"Insegne luminose, laser, criogenia"},
+{z:11,s:"Na",n:"Sodio",a:"22,990",c:"alcalino",x:1,y:3,i:"²³Na 100%",o:"Salgemma (NaCl), soda, acqua di mare",p:"Sale da cucina, lampade a vapore di sodio, sapone"},
+{z:12,s:"Mg",n:"Magnesio",a:"24,305",c:"alcterroso",x:2,y:3,i:"²⁴Mg 79% · ²⁶Mg 11% · ²⁵Mg 10%",o:"Dolomite, magnesite, acqua di mare, clorofilla",p:"Leghe leggere, fuochi e flash, integratori"},
+{z:13,s:"Al",n:"Alluminio",a:"26,982",c:"posttransizione",x:13,y:3,i:"²⁷Al 100%",o:"Bauxite, allumina, feldspati",p:"Lattine, infissi, aeronautica, cavi elettrici"},
+{z:14,s:"Si",n:"Silicio",a:"28,085",c:"semimetallo",x:14,y:3,i:"²⁸Si 92,2% · ²⁹Si 4,7% · ³⁰Si 3,1%",o:"Quarzo (SiO₂), sabbia, silicati",p:"Microchip e pannelli solari, vetro, cemento, siliconi"},
+{z:15,s:"P",n:"Fosforo",a:"30,974",c:"nonmetallo",x:15,y:3,i:"³¹P 100%",o:"Apatite, fosforite",p:"Fertilizzanti, fiammiferi, detergenti; componente di DNA e ossa"},
+{z:16,s:"S",n:"Zolfo",a:"32,06",c:"nonmetallo",x:16,y:3,i:"³²S 95% · ³⁴S 4,3%",o:"Zolfo nativo, pirite, gesso, aree vulcaniche",p:"Acido solforico, vulcanizzazione della gomma, fertilizzanti"},
+{z:17,s:"Cl",n:"Cloro",a:"35,45",c:"alogeno",x:17,y:3,i:"³⁵Cl 75,8% · ³⁷Cl 24,2%",o:"Salgemma, acqua di mare",p:"Disinfezione dell'acqua, PVC, candeggina, farmaci"},
+{z:18,s:"Ar",n:"Argon",a:"39,95",c:"nobile",x:18,y:3,i:"⁴⁰Ar 99,6% · ³⁸Ar · ³⁶Ar",o:"0,93% dell'atmosfera",p:"Atmosfere inerti (saldatura), lampadine, doppi vetri"},
+{z:19,s:"K",n:"Potassio",a:"39,098",c:"alcalino",x:1,y:4,i:"³⁹K 93,3% · ⁴¹K 6,7% · ⁴⁰K 0,012% (radioattivo)",o:"Silvite, carnallite, feldspati",p:"Fertilizzanti, saponi, datazione K-Ar"},
+{z:20,s:"Ca",n:"Calcio",a:"40,078",c:"alcterroso",x:2,y:4,i:"⁴⁰Ca 96,9% · ⁴⁴Ca 2,1%",o:"Calcare (CaCO₃), gesso, fluorite",p:"Cemento e calce, ossa e denti, siderurgia"},
+{z:21,s:"Sc",n:"Scandio",a:"44,956",c:"transizione",x:3,y:4,i:"⁴⁵Sc 100%",o:"Thortveitite, tracce in molti minerali",p:"Leghe alluminio-scandio (aerospazio), lampade"},
+{z:22,s:"Ti",n:"Titanio",a:"47,867",c:"transizione",x:4,y:4,i:"⁴⁸Ti 73,7% · ⁴⁶Ti 8,2% · ⁴⁷Ti 7,4%",o:"Rutilo (TiO₂), ilmenite",p:"Leghe leggere e resistenti, protesi, pigmento bianco"},
+{z:23,s:"V",n:"Vanadio",a:"50,942",c:"transizione",x:5,y:4,i:"⁵¹V 99,75% · ⁵⁰V 0,25%",o:"Vanadinite, patronite",p:"Acciai speciali, catalizzatori, batterie a flusso"},
+{z:24,s:"Cr",n:"Cromo",a:"51,996",c:"transizione",x:6,y:4,i:"⁵²Cr 83,8% · ⁵³Cr 9,5%",o:"Cromite",p:"Acciaio inox, cromatura, pigmenti"},
+{z:25,s:"Mn",n:"Manganese",a:"54,938",c:"transizione",x:7,y:4,i:"⁵⁵Mn 100%",o:"Pirolusite, noduli oceanici",p:"Acciai, batterie a secco, leghe"},
+{z:26,s:"Fe",n:"Ferro",a:"55,845",c:"transizione",x:8,y:4,i:"⁵⁶Fe 91,75% · ⁵⁴Fe 5,8% · ⁵⁷Fe 2,1%",o:"Ematite, magnetite, pirite",p:"Acciaio e ghisa, emoglobina, magneti"},
+{z:27,s:"Co",n:"Cobalto",a:"58,933",c:"transizione",x:9,y:4,i:"⁵⁹Co 100%",o:"Cobaltite, eritrite",p:"Leghe magnetiche, batterie, pigmenti blu, vitamina B12"},
+{z:28,s:"Ni",n:"Nichel",a:"58,693",c:"transizione",x:10,y:4,i:"⁵⁸Ni 68% · ⁶⁰Ni 26%",o:"Pentlandite, garnierite",p:"Acciaio inox, monete, batterie, catalizzatori"},
+{z:29,s:"Cu",n:"Rame",a:"63,546",c:"transizione",x:11,y:4,i:"⁶³Cu 69,2% · ⁶⁵Cu 30,8%",o:"Rame nativo, calcopirite, malachite",p:"Cavi elettrici, tubi, leghe (bronzo, ottone)"},
+{z:30,s:"Zn",n:"Zinco",a:"65,38",c:"transizione",x:12,y:4,i:"⁶⁴Zn 48,6% · ⁶⁶Zn 27,9%",o:"Sfalerite (blenda)",p:"Zincatura antiruggine, ottone, batterie, integratori"},
+{z:31,s:"Ga",n:"Gallio",a:"69,723",c:"posttransizione",x:13,y:4,i:"⁶⁹Ga 60,1% · ⁷¹Ga 39,9%",o:"Tracce in bauxite e blenda",p:"Semiconduttori (LED, GaAs), termometri"},
+{z:32,s:"Ge",n:"Germanio",a:"72,630",c:"semimetallo",x:14,y:4,i:"⁷⁴Ge 36% · ⁷²Ge 27% · ⁷⁰Ge 21%",o:"Germanite, tracce nei minerali di zinco",p:"Fibre ottiche, ottica a infrarossi, semiconduttori"},
+{z:33,s:"As",n:"Arsenico",a:"74,922",c:"semimetallo",x:15,y:4,i:"⁷⁵As 100%",o:"Arsenopirite, realgar, orpimento",p:"Leghe, semiconduttori; storicamente veleni e pesticidi"},
+{z:34,s:"Se",n:"Selenio",a:"78,971",c:"nonmetallo",x:16,y:4,i:"⁸⁰Se 49,6% · ⁷⁸Se 23,8%",o:"Tracce nei solfuri, dalla raffinazione del rame",p:"Vetro, fotocopiatrici, integratori, elettronica"},
+{z:35,s:"Br",n:"Bromo",a:"79,904",c:"alogeno",x:17,y:4,i:"⁷⁹Br 50,7% · ⁸¹Br 49,3%",o:"Salamoie, acqua di mare",p:"Ritardanti di fiamma, farmaci, fotografia"},
+{z:36,s:"Kr",n:"Kripton",a:"83,798",c:"nobile",x:18,y:4,i:"⁸⁴Kr 57% · ⁸⁶Kr 17,3% · ⁸²Kr 11,6%",o:"Tracce nell'atmosfera",p:"Lampade e fari, laser, isolamento finestre"},
+{z:37,s:"Rb",n:"Rubidio",a:"85,468",c:"alcalino",x:1,y:5,i:"⁸⁵Rb 72,2% · ⁸⁷Rb 27,8% (radioattivo)",o:"Lepidolite, pollucite",p:"Orologi atomici, celle fotoelettriche, ricerca"},
+{z:38,s:"Sr",n:"Stronzio",a:"87,62",c:"alcterroso",x:2,y:5,i:"⁸⁸Sr 82,6% · ⁸⁶Sr 9,9%",o:"Celestina, stronzianite",p:"Fuochi d'artificio rossi, magneti ceramici, vetro"},
+{z:39,s:"Y",n:"Ittrio",a:"88,906",c:"transizione",x:3,y:5,i:"⁸⁹Y 100%",o:"Terre rare (xenotime, monazite)",p:"Fosfori (schermi, LED), superconduttori, leghe"},
+{z:40,s:"Zr",n:"Zirconio",a:"91,224",c:"transizione",x:4,y:5,i:"⁹⁰Zr 51,5% · ⁹⁴Zr 17,4%",o:"Zircone, baddeleyite",p:"Reattori nucleari, ceramiche, zirconia (gioielli)"},
+{z:41,s:"Nb",n:"Niobio",a:"92,906",c:"transizione",x:5,y:5,i:"⁹³Nb 100%",o:"Columbite-tantalite (coltan), pirocloro",p:"Acciai altoresistenti, magneti superconduttori"},
+{z:42,s:"Mo",n:"Molibdeno",a:"95,95",c:"transizione",x:6,y:5,i:"⁹⁸Mo 24,4% · ⁹⁶Mo 16,7%",o:"Molibdenite",p:"Acciai speciali, catalizzatori, lubrificanti"},
+{z:43,s:"Tc",n:"Tecnezio",a:"[98]",c:"transizione",x:7,y:5,i:"Nessun isotopo stabile; ⁹⁸Tc il più longevo",o:"Sintetico; tracce dalla fissione dell'uranio",p:"Medicina nucleare (⁹⁹ᵐTc per scintigrafie)"},
+{z:44,s:"Ru",n:"Rutenio",a:"101,07",c:"transizione",x:8,y:5,i:"¹⁰²Ru 31,6% · ¹⁰⁴Ru 18,6%",o:"Minerali del platino",p:"Contatti elettrici, catalizzatori, leghe"},
+{z:45,s:"Rh",n:"Rodio",a:"102,91",c:"transizione",x:9,y:5,i:"¹⁰³Rh 100%",o:"Minerali del platino",p:"Marmitte catalitiche, gioielleria, contatti"},
+{z:46,s:"Pd",n:"Palladio",a:"106,42",c:"transizione",x:10,y:5,i:"¹⁰⁶Pd 27,3% · ¹⁰⁸Pd 26,5%",o:"Minerali di platino e nichel",p:"Marmitte catalitiche, elettronica, odontoiatria"},
+{z:47,s:"Ag",n:"Argento",a:"107,87",c:"transizione",x:11,y:5,i:"¹⁰⁷Ag 51,8% · ¹⁰⁹Ag 48,2%",o:"Argento nativo, argentite",p:"Gioielli e monete, elettronica, fotografia, antibatterico"},
+{z:48,s:"Cd",n:"Cadmio",a:"112,41",c:"transizione",x:12,y:5,i:"¹¹⁴Cd 28,7% · ¹¹²Cd 24%",o:"Greenockite, tracce insieme allo zinco",p:"Batterie Ni-Cd, pigmenti, rivestimenti (tossico)"},
+{z:49,s:"In",n:"Indio",a:"114,82",c:"posttransizione",x:13,y:5,i:"¹¹⁵In 95,7% (radioattivo) · ¹¹³In 4,3%",o:"Tracce nella blenda",p:"Schermi touch (ITO), saldature, semiconduttori"},
+{z:50,s:"Sn",n:"Stagno",a:"118,71",c:"posttransizione",x:14,y:5,i:"¹²⁰Sn 32,6% · ¹¹⁸Sn 24,2%",o:"Cassiterite",p:"Saldature, latta, bronzo, rivestimenti"},
+{z:51,s:"Sb",n:"Antimonio",a:"121,76",c:"semimetallo",x:15,y:5,i:"¹²¹Sb 57,2% · ¹²³Sb 42,8%",o:"Stibnite",p:"Ritardanti di fiamma, leghe per batterie, semiconduttori"},
+{z:52,s:"Te",n:"Tellurio",a:"127,60",c:"semimetallo",x:16,y:5,i:"¹³⁰Te 34,1% · ¹²⁸Te 31,7%",o:"Telluriti, tracce con l'oro",p:"Leghe, pannelli solari (CdTe), semiconduttori"},
+{z:53,s:"I",n:"Iodio",a:"126,90",c:"alogeno",x:17,y:5,i:"¹²⁷I 100%",o:"Salamoie, alghe, nitrati del Cile",p:"Disinfettanti, sale iodato, farmaci, mezzi di contrasto"},
+{z:54,s:"Xe",n:"Xeno",a:"131,29",c:"nobile",x:18,y:5,i:"¹³²Xe 26,9% · ¹²⁹Xe 26,4%",o:"Tracce nell'atmosfera",p:"Fari e flash, anestetico, propulsione ionica"},
+{z:55,s:"Cs",n:"Cesio",a:"132,91",c:"alcalino",x:1,y:6,i:"¹³³Cs 100%",o:"Pollucite",p:"Orologi atomici (definizione del secondo), celle fotoelettriche"},
+{z:56,s:"Ba",n:"Bario",a:"137,33",c:"alcterroso",x:2,y:6,i:"¹³⁸Ba 71,7% · ¹³⁷Ba 11,2%",o:"Barite, witherite",p:"Mezzo di contrasto radiografico, fuochi verdi, perforazioni"},
+{z:57,s:"La",n:"Lantanio",a:"138,91",c:"lantanide",x:4,y:9,i:"¹³⁹La 99,9%",o:"Monazite, bastnasite",p:"Vetri ottici, catalizzatori, batterie NiMH"},
+{z:58,s:"Ce",n:"Cerio",a:"140,12",c:"lantanide",x:5,y:9,i:"¹⁴⁰Ce 88,5% · ¹⁴²Ce 11,1%",o:"Bastnasite, monazite",p:"Lucidatura dei vetri, catalizzatori, pietrine per accendini"},
+{z:59,s:"Pr",n:"Praseodimio",a:"140,91",c:"lantanide",x:6,y:9,i:"¹⁴¹Pr 100%",o:"Monazite, bastnasite",p:"Magneti, vetri verdi, leghe"},
+{z:60,s:"Nd",n:"Neodimio",a:"144,24",c:"lantanide",x:7,y:9,i:"¹⁴²Nd 27,2% · ¹⁴⁴Nd 23,8%",o:"Monazite, bastnasite",p:"Magneti potentissimi (Nd-Fe-B), laser, altoparlanti"},
+{z:61,s:"Pm",n:"Promezio",a:"[145]",c:"lantanide",x:8,y:9,i:"Nessun isotopo stabile; ¹⁴⁵Pm il più longevo",o:"Sintetico; tracce nei minerali di uranio",p:"Vernici luminose, batterie nucleari"},
+{z:62,s:"Sm",n:"Samario",a:"150,36",c:"lantanide",x:9,y:9,i:"¹⁵²Sm 26,7% · ¹⁵⁴Sm 22,7%",o:"Monazite, bastnasite",p:"Magneti Sm-Co, assorbitori di neutroni, laser"},
+{z:63,s:"Eu",n:"Europio",a:"151,96",c:"lantanide",x:10,y:9,i:"¹⁵³Eu 52,2% · ¹⁵¹Eu 47,8%",o:"Monazite, bastnasite",p:"Fosfori rossi e blu (schermi, LED), banconote"},
+{z:64,s:"Gd",n:"Gadolinio",a:"157,25",c:"lantanide",x:11,y:9,i:"¹⁵⁸Gd 24,8% · ¹⁶⁰Gd 21,9%",o:"Monazite, bastnasite",p:"Contrasto per risonanza magnetica, schermature neutroniche"},
+{z:65,s:"Tb",n:"Terbio",a:"158,93",c:"lantanide",x:12,y:9,i:"¹⁵⁹Tb 100%",o:"Monazite, xenotime",p:"Fosfori verdi, magneti, dispositivi magnetostrittivi"},
+{z:66,s:"Dy",n:"Disprosio",a:"162,50",c:"lantanide",x:13,y:9,i:"¹⁶⁴Dy 28,2% · ¹⁶²Dy 25,5%",o:"Xenotime, monazite",p:"Magneti ad alte temperature, controllo dei reattori, laser"},
+{z:67,s:"Ho",n:"Olmio",a:"164,93",c:"lantanide",x:14,y:9,i:"¹⁶⁵Ho 100%",o:"Monazite, gadolinite",p:"Magneti potenti, laser medici, colorazione dei vetri"},
+{z:68,s:"Er",n:"Erbio",a:"167,26",c:"lantanide",x:15,y:9,i:"¹⁶⁶Er 33,5% · ¹⁶⁸Er 26,9%",o:"Xenotime, monazite",p:"Amplificatori per fibre ottiche, laser, vetri rosa"},
+{z:69,s:"Tm",n:"Tulio",a:"168,93",c:"lantanide",x:16,y:9,i:"¹⁶⁹Tm 100%",o:"Monazite, gadolinite",p:"Sorgenti portatili di raggi X, laser"},
+{z:70,s:"Yb",n:"Itterbio",a:"173,05",c:"lantanide",x:17,y:9,i:"¹⁷⁴Yb 32,0% · ¹⁷²Yb 21,9%",o:"Monazite, xenotime",p:"Orologi atomici, laser, acciai inossidabili"},
+{z:71,s:"Lu",n:"Lutezio",a:"174,97",c:"lantanide",x:18,y:9,i:"¹⁷⁵Lu 97,4% · ¹⁷⁶Lu 2,6% (radioattivo)",o:"Monazite, xenotime",p:"Catalizzatori, PET in medicina, datazioni geologiche"},
+{z:72,s:"Hf",n:"Afnio",a:"178,49",c:"transizione",x:4,y:6,i:"¹⁸⁰Hf 35,1% · ¹⁷⁸Hf 27,3%",o:"Insieme allo zircone",p:"Barre di controllo nei reattori, leghe, microchip"},
+{z:73,s:"Ta",n:"Tantalio",a:"180,95",c:"transizione",x:5,y:6,i:"¹⁸¹Ta 99,99%",o:"Coltan (columbite-tantalite)",p:"Condensatori per elettronica, impianti medici, leghe"},
+{z:74,s:"W",n:"Tungsteno",a:"183,84",c:"transizione",x:6,y:6,i:"¹⁸⁴W 30,6% · ¹⁸⁶W 28,4%",o:"Wolframite, scheelite",p:"Filamenti delle lampade, utensili da taglio (carburo), leghe"},
+{z:75,s:"Re",n:"Renio",a:"186,21",c:"transizione",x:7,y:6,i:"¹⁸⁷Re 62,6% (radioattivo) · ¹⁸⁵Re 37,4%",o:"Tracce nella molibdenite",p:"Turbine aeronautiche, catalizzatori, termocoppie"},
+{z:76,s:"Os",n:"Osmio",a:"190,23",c:"transizione",x:8,y:6,i:"¹⁹²Os 41% · ¹⁹⁰Os 26,3%",o:"Minerali del platino",p:"Leghe durissime (perni, punte), elemento più denso"},
+{z:77,s:"Ir",n:"Iridio",a:"192,22",c:"transizione",x:9,y:6,i:"¹⁹³Ir 62,7% · ¹⁹¹Ir 37,3%",o:"Minerali del platino, meteoriti",p:"Candele speciali, crogioli; marcatore di impatti meteoritici"},
+{z:78,s:"Pt",n:"Platino",a:"195,08",c:"transizione",x:10,y:6,i:"¹⁹⁵Pt 33,8% · ¹⁹⁴Pt 32,9%",o:"Platino nativo, sperrylite",p:"Marmitte catalitiche, gioielli, elettrodi, chemioterapici"},
+{z:79,s:"Au",n:"Oro",a:"196,97",c:"transizione",x:11,y:6,i:"¹⁹⁷Au 100%",o:"Oro nativo, pepite, quarzo aurifero",p:"Gioielli e riserve, elettronica, odontoiatria"},
+{z:80,s:"Hg",n:"Mercurio",a:"200,59",c:"transizione",x:12,y:6,i:"²⁰²Hg 29,9% · ²⁰⁰Hg 23,1%",o:"Cinabro (HgS)",p:"Termometri e lampade (storici), amalgami (tossico)"},
+{z:81,s:"Tl",n:"Tallio",a:"204,38",c:"posttransizione",x:13,y:6,i:"²⁰⁵Tl 70,5% · ²⁰³Tl 29,5%",o:"Tracce nei solfuri (crooksite)",p:"Elettronica, rivelatori a infrarossi (tossico)"},
+{z:82,s:"Pb",n:"Piombo",a:"207,2",c:"posttransizione",x:14,y:6,i:"²⁰⁸Pb 52,4% · ²⁰⁶Pb 24,1%",o:"Galena (PbS)",p:"Batterie per auto, schermature contro le radiazioni (tossico)"},
+{z:83,s:"Bi",n:"Bismuto",a:"208,98",c:"posttransizione",x:15,y:6,i:"²⁰⁹Bi ~100% (debolmente radioattivo)",o:"Bismutinite, bismuto nativo",p:"Farmaci (antiacidi), leghe bassofondenti, cosmetici"},
+{z:84,s:"Po",n:"Polonio",a:"[209]",c:"posttransizione",x:16,y:6,i:"Nessun isotopo stabile; ²⁰⁹Po il più longevo",o:"Tracce nei minerali di uranio",p:"Sorgenti alfa, antistatici, ricerca (molto radioattivo)"},
+{z:85,s:"At",n:"Astato",a:"[210]",c:"alogeno",x:17,y:6,i:"Nessun isotopo stabile; ²¹⁰At il più longevo",o:"Tracce dal decadimento dell'uranio",p:"Ricerca; terapia mirata sperimentale (²¹¹At)"},
+{z:86,s:"Rn",n:"Radon",a:"[222]",c:"nobile",x:18,y:6,i:"Nessun isotopo stabile; ²²²Rn dal decadimento del radio",o:"Gas radioattivo emesso da suolo e rocce",p:"Nessuna applicazione pratica (rischio nelle abitazioni)"},
+{z:87,s:"Fr",n:"Francio",a:"[223]",c:"alcalino",x:1,y:7,i:"Nessun isotopo stabile; ²²³Fr il più longevo",o:"Tracce dal decadimento dell'attinio",p:"Solo ricerca"},
+{z:88,s:"Ra",n:"Radio",a:"[226]",c:"alcterroso",x:2,y:7,i:"Nessun isotopo stabile; ²²⁶Ra il più longevo",o:"Tracce nei minerali di uranio",p:"Storicamente vernici luminose; oggi ricerca (radioattivo)"},
+{z:89,s:"Ac",n:"Attinio",a:"[227]",c:"attinide",x:4,y:10,i:"Nessun isotopo stabile; ²²⁷Ac",o:"Tracce nei minerali di uranio",p:"Sorgenti di neutroni, terapie sperimentali"},
+{z:90,s:"Th",n:"Torio",a:"232,04",c:"attinide",x:5,y:10,i:"²³²Th ~100% (radioattivo, primordiale)",o:"Monazite",p:"Potenziale combustibile nucleare, leghe"},
+{z:91,s:"Pa",n:"Protoattinio",a:"231,04",c:"attinide",x:6,y:10,i:"Nessun isotopo stabile; ²³¹Pa il più longevo",o:"Tracce nei minerali di uranio",p:"Solo ricerca"},
+{z:92,s:"U",n:"Uranio",a:"238,03",c:"attinide",x:7,y:10,i:"²³⁸U 99,27% · ²³⁵U 0,72% (fissile)",o:"Uraninite (pechblenda)",p:"Combustibile nucleare, datazioni, armi"},
+{z:93,s:"Np",n:"Nettunio",a:"[237]",c:"attinide",x:8,y:10,i:"Nessun isotopo stabile; ²³⁷Np il più longevo",o:"Tracce nei minerali di uranio (perlopiù sintetico)",p:"Rivelatori di neutroni, ricerca"},
+{z:94,s:"Pu",n:"Plutonio",a:"[244]",c:"attinide",x:9,y:10,i:"²⁴⁴Pu il più longevo; ²³⁹Pu fissile",o:"Sintetico (tracce naturali minime)",p:"Reattori e armi nucleari, batterie per sonde (²³⁸Pu)"},
+{z:95,s:"Am",n:"Americio",a:"[243]",c:"attinide",x:10,y:10,i:"Nessun isotopo stabile; ²⁴³Am il più longevo",o:"Sintetico",p:"Rivelatori di fumo (²⁴¹Am), sorgenti"},
+{z:96,s:"Cm",n:"Curio",a:"[247]",c:"attinide",x:11,y:10,i:"Nessun isotopo stabile; ²⁴⁷Cm il più longevo",o:"Sintetico",p:"Sorgenti di energia per sonde spaziali, ricerca"},
+{z:97,s:"Bk",n:"Berkelio",a:"[247]",c:"attinide",x:12,y:10,i:"Nessun isotopo stabile; ²⁴⁷Bk il più longevo",o:"Sintetico",p:"Ricerca (sintesi di elementi più pesanti)"},
+{z:98,s:"Cf",n:"Californio",a:"[251]",c:"attinide",x:13,y:10,i:"Nessun isotopo stabile; ²⁵¹Cf",o:"Sintetico",p:"Sorgenti di neutroni (avvio reattori, prospezioni)"},
+{z:99,s:"Es",n:"Einstenio",a:"[252]",c:"attinide",x:14,y:10,i:"Nessun isotopo stabile; ²⁵²Es",o:"Sintetico",p:"Solo ricerca"},
+{z:100,s:"Fm",n:"Fermio",a:"[257]",c:"attinide",x:15,y:10,i:"Nessun isotopo stabile; ²⁵⁷Fm",o:"Sintetico",p:"Solo ricerca"},
+{z:101,s:"Md",n:"Mendelevio",a:"[258]",c:"attinide",x:16,y:10,i:"Nessun isotopo stabile; ²⁵⁸Md",o:"Sintetico",p:"Solo ricerca"},
+{z:102,s:"No",n:"Nobelio",a:"[259]",c:"attinide",x:17,y:10,i:"Nessun isotopo stabile; ²⁵⁹No",o:"Sintetico",p:"Solo ricerca"},
+{z:103,s:"Lr",n:"Laurenzio",a:"[266]",c:"attinide",x:18,y:10,i:"Nessun isotopo stabile; ²⁶⁶Lr",o:"Sintetico",p:"Solo ricerca"},
+{z:104,s:"Rf",n:"Rutherfordio",a:"[267]",c:"transizione",x:4,y:7,i:"Nessun isotopo stabile; ²⁶⁷Rf",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:105,s:"Db",n:"Dubnio",a:"[268]",c:"transizione",x:5,y:7,i:"Nessun isotopo stabile; ²⁶⁸Db",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:106,s:"Sg",n:"Seaborgio",a:"[269]",c:"transizione",x:6,y:7,i:"Nessun isotopo stabile; ²⁶⁹Sg",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:107,s:"Bh",n:"Bohrio",a:"[270]",c:"transizione",x:7,y:7,i:"Nessun isotopo stabile; ²⁷⁰Bh",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:108,s:"Hs",n:"Hassio",a:"[269]",c:"transizione",x:8,y:7,i:"Nessun isotopo stabile; ²⁶⁹Hs",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:109,s:"Mt",n:"Meitnerio",a:"[278]",c:"sconosciuto",x:9,y:7,i:"Nessun isotopo stabile; ²⁷⁸Mt",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:110,s:"Ds",n:"Darmstadtio",a:"[281]",c:"sconosciuto",x:10,y:7,i:"Nessun isotopo stabile; ²⁸¹Ds",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:111,s:"Rg",n:"Roentgenio",a:"[282]",c:"sconosciuto",x:11,y:7,i:"Nessun isotopo stabile; ²⁸²Rg",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:112,s:"Cn",n:"Copernicio",a:"[285]",c:"transizione",x:12,y:7,i:"Nessun isotopo stabile; ²⁸⁵Cn",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:113,s:"Nh",n:"Nihonio",a:"[286]",c:"posttransizione",x:13,y:7,i:"Nessun isotopo stabile; ²⁸⁶Nh",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:114,s:"Fl",n:"Flerovio",a:"[289]",c:"posttransizione",x:14,y:7,i:"Nessun isotopo stabile; ²⁸⁹Fl",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:115,s:"Mc",n:"Moscovio",a:"[290]",c:"posttransizione",x:15,y:7,i:"Nessun isotopo stabile; ²⁹⁰Mc",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:116,s:"Lv",n:"Livermorio",a:"[293]",c:"posttransizione",x:16,y:7,i:"Nessun isotopo stabile; ²⁹³Lv",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:117,s:"Ts",n:"Tennesso",a:"[294]",c:"alogeno",x:17,y:7,i:"Nessun isotopo stabile; ²⁹⁴Ts",o:"Sintetico, assente in natura",p:"Solo ricerca"},
+{z:118,s:"Og",n:"Oganesson",a:"[294]",c:"nobile",x:18,y:7,i:"Nessun isotopo stabile; ²⁹⁴Og",o:"Sintetico, assente in natura",p:"Solo ricerca"}
+];
+
+/* etichette dei blocchi f nella tavola principale */
+var LABELS = [
+  { x:3, y:6, c:"lantanide", t:"57–71" },
+  { x:3, y:7, c:"attinide",  t:"89–103" }
+];
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ---- costruzione tavola ---- */
+(function buildTable(){
+  var pt = document.getElementById('ptable');
+  var html = '';
+  for (var i=0;i<LABELS.length;i++){
+    var L = LABELS[i];
+    html += '<div class="lab" style="grid-column:'+L.x+';grid-row:'+L.y+';--c:'+CC[L.c]+'">'+esc(L.t)+'</div>';
+  }
+  for (var e=0;e<EL.length;e++){
+    var el = EL[e];
+    html += '<div class="el" data-i="'+e+'" data-cat="'+el.c+'" '
+      + 'style="grid-column:'+el.x+';grid-row:'+el.y+';--c:'+CC[el.c]+'">'
+      + '<span class="z">'+el.z+'</span>'
+      + '<span class="sym">'+esc(el.s)+'</span>'
+      + '<span class="nm">'+esc(el.n)+'</span>'
+      + '</div>';
+  }
+  // spaziatore tra periodo 7 e blocchi f
+  html += '<div class="spacer" style="grid-row:8"></div>';
+  pt.innerHTML = html;
+
+  var cells = pt.querySelectorAll('.el');
+  for (var k=0;k<cells.length;k++){ cells[k].addEventListener('click', onElClick); }
+})();
+
+/* ---- legenda ---- */
+var hi = null; // categoria evidenziata
+(function buildLegend(){
+  var lg = document.getElementById('legend');
+  var h = '';
+  for (var i=0;i<CATS.length;i++){
+    h += '<button type="button" class="lg" data-k="'+CATS[i].k+'" style="--c:'+CATS[i].c+'">'+esc(CATS[i].n)+'</button>';
+  }
+  lg.innerHTML = h;
+  var bs = lg.querySelectorAll('.lg');
+  for (var k=0;k<bs.length;k++){ bs[k].addEventListener('click', onLegend); }
+  addStuds();
+  if (document.fonts && document.fonts.ready && document.fonts.ready.then){ document.fonts.ready.then(addStuds); }
+  var rt;
+  window.addEventListener('resize', function(){ if (rt) clearTimeout(rt); rt = setTimeout(addStuds, 180); });
+})();
+
+/* aggiunge a ogni etichetta un numero di stud proporzionale alla sua larghezza */
+function addStuds(){
+  var bs = document.querySelectorAll('#legend .lg');
+  for (var i=0;i<bs.length;i++){
+    var b = bs[i];
+    var old = b.querySelector('.studs');
+    if (old) b.removeChild(old);
+    var n = Math.round((b.offsetWidth - 8) / 22);   // ~1 stud ogni ~22px
+    if (n < 1) n = 1;
+    var box = document.createElement('span');
+    box.className = 'studs';
+    for (var k=0;k<n;k++){ var s = document.createElement('span'); s.className = 'stud'; box.appendChild(s); }
+    b.appendChild(box);
+  }
+}
+
+function onLegend(e){
+  var k = e.currentTarget.getAttribute('data-k');
+  hi = (hi === k) ? null : k;
+  applyHighlight();
+}
+
+function applyHighlight(){
+  var cells = document.querySelectorAll('.el');
+  for (var i=0;i<cells.length;i++){
+    if (hi && cells[i].getAttribute('data-cat') !== hi) cells[i].classList.add('dim');
+    else cells[i].classList.remove('dim');
+  }
+  var bs = document.querySelectorAll('#legend .lg');
+  for (var j=0;j<bs.length;j++){
+    if (hi && bs[j].getAttribute('data-k') !== hi) bs[j].classList.add('off');
+    else bs[j].classList.remove('off');
+  }
+}
+
+/* ---- modale ---- */
+var overlay = document.getElementById('overlay');
+var modal = document.getElementById('modal');
+
+function onElClick(e){
+  var el = EL[ parseInt(e.currentTarget.getAttribute('data-i'),10) ];
+  modal.style.setProperty('--c', CC[el.c]);
+  document.getElementById('mZ').textContent = el.z;
+  document.getElementById('mSym').textContent = el.s;
+  document.getElementById('mName').textContent = el.n;
+  document.getElementById('mCat').textContent = CN[el.c];
+  document.getElementById('mZ2').textContent = el.z;
+  document.getElementById('mA').textContent = el.a + ' u';
+  document.getElementById('mIso').textContent = el.i;
+  document.getElementById('mOcc').textContent = el.o;
+  document.getElementById('mApp').textContent = el.p;
+  overlay.classList.add('open');
+}
+function closeModal(){ overlay.classList.remove('open'); }
+
+document.getElementById('closeBtn').addEventListener('click', closeModal);
+overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' || e.keyCode === 27) closeModal(); });
+</script>
+</body>
+</html>

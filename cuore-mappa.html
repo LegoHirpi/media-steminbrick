@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il cuore – Mappa progressiva | STEM in brick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000;
+    --mint:#00e49a;
+    --orange:#e8862a;
+    --ink:#15181f;
+    --blue:#7aa3e5;   --blue-d:#5a83c5;
+    --red:#e68782;    --red-d:#c4635e;
+    --orange-n:#f1925c; --orange-nd:#cf6f3a;
+    --yellow:#ebd95f; --yellow-d:#c9b73e;
+    --purple:#dd94e8; --purple-d:#b46fc0;
+    --green:#9fd46c; --green-d:#78ad47;
+    --grey:#c3c9d1; --grey-d:#9aa1aa;
+    --teal:#6fd6c8; --teal-d:#45ad9f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:transparent;font-family:"Roboto Mono",ui-monospace,monospace;color:var(--mint)}
+  #stars{position:fixed;inset:0;z-index:0;display:none}
+  .stelle #stars,.stelle .glow{display:block}
+  html.stelle,.stelle body{background:var(--bg)}
+  .glow{display:none;position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse 70% 45% at 30% 110%, rgba(0,228,154,.20), transparent 70%),
+      radial-gradient(ellipse 60% 45% at 85% 105%, rgba(120,70,200,.25), transparent 70%);}
+
+  /* ---------- header ---------- */
+  header{position:fixed;top:0;left:0;right:0;z-index:5;padding:14px 18px;display:flex;align-items:center;gap:14px;
+    pointer-events:none}
+  .logo{font-weight:700;font-size:22px;line-height:1;letter-spacing:.5px}
+  .logo .s{color:#f2c230}.logo .t{color:#e2453c}.logo .e{color:#2fb5e8}.logo .m{color:#53c24a}
+  .logo small{display:block;font-size:12px;color:#fff;text-align:center;margin-top:2px}
+  .code{font-size:clamp(14px,2.2vw,20px);color:var(--mint)}
+  .code b{color:var(--orange);font-weight:700}
+
+  /* ---------- viewport / world ---------- */
+  #viewport{position:fixed;inset:0;z-index:1;cursor:grab;touch-action:none}
+  #viewport.dragging{cursor:grabbing}
+  #world{position:absolute;left:0;top:0;transform-origin:0 0}
+  #world.anim{transition:transform .8s cubic-bezier(.45,.05,.25,1)}
+  svg#edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+
+  .node{position:absolute;padding:14px 16px 12px;border-radius:8px;color:var(--ink);font-size:15px;line-height:1.4;text-align:center;
+    background:var(--c);box-shadow:0 5px 0 var(--cd), 0 10px 22px rgba(0,0,0,.55);
+    opacity:0;transform:scale(.6) translateY(20px);transition:opacity .45s ease, transform .55s cubic-bezier(.3,1.6,.5,1);
+    user-select:none}
+  .node.shown{opacity:1;transform:none}
+  .node.new{outline:3px solid #fff;outline-offset:4px;animation:pulse 1.6s ease-out 1}
+  @keyframes pulse{0%{outline-color:#fff}100%{outline-color:transparent}}
+  .node .studs{position:absolute;left:0;right:0;top:-8px;display:flex;justify-content:space-evenly;padding:0 10px;pointer-events:none}
+  .node .studs i{display:block;width:22px;height:9px;border-radius:4px 4px 0 0;background:var(--c);box-shadow:inset 0 -2px 0 var(--cd), inset 0 2px 0 rgba(255,255,255,.35)}
+  .node strong{font-weight:700}
+  .node.list{line-height:1.55}
+  .node.root{font-size:40px;font-weight:700;padding:18px 26px 14px}
+  .node.big{font-size:24px;font-weight:600;line-height:1.25}
+  .node.long{text-align:center;font-size:14px}
+  .blue{--c:var(--blue);--cd:var(--blue-d)}
+  .red{--c:var(--red);--cd:var(--red-d)}
+  .orange{--c:var(--orange-n);--cd:var(--orange-nd)}
+  .yellow{--c:var(--yellow);--cd:var(--yellow-d)}
+  .purple{--c:var(--purple);--cd:var(--purple-d)}
+  .green{--c:var(--green);--cd:var(--green-d)}
+  .grey{--c:var(--grey);--cd:var(--grey-d)}
+  .teal{--c:var(--teal);--cd:var(--teal-d)}
+  .node.left{text-align:left}
+  .node.root{font-size:32px;line-height:1.15}
+  path.edge.brace{stroke-width:4}
+
+  .zone{position:absolute;opacity:0;transition:opacity .6s ease;pointer-events:none}
+  .zone.shown{opacity:1}
+  .zone .lbl{position:absolute;left:50%;top:0;transform:translateX(-50%);white-space:nowrap;
+    padding:6px 18px;border-radius:20px;font-weight:700;font-size:17px;color:var(--ink);background:var(--c)}
+  .zone .bar{position:absolute;left:0;right:0;top:17px;height:18px;border:3px dashed var(--c);border-bottom:none;border-radius:10px 10px 0 0;opacity:.75}
+
+  path.edge{fill:none;stroke-linecap:round;stroke-width:6;opacity:0;transition:opacity .2s}
+  path.edge.shown{opacity:1}
+  path.edge.def{stroke-width:5}
+  path.edge.link{stroke-dasharray:4 12 !important;stroke-width:4}
+
+  /* ---------- controls ---------- */
+  .controls{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:8px;
+    background:rgba(10,14,18,.85);border:2px solid #1f3b31;border-radius:14px;padding:8px 10px;backdrop-filter:blur(4px)}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;color:#04140e;background:var(--mint);
+    font-weight:700;font-size:15px;height:44px;min-width:44px;padding:0 14px;box-shadow:0 4px 0 #00a26d;transition:transform .08s, box-shadow .08s, opacity .2s}
+  button:active{transform:translateY(3px);box-shadow:0 1px 0 #00a26d}
+  button:disabled{opacity:.35;cursor:default}
+  button.sec{background:#26343b;color:var(--mint);box-shadow:0 4px 0 #111b20}
+  button.arrow{font-size:22px;min-width:60px}
+  .counter{min-width:72px;text-align:center;font-size:14px;color:#cfe}
+  .progress{position:fixed;left:0;right:0;bottom:0;height:5px;z-index:6;background:#0b1712}
+  .progress div{height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--orange));transition:width .5s}
+  .hint{position:fixed;right:16px;bottom:84px;z-index:4;font-size:12px;color:#7fbfa8;text-align:right;opacity:.8;pointer-events:none}
+  @media (max-width:640px){
+    .controls{gap:5px;padding:6px;bottom:12px}
+    button{height:40px;font-size:13px;padding:0 10px}
+    button.arrow{min-width:50px}
+    .sec .lab{display:none}
+    .hint{display:none}
+    .counter{min-width:56px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="glow"></div>
+
+<header>
+  <div class="logo"><span class="s">S</span><span class="t">T</span><span class="e">E</span><span class="m">M</span><small>in brick</small></div>
+  <div class="code">$mappa = <b>"Il cuore"</b>;</div>
+</header>
+
+<div id="viewport">
+  <div id="world">
+    <svg id="edges"><defs id="defs"></defs></svg>
+  </div>
+</div>
+
+<div class="hint">← → per avanzare · trascina per spostarti · rotellina per lo zoom</div>
+
+<div class="controls">
+  <button class="sec" id="restart" title="Ricomincia">⟲<span class="lab">&nbsp;Inizio</span></button>
+  <button class="arrow" id="prev" title="Indietro">◀</button>
+  <div class="counter" id="counter">1 / 1</div>
+  <button class="arrow" id="next" title="Avanti">▶</button>
+  <button class="sec" id="overview" title="Vedi tutta la mappa">⤢<span class="lab">&nbsp;Mappa</span></button>
+  <button class="sec" id="fs" title="Schermo intero">⛶</button>
+</div>
+<div class="progress"><div id="bar"></div></div>
+
+<script>
+/* Sfondo trasparente di default; aggiungi ?stelle all'indirizzo per il cielo stellato */
+if(/[?&]stelle/.test(location.search)) document.documentElement.classList.add('stelle');
+/* =========================================================
+   CONTENUTI DELLA MAPPA
+   x, y = centro del riquadro; w = larghezza
+   ========================================================= */
+const NODES = [
+  // ----- note introduttive -----
+  {id:'intro1', x:-330, y:-340, w:580, c:'green', cls:'long', html:'Quello che vedi è un <strong>circuito "chiuso"</strong> che si ripete in continuazione nel nostro organismo. Per comodità inizia a leggere la mappa a partire dai <strong>polmoni</strong>, seguendo il verso della freccia.<br><br>Ricorda che tutti i passaggi compresi tra il ventricolo destro e l\'atrio sinistro (cioè il passaggio dal cuore ai polmoni attraverso le arterie polmonari e dai polmoni al cuore attraverso le vene polmonari) si chiama <strong>piccola circolazione</strong>.<br><br>I passaggi compresi invece tra il ventricolo sinistro e l\'atrio destro (cioè tutto il percorso all\'interno del corpo umano dal cuore ai vari organi e viceversa) si chiama <strong>grande circolazione</strong>.'},
+  {id:'intro2', x:330, y:-340, w:580, c:'green', cls:'long', html:'Ricorda che le caselle e i "rami" di colore <strong>rosso</strong> indicano il trasporto di sangue ossigenato (vene polmonari nella piccola circolazione e arterie nella grande circolazione), mentre le caselle e i "rami" di colore <strong>blu</strong> (arterie polmonari nella piccola circolazione e vene nella grande circolazione) indicano il trasporto di sangue ricco di anidride carbonica.<br><br>All\'interno dei polmoni il sangue si arricchisce di ossigeno e si scarica dell\'anidride carbonica e nei vari organi, al contrario, si impoverisce di ossigeno e si carica di anidride carbonica.'},
+
+  // ----- piccola circolazione (in alto) -----
+  {id:'arteriePolm', x:-560, y:0, w:250, c:'blue', html:'<strong>Arterie polmonari</strong><br>(anidride carbonica)'},
+  {id:'polmoni', x:0, y:0, w:220, c:'teal', cls:'big', html:'Polmoni'},
+  {id:'venePolm', x:460, y:0, w:240, c:'red', html:'<strong>Vene polmonari</strong><br>(ossigeno)'},
+
+  // ----- cuore -----
+  {id:'cuore', x:0, y:400, w:200, c:'red', cls:'root', html:'Cuore'},
+  {id:'atrioDx', x:-300, y:300, w:230, c:'blue', html:'<strong>Atrio destro</strong>'},
+  {id:'tricuspide', x:-300, y:400, w:250, c:'blue', html:'Valvola <strong>tricuspide</strong>'},
+  {id:'ventrDx', x:-300, y:500, w:230, c:'blue', html:'<strong>Ventricolo destro</strong>'},
+  {id:'atrioSx', x:300, y:300, w:230, c:'red', html:'<strong>Atrio sinistro</strong>'},
+  {id:'mitrale', x:300, y:400, w:260, c:'red', html:'Valvola <strong>mitrale</strong> o bicuspide'},
+  {id:'ventrSx', x:300, y:500, w:230, c:'red', html:'<strong>Ventricolo sinistro</strong>'},
+  {id:'g1', x:-300, below:'ventrDx', gap:60, w:330, c:'green', cls:'long', html:'Il sangue viene spinto dall\'atrio destro al ventricolo destro grazie alla <strong>sistole</strong> (contrazione) degli atri e alla contemporanea <strong>diastole</strong> (dilatazione) dei ventricoli'},
+  {id:'g2', x:-300, below:'g1', gap:45, w:330, c:'green', cls:'long', html:'Il sangue viene spinto dal ventricolo destro all\'arteria polmonare attraverso la <strong>sistole</strong> (contrazione) dei ventricoli'},
+  {id:'g3', x:300, below:'ventrSx', gap:60, w:330, c:'green', cls:'long', html:'Il sangue viene spinto dall\'atrio sinistro al ventricolo sinistro grazie alla <strong>sistole</strong> (contrazione) degli atri e alla contemporanea <strong>diastole</strong> (dilatazione) dei ventricoli'},
+  {id:'g4', x:300, below:'g3', gap:45, w:330, c:'green', cls:'long', html:'Il sangue viene spinto dal ventricolo sinistro all\'aorta attraverso la <strong>sistole</strong> (contrazione) dei ventricoli'},
+  {id:'battito', x:900, y:220, w:330, c:'green', cls:'long', html:'L\'insieme di sistoli e diastoli (<strong>ciclo cardiaco</strong>) forma un <strong>battito</strong>, e mediamente avviene 60-70 volte al minuto'},
+
+  // ----- grande circolazione -----
+  {id:'aorta', x:690, y:500, w:210, c:'red', html:'<strong>Arteria aorta</strong><br>(ossigeno)'},
+  {id:'tessuti', x:1100, y:500, w:400, c:'red', html:'Il sangue ossigenato va verso i tessuti di tutti gli organi del corpo per ossigenarne le cellule'},
+  {id:'cellule', x:1100, y:1200, w:380, c:'purple', html:'Le <strong>cellule</strong> dei vari organi consumano l\'ossigeno e rilasciano anidride carbonica e acqua'},
+  {id:'povero', x:300, y:1200, w:400, c:'blue', html:'Sangue povero di ossigeno e ricco di anidride carbonica e acqua'},
+  {id:'veneCave', x:-820, y:400, w:230, c:'blue', html:'Attraverso le <strong>vene cave</strong>'},
+];
+
+/* Collegamenti: [da, a, tipo, opzioni]
+   tipo 'def'  = linea senza freccia (definizione, non un passaggio)
+   tipo ''     = freccia
+   opzioni: end:'top' / 'bottom' = entra dall'alto / dal basso
+            end:'side' = parte dall'alto o dal basso ed entra di lato (off = spostamento)
+            c:'colore' = forza il colore della linea */
+const EDGES = [
+  // piccola circolazione
+  ['arteriePolm','polmoni','',{c:'blue'}],
+  ['polmoni','venePolm'],
+  ['venePolm','atrioSx','',{end:'side', off:60}],
+  // cuore sinistro
+  ['atrioSx','mitrale'], ['mitrale','ventrSx'],
+  ['ventrSx','g3','def'], ['g3','g4','def'],
+  // grande circolazione
+  ['ventrSx','aorta'], ['aorta','tessuti'],
+  ['tessuti','cellule'], ['cellule','povero'],
+  ['povero','veneCave','',{end:'bottom'}],
+  ['veneCave','atrioDx','',{end:'side'}],
+  // cuore destro
+  ['atrioDx','tricuspide'], ['tricuspide','ventrDx'],
+  ['ventrDx','g1','def'], ['g1','g2','def'],
+  ['ventrDx','arteriePolm','',{end:'bottom'}],
+];
+
+const BRACES = [];
+const ZONES = [];
+
+/* Sequenza dei passi: elementi che compaiono a ogni clic */
+const STEPS = [
+  ['cuore','intro1','intro2','polmoni'],
+  ['venePolm'],
+  ['atrioSx'],
+  ['mitrale'],
+  ['ventrSx','g3'],
+  ['aorta','g4'],
+  ['tessuti'],
+  ['cellule'],
+  ['povero'],
+  ['veneCave'],
+  ['atrioDx'],
+  ['tricuspide'],
+  ['ventrDx','g1'],
+  ['arteriePolm','g2'],
+  ['battito'],
+];
+
+/* =========================================================
+   COSTRUZIONE
+   ========================================================= */
+const world = document.getElementById('world');
+const svg = document.getElementById('edges');
+const viewport = document.getElementById('viewport');
+const els = {}, box = {}, parentOf = {};
+const COLORS = {blue:'#7aa3e5', red:'#e68782', orange:'#f1925c', yellow:'#ebd95f', purple:'#dd94e8', green:'#9fd46c', grey:'#c3c9d1', teal:'#6fd6c8'};
+
+NODES.forEach(n=>{
+  const d = document.createElement('div');
+  d.className = `node ${n.c} ${n.cls||''}`;
+  d.style.width = n.w+'px';
+  d.innerHTML = `<div class="studs">${'<i></i>'.repeat(Math.max(2,Math.floor(n.w/55)))}</div>${n.html}`;
+  world.appendChild(d);
+  els[n.id] = d;
+});
+ZONES.forEach(z=>{
+  const d = document.createElement('div');
+  d.className = `zone ${z.c}`;
+  d.innerHTML = `<div class="bar"></div><div class="lbl">${z.label}</div>`;
+  world.appendChild(d);
+  els[z.id] = d;
+});
+EDGES.forEach(([a,b,t])=>{ if(t!=='link' && !parentOf[b]) parentOf[b] = a; });
+
+function layout(){
+  NODES.forEach(n=>{
+    const d = els[n.id];
+    const h = d.offsetHeight;
+    let y = n.y;
+    if (n.below) y = box[n.below].b + (n.gap||40) + h/2;          // sotto un'altra casella
+    if (n.alignY) y = box[n.alignY].cy + (n.dy||0);                 // alla stessa altezza di un'altra
+    const l = n.x - n.w/2, t = y - h/2;
+    d.style.left = l+'px'; d.style.top = t+'px';
+    box[n.id] = {l, t, r:l+n.w, b:t+h, cx:n.x, cy:y};
+  });
+  ZONES.forEach(z=>{
+    const a = box[z.from], b = box[z.to], d = els[z.id];
+    const l = a.l - 14, r = b.r + 14;
+    d.style.left = l+'px'; d.style.top = (z.y-17)+'px'; d.style.width = (r-l)+'px'; d.style.height='60px';
+    d.querySelector('.bar').style.borderColor = COLORS[z.c];
+    box[z.id] = {l, r, t:z.y-17, b:z.y+40, cx:(l+r)/2, cy:z.y};
+  });
+  // edges
+  svg.querySelectorAll('path.edge').forEach(p=>p.remove());
+  const defs = document.getElementById('defs'); defs.innerHTML='';
+  Object.entries(COLORS).forEach(([k,v])=>{
+    defs.insertAdjacentHTML('beforeend',
+      `<marker id="ar-${k}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${v}"/></marker>`);
+  });
+  EDGES.forEach(([a,b,t,o={}])=>{
+    const A = box[a], B = box[b];
+    const col = o.c || NODES.find(n=>n.id===(t==='link'?a:b)).c;
+    const g = t==='def' ? 4 : 10; // distanza dal bordo
+    const k = t==='def' ? 0 : 1; // spazio per la punta
+    let d;
+    const horiz = B.l > A.r - 5 || B.r < A.l + 5;
+    if (o.arc){
+      const R = o.arc==='R', X = (A.cx+B.cx)/2 + (R ? 270 : -270);
+      const x1 = R ? A.r+g : A.l-g, x2 = R ? B.r+g+6 : B.l-g-6;
+      d = `M${x1},${A.cy} C${X},${A.cy} ${X},${B.cy} ${x2},${B.cy}`;
+    } else if (o.end==='bottom'){
+      const right = B.cx > A.cx;
+      const x1 = right ? A.r+g : A.l-g, x2 = B.cx + (o.off||0), y2 = B.b+g+8*k;
+      d = `M${x1},${A.cy} C${x2},${A.cy} ${x2},${A.cy} ${x2},${y2}`;
+    } else if (o.end==='top'){
+      const right = B.cx > A.cx;
+      const x1 = right ? A.r+g : A.l-g, x2 = B.cx + (o.off||0), y2 = B.t-g-8*k;
+      d = `M${x1},${A.cy} C${x2},${A.cy} ${x2},${A.cy} ${x2},${y2}`;
+    } else if (o.end==='side'){
+      const right = B.cx > A.cx;
+      const x1 = A.cx + (o.off||0), y1 = B.cy > A.cy ? A.b+g : A.t-g, x2 = right ? B.l-g-6*k : B.r+g+6*k;
+      d = `M${x1},${y1} C${x1},${B.cy} ${x1},${B.cy} ${x2},${B.cy}`;
+    } else if (t==='link'){
+      // dal basso di A al lato destro di B
+      const x1=A.cx, y1=A.b+g, x2=B.r+g+6, y2=B.cy;
+      d = `M${x1},${y1} C${x1},${y2} ${x1},${y2} ${x2},${y2}`;
+    } else if (horiz && Math.abs(B.cy - A.cy) < 40){
+      const right = B.l > A.r - 5;
+      const x1 = right? A.r+g : A.l-g, x2 = right? B.l-g-6*k : B.r+g+6*k;
+      d = `M${x1},${A.cy} L${x2},${B.cy}`;
+    } else if (horiz && t!=='def' && Math.abs((B.l > A.r - 5 ? B.l - A.r : A.l - B.r)) < 150){
+      // poco spazio orizzontale e grande dislivello: linea a gomito
+      // (scende in verticale, poi entra in orizzontale nel riquadro)
+      const right = B.l > A.r - 5, down = B.cy > A.cy;
+      const x0 = right ? Math.min(A.cx, B.l - 90) : Math.max(A.cx, B.r + 90);
+      const y1 = down ? A.b + g : A.t - g;
+      const x2 = right ? B.l - g - 6 : B.r + g + 6;
+      const R = 30, sx = right ? 1 : -1, sy = down ? 1 : -1;
+      d = `M${x0},${y1} L${x0},${B.cy - sy*R} Q${x0},${B.cy} ${x0 + sx*R},${B.cy} L${x2},${B.cy}`;
+    } else if (horiz){
+      const right = B.l > A.r - 5;
+      const x1 = right? A.r+g : A.l-g, x2 = right? B.l-g-6*k : B.r+g+6*k;
+      const mx = (x1+x2)/2, by = B.cy + (o.dy||0);
+      d = `M${x1},${A.cy} C${mx},${A.cy} ${mx},${by} ${x2},${by}`;
+    } else {
+      const down = B.cy > A.cy;
+      const y1 = down? A.b+g : A.t-g, y2 = down? B.t-g-8*k : B.b+g+8*k;
+      const my = (y1+y2)/2;
+      d = `M${A.cx},${y1} C${A.cx},${my} ${B.cx},${my} ${B.cx},${y2}`;
+    }
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d', d);
+    p.setAttribute('class','edge'+(t?' '+t:''));
+    p.setAttribute('stroke', COLORS[col]);
+    if(t!=='def') p.setAttribute('marker-end', `url(#ar-${col})`);
+    p.dataset.to = b; p.dataset.from = a;
+    if (o.id) p.dataset.id = o.id;
+    p.dataset.delay = o.delay || 0;
+    svg.appendChild(p);
+  });
+  // parentesi dei gruppi
+  BRACES.forEach(br=>{
+    const F = box[br.from], T = box[br.to], L = box[br.label];
+    const left = L.cx < F.cx, sg = left ? -1 : 1;   // etichetta a sinistra o a destra del gruppo
+    const gx = left ? Math.min(F.l, T.l) - 18 : Math.max(F.r, T.r) + 18, top = F.t + 4, bot = T.b - 4, my = (top+bot)/2;
+    const lx = left ? L.r + 10 : L.l - 10;
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d', `M${gx-10*sg},${top} Q${gx},${top} ${gx},${top+10} L${gx},${bot-10} Q${gx},${bot} ${gx-10*sg},${bot} M${gx},${my} L${lx},${L.cy}`);
+    p.setAttribute('class','edge brace');
+    p.setAttribute('stroke', COLORS[NODES.find(n=>n.id===br.label).c]);
+    p.dataset.to = br.label; p.dataset.from = br.label;
+    svg.appendChild(p);
+  });
+  applyStep(false);
+}
+
+/* =========================================================
+   PASSI
+   ========================================================= */
+let step = 0;
+const counter = document.getElementById('counter');
+const bar = document.getElementById('bar');
+const prevB = document.getElementById('prev'), nextB = document.getElementById('next');
+
+function visibleSet(upTo){
+  const s = new Set();
+  for(let i=0;i<=upTo;i++) STEPS[i].forEach(id=>s.add(id));
+  return s;
+}
+function applyStep(animate=true, focus=true){
+  const vis = visibleSet(step);
+  const fresh = new Set(STEPS[step]);
+  Object.entries(els).forEach(([id,el])=>{
+    el.classList.toggle('shown', vis.has(id));
+    el.classList.remove('new');
+  });
+  if(animate) STEPS[step].forEach(id=>{ if(els[id] && els[id].classList.contains('node')){ void els[id].offsetWidth; els[id].classList.add('new'); }});
+  svg.querySelectorAll('path.edge').forEach(p=>{
+    const eid = p.dataset.id;
+    let show = vis.has(p.dataset.to) && vis.has(p.dataset.from);
+    let isNew = show && (fresh.has(p.dataset.to) || fresh.has(p.dataset.from));
+    if (eid){ show = show && vis.has(eid); isNew = show && (isNew || fresh.has(eid)); }
+    const len = p.getTotalLength();
+    const delay = +p.dataset.delay || 0;
+    clearTimeout(p._t);
+    p.style.transition='none';
+    if(show && isNew && animate){
+      p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+      p.classList.remove('shown');
+      p._t = setTimeout(()=>{
+        p.classList.add('shown');
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          p.style.transition='stroke-dashoffset .6s ease, opacity .1s';
+          p.style.strokeDashoffset = 0;
+          p._t = setTimeout(()=>{ if(!p.classList.contains('link')) p.style.strokeDasharray='none'; else p.style.strokeDasharray=''; }, 650);
+        }));
+      }, delay);
+    } else {
+      p.style.strokeDasharray = p.classList.contains('link') ? '' : 'none';
+      p.style.strokeDashoffset = 0;
+      p.classList.toggle('shown', show);
+    }
+  });
+  counter.textContent = `${step+1} / ${STEPS.length}`;
+  bar.style.width = ((step+1)/STEPS.length*100)+'%';
+  prevB.disabled = step===0;
+  nextB.disabled = step===STEPS.length-1;
+  if(focus){
+    // inquadra i nuovi elementi + il loro "genitore"
+    const ids = [];
+    STEPS[step].forEach(id=>{
+      if (box[id]) ids.push(id);
+      else EDGES.forEach(([a,b,t,o={}])=>{ if(o.id===id){ ids.push(a,b); } });
+    });
+    if(STEPS[step].length <= 3) STEPS[step].forEach(id=>{ if(parentOf[id]) ids.push(parentOf[id]); });
+    if(step===0) ids.push('reni');
+    frame(ids.filter(id=>!id.startsWith('z')), animate, 1);
+  }
+}
+function go(d){
+  const n = Math.min(STEPS.length-1, Math.max(0, step+d));
+  if(n===step) return;
+  step = n; applyStep(d>0);
+}
+
+/* =========================================================
+   CAMERA (pan / zoom)
+   ========================================================= */
+let cam = {x:0, y:0, s:1};
+function setCam(c, animate){
+  cam = c;
+  world.classList.toggle('anim', !!animate);
+  world.style.transform = `translate(${cam.x}px,${cam.y}px) scale(${cam.s})`;
+}
+function viewRect(){
+  const top = 95, bottom = 90;
+  return {w: innerWidth, h: innerHeight - top - bottom, top};
+}
+function frame(ids, animate=true, maxS=1.15){
+  if(!ids.length) return;
+  let l=Infinity,t=Infinity,r=-Infinity,b=-Infinity;
+  ids.forEach(id=>{ const B=box[id]; if(!B) return; l=Math.min(l,B.l); t=Math.min(t,B.t); r=Math.max(r,B.r); b=Math.max(b,B.b); });
+  const pad = 50, V = viewRect();
+  const s = Math.min(maxS, (V.w-2*pad)/(r-l), (V.h-2*pad)/(b-t));
+  setCam({s, x: V.w/2 - (l+r)/2*s, y: V.top + V.h/2 - (t+b)/2*s}, animate);
+}
+function overview(){
+  const vis = [...visibleSet(step)];
+  frame(vis, true, 1);
+}
+
+// trascinamento e pinch
+const pointers = new Map(); let last = null, pinch0 = null;
+viewport.addEventListener('pointerdown', e=>{
+  if(e.target.closest('button')) return;
+  viewport.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  viewport.classList.add('dragging'); world.classList.remove('anim');
+  if(pointers.size===2){
+    const [a,b] = [...pointers.values()];
+    pinch0 = {d:Math.hypot(a.x-b.x,a.y-b.y), cam:{...cam}, mx:(a.x+b.x)/2, my:(a.y+b.y)/2};
+  }
+});
+viewport.addEventListener('pointermove', e=>{
+  if(!pointers.has(e.pointerId)) return;
+  const prev = pointers.get(e.pointerId);
+  pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(pointers.size===2 && pinch0){
+    const [a,b] = [...pointers.values()];
+    const d = Math.hypot(a.x-b.x,a.y-b.y);
+    zoomAt(pinch0.mx, pinch0.my, Math.max(.12, Math.min(2.5, pinch0.cam.s * d/pinch0.d)), pinch0.cam);
+  } else if(pointers.size===1){
+    setCam({...cam, x:cam.x + e.clientX-prev.x, y:cam.y + e.clientY-prev.y});
+  }
+});
+function endPtr(e){ pointers.delete(e.pointerId); if(pointers.size<2) pinch0=null; if(!pointers.size) viewport.classList.remove('dragging'); }
+viewport.addEventListener('pointerup', endPtr);
+viewport.addEventListener('pointercancel', endPtr);
+function zoomAt(px, py, ns, base=cam){
+  const wx = (px - base.x)/base.s, wy = (py - base.y)/base.s;
+  setCam({s:ns, x:px - wx*ns, y:py - wy*ns});
+}
+viewport.addEventListener('wheel', e=>{
+  e.preventDefault(); world.classList.remove('anim');
+  const f = Math.exp(-e.deltaY*0.0015);
+  zoomAt(e.clientX, e.clientY, Math.max(.12, Math.min(2.5, cam.s*f)));
+}, {passive:false});
+
+/* =========================================================
+   COMANDI
+   ========================================================= */
+nextB.onclick = ()=>go(1);
+prevB.onclick = ()=>go(-1);
+document.getElementById('restart').onclick = ()=>{ step=0; applyStep(true); };
+document.getElementById('overview').onclick = overview;
+document.getElementById('fs').onclick = ()=>{
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.().catch(()=>{});
+};
+addEventListener('keydown', e=>{
+  if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){ e.preventDefault(); go(1); }
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){ e.preventDefault(); go(-1); }
+  else if(e.key==='Home'){ step=0; applyStep(true); }
+  else if(e.key==='End'){ step=STEPS.length-1; applyStep(false, false); overview(); }
+  else if(e.key.toLowerCase()==='m'){ overview(); }
+});
+let rT; addEventListener('resize', ()=>{ clearTimeout(rT); rT=setTimeout(()=>{ drawStars(); applyStep(false); }, 150); });
+
+/* =========================================================
+   CIELO STELLATO
+   ========================================================= */
+const cv = document.getElementById('stars'), cx = cv.getContext('2d');
+let stars = [];
+function drawStars(){
+  const dpr = devicePixelRatio||1;
+  cv.width = innerWidth*dpr; cv.height = innerHeight*dpr;
+  cv.style.width = innerWidth+'px'; cv.style.height = innerHeight+'px';
+  const n = Math.round(innerWidth*innerHeight/3500);
+  stars = Array.from({length:n}, ()=>({x:Math.random()*cv.width, y:Math.random()*cv.height, r:(Math.random()<.9?1:2)*dpr, p:Math.random()*6.28, sp:.5+Math.random()*1.5}));
+}
+function tick(t){
+  cx.clearRect(0,0,cv.width,cv.height);
+  for(const s of stars){
+    const a = .35 + .65*Math.abs(Math.sin(s.p + t/1000*s.sp*.6));
+    cx.fillStyle = `rgba(255,255,255,${a})`;
+    cx.fillRect(s.x, s.y, s.r, s.r);
+  }
+  requestAnimationFrame(tick);
+}
+drawStars(); requestAnimationFrame(tick);
+
+/* avvio dopo il caricamento del font */
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(()=>{ layout(); applyStep(true); });
+</script>
+</body>
+</html>

@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="versione" content="2026-10-19 sfondo trasparente">
+<title>Punti Notevoli del Triangolo — STEMinBrick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* colori del sito per le scritte che stanno direttamente sullo sfondo */
+  --arancio-sito: #FB6500;
+  --azzurro-sito: #22D3EE;
+  --rosso: #D4312A;
+  --giallo: #F2C230;
+  --verde: #2E8B4E;
+  --azzurro: #1E88C7;
+  --nero: #26241F;
+  --crema: #FFF8EC;
+  --crema2: #FBF0DC;
+  --bordo: #E7D9BC;
+  --ombra: 0 6px 0 rgba(38,36,31,0.18);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: transparent;
+  color: var(--nero);
+  font-family: 'Nunito', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* striscia di bottoncini in alto */
+.fila-bottoni {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 0;
+  background: var(--azzurro);
+}
+.bottone {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3aa0e0;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.15), 0 2px 0 rgba(255,255,255,0.2);
+}
+
+header {
+  text-align: center;
+  padding: 36px 20px 24px;
+}
+.sopratitolo {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: .08em;
+  background: var(--nero);
+  color: var(--giallo);
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(28px, 5vw, 44px);
+  margin: 0 0 8px;
+  color: var(--arancio-sito);
+}
+header p {
+  max-width: 680px;
+  margin: 0 auto;
+  color: var(--azzurro-sito);
+  font-size: 16px;
+}
+
+/* due colonne: disegno a sinistra, pannelli a destra */
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 26px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; }
+}
+.colonna {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.riquadro {
+  background: #fff;
+  border: 3px solid var(--nero);
+  border-radius: 18px;
+  box-shadow: var(--ombra);
+  padding: 22px;
+}
+.titolo-riquadro {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 19px;
+  margin: 0 0 12px;
+}
+.suggerimento {
+  font-size: 14px;
+  color: #5b564a;
+  margin: 0 0 12px;
+}
+.solo-touch { display: none; }
+@media (pointer: coarse) {
+  .solo-touch { display: inline; }
+}
+
+/* il foglio a quadretti */
+.foglio {
+  position: relative;
+  border: 3px solid var(--nero);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #DCE5EC;
+}
+
+/* tessere lisce 2x2 che coprono la basetta quando i vertici non sono agganciati:
+   compaiono a onda dall'angolo in alto a sinistra, e spariscono a onda al contrario */
+.tessere { pointer-events: none; }
+.tessera {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(.35);
+  transition: opacity .25s ease, transform .4s cubic-bezier(.3, 1.5, .5, 1);
+  transition-delay: var(--u);
+}
+.tessere.coperto .tessera {
+  opacity: 1;
+  transform: none;
+  transition-delay: var(--d);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tessera { transition: none; }
+}
+
+/* il suggerimento cambia a seconda che i vertici siano agganciati o liberi */
+.testo-libero { display: none; }
+body.libero .testo-libero { display: inline; }
+body.libero .testo-agganciato { display: none; }
+#lavagna {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* col dito, un gesto sulla lavagna muove i vertici e non fa scorrere la pagina.
+     Va messo sull'svg (non solo sui tappini): dentro un iframe, come nell'articolo,
+     il solo controllo via script non basta a fermare lo scorrimento. */
+  touch-action: none;
+}
+#lavagna text {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  pointer-events: none;
+}
+.alone {
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.vertice { cursor: grab; touch-action: none; }
+.vertice.trascinato { cursor: grabbing; }
+/* mentre si trascina compare un alone attorno al vertice (col dito mostra anche dov'è, sotto il polpastrello) */
+.anello-presa {
+  fill: rgba(242,194,48,.28);
+  stroke: #F2C230;
+  stroke-width: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s;
+}
+.vertice.trascinato .anello-presa { opacity: 1; }
+
+.sotto-foglio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.opzioni {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opzione {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.opzione input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--verde);
+}
+.btn-secondario {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 2px solid var(--nero);
+  background: var(--crema2);
+  cursor: pointer;
+}
+
+/* pannello delle misure */
+.titoletto {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #8a8474;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 12px 0 2px;
+}
+.titoletto:first-child { margin-top: 0; }
+.riga-misura {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 2px dashed var(--bordo);
+}
+.riga-misura:last-child { border-bottom: none; }
+.campione-lato {
+  width: 24px;
+  height: 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.campione-angolo {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 5px solid transparent;
+  flex-shrink: 0;
+  transform: rotate(-45deg);
+}
+.nome-misura {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  min-width: 40px;
+}
+.valore-misura {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 15px;
+  text-align: right;
+}
+.misura-extra {
+  font-size: 13.5px;
+  color: #5b564a;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px dashed var(--bordo);
+}
+.avviso {
+  background: var(--giallo);
+  border: 2px solid var(--nero);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* elenco delle costruzioni */
+.voce {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  cursor: pointer;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 17px;
+  border-bottom: 2px dashed var(--bordo);
+}
+.voce input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--verde);
+  flex-shrink: 0;
+}
+.voce svg { flex-shrink: 0; }
+.testo-voce {
+  display: flex;
+  flex-direction: column;
+}
+.richiede {
+  display: none;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #8a8474;
+  line-height: 1.2;
+}
+.voce input:disabled ~ .testo-voce { opacity: .5; }
+.voce input:disabled ~ .testo-voce .richiede { display: block; }
+.voce input:disabled { cursor: not-allowed; }
+
+.btn-altro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 14px;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 3px solid var(--nero);
+  background: var(--giallo);
+  color: var(--nero);
+  cursor: pointer;
+}
+.btn-altro .freccia {
+  display: inline-block;
+  transition: transform .25s ease;
+}
+.btn-altro[aria-expanded="true"] .freccia { transform: rotate(180deg); }
+
+/* sotto-menu che si apre con "Mostra altro" */
+.sotto-menu {
+  margin: 12px 0 0 10px;
+  padding-left: 14px;
+  border-left: 4px solid var(--bordo);
+  animation: compare .3s ease;
+}
+.sotto-menu[hidden] { display: none; }
+.sotto-menu .titoletto { margin: 0 0 2px; }
+.sotto-menu .voce { font-size: 15.5px; padding: 8px 4px; }
+.sotto-menu .voce:last-of-type { border-bottom: none; }
+@keyframes compare {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* legenda sopra il foglio, si sposta tra gli angoli (vedi script) */
+.legenda {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 200px;
+  z-index: 2;
+  background: rgba(255,255,255,.95);
+  border: 3px solid var(--nero);
+  border-radius: 12px;
+  padding: 8px 12px 6px;
+  transform: translateX(-120%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .45s ease, opacity .25s ease;
+}
+.legenda.aperta { opacity: 1; }
+.foglio.trascinando .legenda { opacity: .18; }
+.leg-titolo {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #8a8474;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 2px;
+}
+.leg-riga {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 0;
+  border-bottom: 2px dashed var(--bordo);
+}
+.leg-riga:last-child { border-bottom: none; }
+.leg-pallino {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px var(--nero);
+  color: #fff;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.leg-nome {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.15;
+}
+.leg-desc {
+  font-size: 11.5px;
+  color: #5b564a;
+  line-height: 1.15;
+}
+/* sugli schermi stretti la legenda non copre il disegno, va sotto il foglio */
+@media (max-width: 600px) {
+  .legenda {
+    position: static;
+    width: auto;
+    border: none;
+    border-top: 3px solid var(--nero);
+    border-radius: 0;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    display: none;
+  }
+  .legenda.aperta { display: block; }
+  .foglio.trascinando .legenda { opacity: 1; }
+}
+
+footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 13px;
+  color: var(--azzurro-sito);
+}
+.versione { opacity: .7; }
+</style>
+</head>
+<body>
+
+<div class="fila-bottoni">
+  <div class="bottone"></div><div class="bottone"></div><div class="bottone"></div>
+  <div class="bottone"></div><div class="bottone"></div><div class="bottone"></div>
+  <div class="bottone"></div><div class="bottone"></div>
+</div>
+
+<header>
+  <span class="sopratitolo">STEMinBrick · Matematica con i mattoncini</span>
+  <h1>Punti Notevoli del Triangolo</h1>
+  <p>Muovi i vertici del triangolo e osserva come cambiano misure, altezze, mediane, bisettrici e assi. Qualche punto notevole può anche uscire dal triangolo!</p>
+</header>
+
+<main>
+
+  <section class="riquadro">
+    <p class="suggerimento"><span class="testo-agganciato">Trascina i bottoncini gialli (i vertici) per modificare il triangolo: si incastrano sui bottoncini della basetta. La distanza tra due bottoncini vicini vale 1.</span><span class="testo-libero">Le tessere lisce, senza bottoncini, coprono la basetta: ora i vertici scivolano dove vuoi. La distanza tra due bottoncini sotto le tessere vale sempre 1.</span><span class="solo-touch"> Col dito, per scorrere la pagina parti da fuori dal disegno.</span></p>
+    <div class="foglio" id="foglio">
+      <svg id="lavagna" viewBox="0 0 660 510" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- basetta: un bottoncino a ogni nodo della griglia (ogni 30) -->
+          <pattern id="bottoncini" x="-15" y="-15" width="30" height="30" patternUnits="userSpaceOnUse">
+            <circle cx="16.2" cy="17.4" r="8.6" fill="#B3C1CD"/>
+            <circle cx="15" cy="15" r="8.2" fill="#F1F6FA" stroke="#BCC9D4" stroke-width="1.2"/>
+            <ellipse cx="12.4" cy="11.8" rx="3.2" ry="2" fill="#ffffff" fill-opacity=".75"/>
+          </pattern>
+          <radialGradient id="sfumaturaBottone" cx="38%" cy="32%" r="75%">
+            <stop offset="0%" stop-color="#FFE9A0"/>
+            <stop offset="45%" stop-color="#F2C230"/>
+            <stop offset="100%" stop-color="#C99A00"/>
+          </radialGradient>
+        </defs>
+        <rect width="660" height="510" fill="#DCE5EC"/>
+        <rect width="660" height="510" fill="url(#bottoncini)"/>
+        <g id="gTessere" class="tessere"></g>
+        <g id="gCostruzioni"></g>
+        <g id="gLati"></g>
+        <g id="gArchi"></g>
+        <g id="gPunti"></g>
+        <g id="gEtichette"></g>
+        <g id="gVertici"></g>
+      </svg>
+      <div class="legenda" id="legenda">
+        <div class="leg-titolo">Legenda</div>
+        <div id="righeLegenda"></div>
+      </div>
+    </div>
+    <div class="sotto-foglio">
+      <div class="opzioni">
+        <label class="opzione"><input type="checkbox" id="aggancio" checked> Aggancia i vertici ai nodi della griglia</label>
+        <label class="opzione"><input type="checkbox" id="flagLegenda" checked> Legenda</label>
+      </div>
+      <button class="btn-secondario" id="btnRipristina">Ripristina triangolo</button>
+    </div>
+  </section>
+
+  <aside class="colonna">
+
+    <section class="riquadro">
+      <h2 class="titolo-riquadro">Misure</h2>
+      <div id="misure"></div>
+    </section>
+
+    <section class="riquadro">
+      <h2 class="titolo-riquadro">Costruzioni</h2>
+      <label class="voce"><input type="checkbox" id="cAltezze">
+        <svg width="38" height="10"><line x1="2" y1="5" x2="36" y2="5" stroke="#26241F" stroke-width="3" stroke-linecap="round"/></svg>
+        <span class="testo-voce">Altezze e ortocentro</span></label>
+      <label class="voce"><input type="checkbox" id="cMediane">
+        <svg width="38" height="10"><line x1="2" y1="5" x2="36" y2="5" stroke="#8D5524" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 5"/></svg>
+        <span class="testo-voce">Mediane e baricentro</span></label>
+      <label class="voce"><input type="checkbox" id="cBisettrici">
+        <svg width="38" height="10"><line x1="2" y1="5" x2="36" y2="5" stroke="#C99A00" stroke-width="3" stroke-linecap="round" stroke-dasharray="12 4 3 4"/></svg>
+        <span class="testo-voce">Bisettrici e incentro</span></label>
+      <label class="voce"><input type="checkbox" id="cAssi">
+        <svg width="38" height="10"><line x1="2" y1="5" x2="36" y2="5" stroke="#5C7080" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 6"/></svg>
+        <span class="testo-voce">Assi e circocentro</span></label>
+
+      <button type="button" class="btn-altro" id="btnAltro" aria-expanded="false" aria-controls="sottoMenu">
+        Mostra altro <span class="freccia">▾</span>
+      </button>
+      <div class="sotto-menu" id="sottoMenu" hidden>
+        <div class="titoletto">Valori sul disegno</div>
+        <label class="voce"><input type="checkbox" id="mDistCirco" disabled>
+          <span class="testo-voce">Distanza circocentro-vertici<small class="richiede">serve «Assi e circocentro»</small></span></label>
+        <label class="voce"><input type="checkbox" id="mDistIn" disabled>
+          <span class="testo-voce">Distanza incentro-lati<small class="richiede">serve «Bisettrici e incentro»</small></span></label>
+        <label class="voce"><input type="checkbox" id="mPartiMediana" disabled>
+          <span class="testo-voce">Parti della mediana<small class="richiede">serve «Mediane e baricentro»</small></span></label>
+      </div>
+    </section>
+
+  </aside>
+
+</main>
+
+<footer>Realizzato da Andrea Gramazio per STEM in Brick</footer>
+
+<script>
+// Punti notevoli del triangolo - steminbrick.com
+
+const NS = 'http://www.w3.org/2000/svg';
+const PASSO = 30;                         // un quadretto = 30 px = 1 unità
+const LARG = 660, ALT = 510, MARGINE = 16;
+
+const COLORI = {
+  lato:    { AB: '#2E8B4E', BC: '#D4312A', CA: '#1E88C7' },
+  angolo:  { A: '#8B5FBF', B: '#E8792F', C: '#D6458F' },
+  altezza: '#26241F',
+  mediana: '#8D5524',
+  bisettrice: '#C99A00',
+  bisettriceTesto: '#9A7400',
+  asse: '#5C7080',
+  asseTesto: '#44566a'
+};
+
+// posizione di partenza dei vertici (sui nodi della griglia)
+const INIZIALE = {
+  A: { x: 4 * PASSO,  y: 14 * PASSO },
+  B: { x: 17 * PASSO, y: 12 * PASSO },
+  C: { x: 8 * PASSO,  y: 3 * PASSO }
+};
+const V = {
+  A: { x: INIZIALE.A.x, y: INIZIALE.A.y },
+  B: { x: INIZIALE.B.x, y: INIZIALE.B.y },
+  C: { x: INIZIALE.C.x, y: INIZIALE.C.y }
+};
+
+// cosa è acceso nei menu
+const stato = {
+  altezze: false, mediane: false, bisettrici: false, assi: false,
+  distCirco: false, distIn: false, partiMediana: false
+};
+function acceso(k) { return stato[k]; }
+let fattoreManiglie = 1;     // di quanto sono ingranditi i tappini dei vertici (1 su schermi grandi)
+let fattoreTesto = 1;        // di quanto sono ingrandite le scritte sulla figura (1 su schermi grandi)
+
+// Misure lette dal DOM solo quando servono (all'avvio, quando cambia la finestra o
+// quando cambia la legenda): rileggerle a ogni spostamento di un vertice rallenta,
+// soprattutto sui telefoni.
+let scalaSchermo = 1;                 // pixel dello schermo per unità svg
+let larghFoglio = LARG, altFoglio = ALT;
+let dimLegenda = { w: 0, h: 0 };
+let ultimaLegenda = '';               // contenuti già scritti: evito di riscriverli se non cambiano
+let ultimeMisure = '';
+function misuraSchermo() {
+  const w = prendi('lavagna').clientWidth;
+  scalaSchermo = w ? w / LARG : 1;
+  const foglio = prendi('foglio');
+  larghFoglio = foglio.clientWidth || LARG;
+  altFoglio = foglio.clientHeight || ALT;
+  const box = prendi('legenda');
+  dimLegenda = { w: box.offsetWidth || 0, h: box.offsetHeight || 0 };
+}
+// i valori del sotto-menu si vedono solo se la costruzione relativa è accesa
+function mostraDistCirco()   { return stato.distCirco && acceso('assi'); }
+function mostraDistIn()      { return stato.distIn && acceso('bisettrici'); }
+function mostraPartiMediana() { return stato.partiMediana && acceso('mediane'); }
+
+function prendi(id) { return document.getElementById(id); }
+const lavagna = prendi('lavagna');
+const gCostruzioni = prendi('gCostruzioni');
+const gLati = prendi('gLati');
+const gArchi = prendi('gArchi');
+const gPunti = prendi('gPunti');
+const gEtichette = prendi('gEtichette');
+const gVertici = prendi('gVertici');
+const gTessere = prendi('gTessere');
+
+// ---- piccole funzioni sui vettori ----
+function meno(p, q)  { return { x: p.x - q.x, y: p.y - q.y }; }
+function piu(p, q)   { return { x: p.x + q.x, y: p.y + q.y }; }
+function per(p, k)   { return { x: p.x * k, y: p.y * k }; }
+function scalare(p, q) { return p.x * q.x + p.y * q.y; }
+function vett(p, q)  { return p.x * q.y - p.y * q.x; }
+function modulo(p)   { return Math.hypot(p.x, p.y); }
+function versore(p) {
+  const m = modulo(p) || 1;
+  return { x: p.x / m, y: p.y / m };
+}
+function dist(p, q)  { return modulo(meno(p, q)); }
+function medio(p, q) { return { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 }; }
+function limita(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function fmt(n, dec) {
+  if (dec === undefined) dec = 2;
+  return Number(n).toLocaleString('it-IT', { maximumFractionDigits: dec });
+}
+
+// ---- disegno svg ----
+function crea(tag, attr, padre) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attr) e.setAttribute(k, attr[k]);
+  if (padre) padre.appendChild(e);
+  return e;
+}
+function segmento(padre, p, q, attr) {
+  const base = { x1: p.x, y1: p.y, x2: q.x, y2: q.y, 'stroke-linecap': 'round' };
+  return crea('line', Object.assign(base, attr), padre);
+}
+function etichetta(padre, x, y, testo, colore, dim) {
+  const t = crea('text', {
+    x: x, y: y, fill: colore, 'font-size': (dim || 14) * fattoreTesto,
+    'text-anchor': 'middle', 'dominant-baseline': 'central', class: 'alone'
+  }, padre);
+  if (fattoreTesto !== 1) t.style.strokeWidth = 4 * fattoreTesto;   // l'alone bianco cresce con la scritta
+  t.textContent = testo;
+  return t;
+}
+// quadratino dell'angolo retto
+function segnoRetto(padre, F, d1, d2, lato, colore) {
+  const p1 = { x: F.x + d1.x * lato, y: F.y + d1.y * lato };
+  const p2 = { x: p1.x + d2.x * lato, y: p1.y + d2.y * lato };
+  const p3 = { x: F.x + d2.x * lato, y: F.y + d2.y * lato };
+  crea('polyline', {
+    points: p1.x + ',' + p1.y + ' ' + p2.x + ',' + p2.y + ' ' + p3.x + ',' + p3.y,
+    fill: 'none', stroke: colore, 'stroke-width': 1.8
+  }, padre);
+}
+// scrive un'etichetta a metà del segmento pq, spostata di lato di "scost"
+function etichettaSu(padre, p, q, scost, testo, colore, dim) {
+  const m = medio(p, q), d = versore(meno(q, p));
+  const n = { x: -d.y, y: d.x };
+  etichetta(padre, m.x + n.x * scost * fattoreTesto, m.y + n.y * scost * fattoreTesto, testo, colore, dim);
+}
+function angoloIn(vert, p1, p2) {
+  const c = scalare(versore(meno(p1, vert)), versore(meno(p2, vert)));
+  return Math.acos(limita(c, -1, 1)) * 180 / Math.PI;
+}
+
+// ---- geometria del triangolo ----
+function geometria() {
+  const A = V.A, B = V.B, C = V.C;
+
+  const lati = {
+    AB: { p: A, q: B, opposto: 'C' },
+    BC: { p: B, q: C, opposto: 'A' },
+    CA: { p: C, q: A, opposto: 'B' }
+  };
+  for (const k in lati) {
+    const l = lati[k];
+    l.lung = dist(l.p, l.q);        // in pixel
+    l.unita = l.lung / PASSO;       // in quadretti
+    l.medio = medio(l.p, l.q);
+  }
+
+  const vertici = {
+    A: { p: A, v1: B, v2: C, opposto: 'BC' },
+    B: { p: B, v1: C, v2: A, opposto: 'CA' },
+    C: { p: C, v1: A, v2: B, opposto: 'AB' }
+  };
+  for (const k in vertici) {
+    vertici[k].ang = angoloIn(vertici[k].p, vertici[k].v1, vertici[k].v2);
+  }
+
+  const area = Math.abs(vett(meno(B, A), meno(C, A))) / 2 / (PASSO * PASSO);
+  const t = { lati: lati, vertici: vertici, area: area, degenere: area < 0.3 };
+  t.G = { x: (A.x + B.x + C.x) / 3, y: (A.y + B.y + C.y) / 3 };   // baricentro
+  if (t.degenere) return t;
+
+  // incentro: media dei vertici pesata con i lati opposti
+  const a = lati.BC.lung, b = lati.CA.lung, c = lati.AB.lung;
+  t.I = {
+    x: (a * A.x + b * B.x + c * C.x) / (a + b + c),
+    y: (a * A.y + b * B.y + c * C.y) / (a + b + c)
+  };
+
+  // circocentro (formula con le coordinate)
+  const d = 2 * (A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y));
+  const a2 = A.x * A.x + A.y * A.y;
+  const b2 = B.x * B.x + B.y * B.y;
+  const c2 = C.x * C.x + C.y * C.y;
+  t.O = {
+    x: (a2 * (B.y - C.y) + b2 * (C.y - A.y) + c2 * (A.y - B.y)) / d,
+    y: (a2 * (C.x - B.x) + b2 * (A.x - C.x) + c2 * (B.x - A.x)) / d
+  };
+
+  // ortocentro: H = A + B + C - 2O
+  t.H = { x: A.x + B.x + C.x - 2 * t.O.x, y: A.y + B.y + C.y - 2 * t.O.y };
+
+  t.R = dist(t.O, A) / PASSO;                                   // raggio circoscritto
+  t.r = area / ((lati.AB.unita + lati.BC.unita + lati.CA.unita) / 2);   // raggio inscritto
+  return t;
+}
+
+// proiezione del punto P sulla retta pq
+function piede(P, p, q) {
+  const d = meno(q, p);
+  const t = scalare(meno(P, p), d) / scalare(d, d);
+  return { pt: piu(p, per(d, t)), t: t };
+}
+
+// ---- costruzioni ----
+function disegnaLati(t) {
+  for (const k in t.lati) {
+    const l = t.lati[k];
+    segmento(gLati, l.p, l.q, { stroke: COLORI.lato[k], 'stroke-width': 5 });
+  }
+}
+
+function disegnaAltezze(t) {
+  const tratteggio = { stroke: COLORI.altezza, 'stroke-width': 1.8, 'stroke-dasharray': '3 5' };
+  for (const k in t.vertici) {
+    const P = t.vertici[k].p;
+    const lato = t.lati[t.vertici[k].opposto];
+    const pf = piede(P, lato.p, lato.q);
+    const F = pf.pt, tt = pf.t;
+
+    // se il piede cade fuori dal lato, prolungo il lato col tratteggio
+    if (tt < 0 || tt > 1) segmento(gCostruzioni, tt < 0 ? lato.p : lato.q, F, tratteggio);
+
+    // l'altezza può proseguire fino all'ortocentro (anche fuori dal triangolo)
+    const v = meno(F, P);
+    const tH = scalare(meno(t.H, P), v) / scalare(v, v);
+    if (tH > 1) segmento(gCostruzioni, F, t.H, tratteggio);
+    else if (tH < 0) segmento(gCostruzioni, P, t.H, tratteggio);
+
+    segmento(gCostruzioni, P, F, { stroke: COLORI.altezza, 'stroke-width': 2.6 });
+
+    const dEstremo = Math.min(dist(F, lato.p), dist(F, lato.q));
+    if (tt < 0 || tt > 1 || dEstremo > 10) {
+      const versoMedio = meno(lato.medio, F);
+      const d1 = modulo(versoMedio) > 1 ? versore(versoMedio) : versore(meno(lato.q, lato.p));
+      segnoRetto(gCostruzioni, F, d1, versore(meno(P, F)), 8, COLORI.altezza);
+    }
+  }
+}
+
+function disegnaMediane(t) {
+  for (const k in t.vertici) {
+    const P = t.vertici[k].p;
+    const M = t.lati[t.vertici[k].opposto].medio;
+    segmento(gCostruzioni, P, M, { stroke: COLORI.mediana, 'stroke-width': 2.6, 'stroke-dasharray': '10 5' });
+    crea('circle', { cx: M.x, cy: M.y, r: 3.8, fill: COLORI.mediana }, gCostruzioni);
+  }
+}
+
+// punto dove la bisettrice incontra il lato opposto (teorema della bisettrice)
+function piedeBisettrice(v) {
+  const l1 = dist(v.p, v.v1), l2 = dist(v.p, v.v2);
+  return {
+    x: (l2 * v.v1.x + l1 * v.v2.x) / (l1 + l2),
+    y: (l2 * v.v1.y + l1 * v.v2.y) / (l1 + l2)
+  };
+}
+function disegnaBisettrici(t) {
+  for (const k in t.vertici) {
+    const v = t.vertici[k];
+    const D = piedeBisettrice(v);
+    segmento(gCostruzioni, v.p, D, { stroke: COLORI.bisettrice, 'stroke-width': 2.8, 'stroke-dasharray': '12 4 3 4' });
+    crea('circle', { cx: D.x, cy: D.y, r: 3.8, fill: COLORI.bisettrice }, gCostruzioni);
+  }
+}
+
+function disegnaAssi(t) {
+  for (const k in t.lati) {
+    const l = t.lati[k];
+    const M = l.medio;
+    const Vopp = V[l.opposto];
+    const d = versore(meno(l.q, l.p));
+    let n = { x: -d.y, y: d.x };
+    if (scalare(n, meno(Vopp, M)) < 0) n = { x: -n.x, y: -n.y };   // normale verso l'interno
+    const sO = scalare(meno(t.O, M), n);
+    const da = Math.min(0, sO) - 24;
+    const a = Math.max(0, sO) + 24;
+    segmento(gCostruzioni, piu(M, per(n, da)), piu(M, per(n, a)),
+      { stroke: COLORI.asse, 'stroke-width': 2.8, 'stroke-dasharray': '2 6' });
+    segnoRetto(gCostruzioni, M, d, n, 8, COLORI.asse);
+    crea('circle', { cx: M.x, cy: M.y, r: 3.8, fill: COLORI.asse }, gCostruzioni);
+  }
+}
+
+// valori che si scelgono dal sotto-menu "Mostra altro"
+function disegnaDistCirco(t) {
+  crea('circle', { cx: t.O.x, cy: t.O.y, r: t.R * PASSO, fill: 'none', stroke: COLORI.asse,
+    'stroke-width': 1.6, 'stroke-opacity': .5 }, gCostruzioni);
+  for (const k in t.vertici) {
+    const P = t.vertici[k].p;
+    segmento(gCostruzioni, t.O, P, { stroke: COLORI.asse, 'stroke-width': 2, 'stroke-dasharray': '5 4' });
+    etichettaSu(gEtichette, t.O, P, 11, fmt(dist(t.O, P) / PASSO), COLORI.asseTesto, 12.5);
+  }
+}
+
+function disegnaDistIn(t) {
+  crea('circle', { cx: t.I.x, cy: t.I.y, r: t.r * PASSO, fill: 'none', stroke: COLORI.bisettrice,
+    'stroke-width': 1.6, 'stroke-opacity': .55 }, gCostruzioni);
+  for (const k in t.lati) {
+    const l = t.lati[k];
+    const F = piede(t.I, l.p, l.q).pt;
+    segmento(gCostruzioni, t.I, F, { stroke: COLORI.bisettrice, 'stroke-width': 2.2, 'stroke-dasharray': '4 3' });
+    etichettaSu(gEtichette, t.I, F, 11, fmt(dist(t.I, F) / PASSO), COLORI.bisettriceTesto, 12.5);
+  }
+}
+
+function disegnaPartiMediana(t) {
+  for (const k in t.vertici) {
+    const P = t.vertici[k].p;
+    const M = t.lati[t.vertici[k].opposto].medio;
+    etichettaSu(gEtichette, P, t.G, -12, fmt(dist(P, t.G) / PASSO), COLORI.mediana, 12.5);
+    etichettaSu(gEtichette, t.G, M, -12, fmt(dist(t.G, M) / PASSO), COLORI.mediana, 12.5);
+  }
+}
+
+// archetti degli angoli (diventano due se ci sono le bisettrici)
+function disegnaArchi(t) {
+  const conBisettrici = acceso('bisettrici');
+  for (const k in t.vertici) {
+    const v = t.vertici[k];
+    const u = versore(meno(v.v1, v.p));
+    const w = versore(meno(v.v2, v.p));
+    const latoMin = Math.min(dist(v.p, v.v1), dist(v.p, v.v2));
+    const r = limita(latoMin * 0.4, 18 * fattoreManiglie, 36 * fattoreManiglie);
+    const verso = vett(u, w) > 0 ? 1 : 0;
+    const colore = COLORI.angolo[k];
+
+    const punto = function (dir, raggio) {
+      return { x: v.p.x + dir.x * raggio, y: v.p.y + dir.y * raggio };
+    };
+    const arco = function (d1, d2) {
+      const p1 = punto(d1, r), p2 = punto(d2, r);
+      crea('path', {
+        d: 'M ' + p1.x + ' ' + p1.y + ' A ' + r + ' ' + r + ' 0 0 ' + verso + ' ' + p2.x + ' ' + p2.y,
+        fill: 'none', stroke: colore, 'stroke-width': 4, 'stroke-linecap': 'round'
+      }, gArchi);
+    };
+    const rl = r + 18 * fattoreTesto;
+    const scrivi = function (dir, raggio, testo) {
+      const p = punto(dir, raggio);
+      etichetta(gEtichette, limita(p.x, 48 * fattoreTesto, LARG - 48 * fattoreTesto),
+        limita(p.y, 12 * fattoreTesto, ALT - 12 * fattoreTesto), testo, colore, 13);
+    };
+
+    if (!conBisettrici) {
+      arco(u, w);
+      scrivi(versore(piu(u, w)), v.ang >= 16 ? rl : rl + 14 * fattoreTesto, fmt(v.ang, 1) + '°');
+    } else {
+      const m = versore(piu(u, w));
+      arco(u, m);
+      arco(m, w);
+      const meta = fmt(v.ang / 2, 1) + '°';
+      const corda = 2 * rl * Math.sin(v.ang * Math.PI / 180 / 4);
+      const piccolo = fattoreTesto > 1;              // schermo piccolo: scritte grandi, serve più spazio
+      if (corda >= (piccolo ? 40 * fattoreTesto : 22)) {
+        // c'è spazio: una metà per parte
+        scrivi(versore(piu(u, m)), rl, meta);
+        scrivi(versore(piu(m, w)), rl, meta);
+      } else if (piccolo) {
+        // telefono: un'etichetta sola e corta ("2 × 30°")
+        scrivi(m, rl, '2 × ' + meta);
+      } else {
+        // angolo stretto: un'etichetta sola con le due metà
+        scrivi(m, r + 34, meta + ' + ' + meta);
+      }
+    }
+  }
+}
+
+function disegnaPunti(t) {
+  const punto = function (p, nome, colore) {
+    const q = Math.min(fattoreManiglie, 1.8);
+    crea('circle', { cx: p.x, cy: p.y, r: 6 * q, fill: colore, stroke: '#fff', 'stroke-width': 2.5 * q }, gPunti);
+    etichetta(gEtichette, p.x + 14 * fattoreTesto, p.y - 14 * fattoreTesto, nome, colore, 17);
+  };
+  if (acceso('altezze')) punto(t.H, 'H', COLORI.altezza);
+  if (acceso('mediane')) punto(t.G, 'G', COLORI.mediana);
+  if (acceso('bisettrici')) punto(t.I, 'I', COLORI.bisettriceTesto);
+  if (acceso('assi')) punto(t.O, 'O', COLORI.asse);
+}
+
+// lunghezze dei lati e lettere dei vertici
+function disegnaEtichette(t) {
+  for (const k in t.lati) {
+    const l = t.lati[k];
+    const n = versore(meno(l.medio, t.G));      // verso l'esterno
+    etichetta(gEtichette, l.medio.x + n.x * 20 * fattoreTesto, l.medio.y + n.y * 20 * fattoreTesto, fmt(l.unita), COLORI.lato[k], 15);
+  }
+  for (const k in t.vertici) {
+    const p = t.vertici[k].p;
+    const n = versore(meno(p, t.G));
+    const d = 30 * Math.max(fattoreManiglie, fattoreTesto * 0.9);   // le lettere stanno fuori dal tappino, anche quando è ingrandito
+    etichetta(gEtichette, p.x + n.x * d, p.y + n.y * d, k, '#26241F', 19);
+  }
+}
+
+// ---- pannello delle misure ----
+function classifica(t) {
+  const u = [t.lati.AB.unita, t.lati.BC.unita, t.lati.CA.unita];
+  const tol = 0.05;
+  const e1 = Math.abs(u[0] - u[1]) < tol;
+  const e2 = Math.abs(u[1] - u[2]) < tol;
+  const e3 = Math.abs(u[0] - u[2]) < tol;
+  let tipoLati = 'scaleno';
+  if (e1 && e2 && e3) tipoLati = 'equilatero';
+  else if (e1 || e2 || e3) tipoLati = 'isoscele';
+
+  const maxA = Math.max(t.vertici.A.ang, t.vertici.B.ang, t.vertici.C.ang);
+  let tipoAngoli = 'acutangolo';
+  if (Math.abs(maxA - 90) < 0.5) tipoAngoli = 'rettangolo';
+  else if (maxA > 90) tipoAngoli = 'ottusangolo';
+
+  return tipoLati + ' · ' + tipoAngoli;
+}
+
+function aggiornaMisure(t) {
+  let html = '<div class="titoletto">Lati</div>';
+  ['AB', 'BC', 'CA'].forEach(function (k) {
+    const c = COLORI.lato[k];
+    html += '<div class="riga-misura"><span class="campione-lato" style="background:' + c + '"></span>' +
+      '<span class="nome-misura" style="color:' + c + '">' + k + '</span>' +
+      '<span class="valore-misura" style="color:' + c + '">' + fmt(t.lati[k].unita) + '</span></div>';
+  });
+
+  html += '<div class="titoletto">Angoli</div>';
+  ['A', 'B', 'C'].forEach(function (k) {
+    const c = COLORI.angolo[k];
+    const a = t.vertici[k].ang;
+    let valore = fmt(a, 1) + '°';
+    // con le bisettrici l'angolo si spezza in due metà
+    if (acceso('bisettrici') && !t.degenere) {
+      valore = fmt(a, 1) + '° = ' + fmt(a / 2, 1) + '° + ' + fmt(a / 2, 1) + '°';
+    }
+    html += '<div class="riga-misura"><span class="campione-angolo" style="border-top-color:' + c + ';border-right-color:' + c + '"></span>' +
+      '<span class="nome-misura" style="color:' + c + '">∠' + k + '</span>' +
+      '<span class="valore-misura" style="color:' + c + '">' + valore + '</span></div>';
+  });
+
+  if (t.degenere) {
+    html += '<div class="avviso" style="margin-top:12px">Triangolo degenere: i tre vertici sono quasi allineati.</div>';
+  } else {
+    const somma = t.vertici.A.ang + t.vertici.B.ang + t.vertici.C.ang;
+    html += '<div class="misura-extra">Somma degli angoli: <b>' + fmt(somma, 1) + '°</b><br>Triangolo ' + classifica(t) + '</div>';
+  }
+  if (html !== ultimeMisure) {
+    prendi('misure').innerHTML = html;
+    ultimeMisure = html;
+  }
+}
+
+// ---- legenda ----
+// Sta in uno dei 4 angoli del foglio (as, ad, bd, bs = alto/basso, sinistra/destra).
+// Se un vertice le va sotto la sposto nell'angolo più libero.
+let angoloLegenda = 'as';
+
+function schermoStretto() {
+  return !!(window.matchMedia && window.matchMedia('(max-width:600px)').matches);
+}
+
+function posizionaLegenda(box, aperta) {
+  if (schermoStretto()) { box.style.transform = ''; return; }   // sotto il foglio, ci pensa il css
+
+  const pw = larghFoglio;
+  const ph = altFoglio;
+  const s = pw / LARG;                                  // scala svg -> pixel dello schermo
+  const lw = dimLegenda.w;
+  const lh = dimLegenda.h;
+  const m = 10;
+
+  const pos = {
+    as: { x: m,           y: m },
+    ad: { x: pw - m - lw, y: m },
+    bd: { x: pw - m - lw, y: ph - m - lh },
+    bs: { x: m,           y: ph - m - lh }
+  };
+
+  // distanza minima tra i vertici e la legenda messa in quell'angolo
+  function libero(c) {
+    let min = Infinity;
+    for (const k in V) {
+      const px = V[k].x * s, py = V[k].y * s;
+      const dx = Math.max(pos[c].x - px, 0, px - (pos[c].x + lw));
+      const dy = Math.max(pos[c].y - py, 0, py - (pos[c].y + lh));
+      min = Math.min(min, Math.hypot(dx, dy));
+    }
+    return min;
+  }
+
+  const minimo = 28 * s;
+  if (libero(angoloLegenda) < minimo) {
+    let migliore = angoloLegenda, valore = -1;
+    ['as', 'ad', 'bd', 'bs'].forEach(function (c) {
+      const l = libero(c);
+      if (l > valore) { valore = l; migliore = c; }
+    });
+    angoloLegenda = migliore;
+  }
+
+  const adestra = angoloLegenda[1] === 'd';
+  const scivola = aperta ? 0 : (adestra ? lw + 30 : -(lw + 30));
+  box.style.transform = 'translate(' + (pos[angoloLegenda].x - m + scivola) + 'px, ' + (pos[angoloLegenda].y - m) + 'px)';
+}
+
+function aggiornaLegenda(t) {
+  const elenco = [
+    ['altezze',    'H', 'Ortocentro',  'incontro delle altezze',    COLORI.altezza],
+    ['mediane',    'G', 'Baricentro',  'incontro delle mediane',    COLORI.mediana],
+    ['bisettrici', 'I', 'Incentro',    'incontro delle bisettrici', COLORI.bisettriceTesto],
+    ['assi',       'O', 'Circocentro', 'incontro degli assi',       COLORI.asseTesto]
+  ].filter(function (v) { return acceso(v[0]); });
+
+  const box = prendi('legenda');
+  const aperta = elenco.length > 0 && !t.degenere && prendi('flagLegenda').checked;
+
+  if (elenco.length) {
+    const html = elenco.map(function (v) {
+      return '<div class="leg-riga"><span class="leg-pallino" style="background:' + v[4] + '">' + v[1] + '</span>' +
+        '<span><span class="leg-nome">' + v[2] + '</span><br><span class="leg-desc">' + v[3] + '</span></span></div>';
+    }).join('');
+    if (html !== ultimaLegenda) {
+      prendi('righeLegenda').innerHTML = html;
+      ultimaLegenda = html;
+      misuraSchermo();                    // l'altezza della legenda dipende dal numero di voci
+    }
+  }
+  box.classList.toggle('aperta', aperta);
+  posizionaLegenda(box, aperta);
+}
+
+// ---- ridisegna tutto ----
+function disegna() {
+  const t = geometria();
+  posizionaVertici();
+  [gCostruzioni, gLati, gArchi, gPunti, gEtichette].forEach(function (g) { g.innerHTML = ''; });
+
+  if (!t.degenere) {
+    if (acceso('altezze')) disegnaAltezze(t);
+    if (acceso('mediane')) disegnaMediane(t);
+    if (acceso('bisettrici')) disegnaBisettrici(t);
+    if (acceso('assi')) disegnaAssi(t);
+    if (mostraDistCirco()) disegnaDistCirco(t);
+    if (mostraDistIn()) disegnaDistIn(t);
+    if (mostraPartiMediana()) disegnaPartiMediana(t);
+  }
+  disegnaLati(t);
+  if (!t.degenere) {
+    disegnaArchi(t);
+    disegnaPunti(t);
+  }
+  disegnaEtichette(t);
+  aggiornaMisure(t);
+  aggiornaLegenda(t);
+}
+
+// ---- vertici trascinabili ----
+// Il vertice da muovere si sceglie guardando quale è più vicino al punto toccato:
+// non serve centrare il tappino, col dito basta toccare vicino. Vale uguale per
+// mouse, touch e penna.
+const maniglie = {};
+const zoneSensibili = {};
+const aloni = {};
+let inTrascinamento = null;
+let idPuntatore = null;
+let scarto = { x: 0, y: 0 };      // distanza tra il punto toccato e il centro del vertice
+let daApplicare = null;           // ultimo spostamento in attesa (ne applico uno per fotogramma)
+let fotogrammaInAttesa = false;
+let numeroGlide = 0;              // serve per fermare lo scivolamento verso i bottoncini se si afferra un vertice
+const flagAggancio = prendi('aggancio');
+
+function inSvg(e) {
+  const pt = lavagna.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  return pt.matrixTransform(lavagna.getScreenCTM().inverse());
+}
+
+function spostaVertice(k, pt) {
+  let x = pt.x, y = pt.y;
+  if (flagAggancio.checked) {
+    x = limita(Math.round(x / PASSO) * PASSO, PASSO, LARG - PASSO);
+    y = limita(Math.round(y / PASSO) * PASSO, PASSO, ALT - PASSO);
+  } else {
+    x = limita(x, MARGINE, LARG - MARGINE);
+    y = limita(y, MARGINE, ALT - MARGINE);
+  }
+  if (V[k].x === x && V[k].y === y) return;       // è rimasto sullo stesso nodo: niente da ridisegnare
+  V[k] = { x: x, y: y };
+  disegna();
+}
+
+// su telefono il disegno è rimpicciolito: ingrandisco i tappini e la zona sensibile
+// in modo che restino comodi da vedere e da prendere col dito
+function posizionaVertici() {
+  const scala = scalaSchermo;                                         // pixel per unità svg
+  const f = Math.max(1, 11 / (14 * scala));                          // raggio visibile di almeno ~11 px
+  fattoreManiglie = f;
+  fattoreTesto = Math.max(1, 12.5 / (13 * scala));                   // scritte alte almeno ~12 px
+  const zona = Math.max(24, 28 / scala);                             // zona sensibile (solo per il cursore del mouse)
+  const alone = Math.max(30, 36 / scala);
+  for (const k in maniglie) {
+    maniglie[k].setAttribute('transform', 'translate(' + V[k].x + ' ' + V[k].y + ') scale(' + f + ')');
+    zoneSensibili[k].setAttribute('r', zona / f);
+    aloni[k].setAttribute('r', alone / f);
+  }
+}
+
+// vertice più vicino al punto (clientX, clientY), entro "raggio" pixel dello schermo
+function verticeVicino(clientX, clientY, raggio) {
+  const r = lavagna.getBoundingClientRect();
+  const s = r.width / LARG;
+  let trovato = null, minima = raggio;
+  for (const k in V) {
+    const d = Math.hypot(r.left + V[k].x * s - clientX, r.top + V[k].y * s - clientY);
+    if (d <= minima) { minima = d; trovato = k; }
+  }
+  return trovato;
+}
+function raggioPresa(tipo) {
+  if (tipo === 'mouse') return Math.max(24 * scalaSchermo, 18);
+  return 44;                       // col dito: si prende il vertice anche toccando a 44 px di distanza
+}
+
+// i tappini sono solo disegno: i gesti si ascoltano sull'intera lavagna
+['A', 'B', 'C'].forEach(function (k) {
+  const gh = crea('g', { class: 'vertice' }, gVertici);
+  aloni[k] = crea('circle', { r: 36, class: 'anello-presa' }, gh);
+  zoneSensibili[k] = crea('circle', { r: 24, fill: 'transparent' }, gh);
+  // vertice tondo: placca 1x1 con il bottoncino al centro
+  crea('circle', { cx: 1.5, cy: 3, r: 14, fill: '#000', 'fill-opacity': .2 }, gh);
+  crea('circle', { r: 14, fill: '#F2C230', stroke: '#26241F', 'stroke-width': 2.5 }, gh);
+  crea('circle', { r: 11.2, fill: 'none', stroke: '#fff', 'stroke-opacity': .45, 'stroke-width': 1.6 }, gh);
+  crea('circle', { r: 7.4, fill: 'url(#sfumaturaBottone)', stroke: '#8A6A00', 'stroke-width': 1.6 }, gh);
+  crea('ellipse', { cx: -2.4, cy: -3, rx: 3, ry: 2, fill: '#fff', 'fill-opacity': .65 }, gh);
+  maniglie[k] = gh;
+});
+
+lavagna.addEventListener('pointerdown', function (e) {
+  if (inTrascinamento !== null) return;                       // un vertice per volta
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  const k = verticeVicino(e.clientX, e.clientY, raggioPresa(e.pointerType));
+  if (!k) return;
+  e.preventDefault();
+  numeroGlide++;                                              // ferma un eventuale scivolamento in corso
+  inTrascinamento = k;
+  idPuntatore = e.pointerId;
+  try { lavagna.setPointerCapture(e.pointerId); } catch (err) { /* se non si può, vanno bene gli eventi sulla finestra */ }
+  maniglie[k].classList.add('trascinato');
+  prendi('foglio').classList.add('trascinando');
+  if (e.pointerType !== 'mouse') {
+    // col dito il vertice non salta sotto il polpastrello: tengo la distanza iniziale
+    const p = inSvg(e);
+    scarto = { x: V[k].x - p.x, y: V[k].y - p.y };
+  } else {
+    scarto = { x: 0, y: 0 };
+  }
+});
+
+function applicaSpostamento() {
+  if (!daApplicare) return;
+  const d = daApplicare;
+  daApplicare = null;
+  spostaVertice(d.k, d.pt);
+}
+
+window.addEventListener('pointermove', function (e) {
+  if (inTrascinamento === null || e.pointerId !== idPuntatore) return;
+  const p = inSvg(e);
+  daApplicare = { k: inTrascinamento, pt: { x: p.x + scarto.x, y: p.y + scarto.y } };
+  if (!fotogrammaInAttesa) {
+    fotogrammaInAttesa = true;
+    requestAnimationFrame(function () {
+      fotogrammaInAttesa = false;
+      applicaSpostamento();
+    });
+  }
+});
+
+function fineTrascinamento(e) {
+  if (inTrascinamento === null) return;
+  if (e && e.pointerId !== idPuntatore) return;
+  applicaSpostamento();                                       // ultimo spostamento rimasto in sospeso
+  maniglie[inTrascinamento].classList.remove('trascinato');
+  prendi('foglio').classList.remove('trascinando');
+  inTrascinamento = null;
+  idPuntatore = null;
+}
+window.addEventListener('pointerup', fineTrascinamento);
+window.addEventListener('pointercancel', fineTrascinamento);
+
+// col dito, se il tocco parte vicino a un vertice blocco lo scorrimento della pagina,
+// altrimenti il browser lo prenderebbe per uno scroll e interromperebbe il trascinamento
+lavagna.addEventListener('touchstart', function (e) {
+  if (e.touches.length !== 1) return;
+  const t = e.touches[0];
+  if (verticeVicino(t.clientX, t.clientY, raggioPresa('touch'))) e.preventDefault();
+}, { passive: false });
+lavagna.addEventListener('touchmove', function (e) {
+  if (inTrascinamento !== null) e.preventDefault();
+}, { passive: false });
+// una pressione lunga non deve aprire menu contestuali
+lavagna.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+// ---- basetta con i bottoncini / tessere lisce ----
+// Tessere lisce (senza bottoncini) bianche, di misure e orientamenti diversi:
+// coprono tutta la basetta quando i vertici non sono agganciati.
+// I numeri casuali partono da un seme fisso, così la disposizione è sempre la stessa.
+function casuale(seme) {
+  let s = seme >>> 0;
+  return function () {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// colori delle tessere [esadecimale, peso]: ora sono tutte bianche; l'elenco resta per poterne
+// aggiungere altri (basta una riga, con il suo peso)
+const COLORI_TESSERE = [
+  ['#F7F8F9', 1]       // bianco
+];
+// forme [larghezza, altezza, peso] in bottoncini: il rettangolo si usa in entrambi gli orientamenti
+// (i pesi sono tarati perché i pezzi orizzontali e verticali risultino in numero simile:
+//  scorrendo la griglia riga per riga, i pezzi in piedi trovano posto più facilmente)
+const FORME = [
+  [4, 1, 3.2], [1, 4, 0.8],
+  [2, 2, 1.0],
+  [2, 1, 3.4], [1, 2, 1.5],
+  [1, 1, 0.7]
+];
+
+function pesca(elenco, rnd, posPeso) {
+  let totale = 0;
+  elenco.forEach(function (e) { totale += e[posPeso]; });
+  let r = rnd() * totale;
+  for (let i = 0; i < elenco.length; i++) {
+    r -= elenco[i][posPeso];
+    if (r <= 0) return i;
+  }
+  return elenco.length - 1;
+}
+function variaColore(hex, d) {          // schiarisce (d > 0) o scurisce (d < 0) un colore
+  const n = parseInt(hex.slice(1), 16);
+  const c = [n >> 16, (n >> 8) & 255, n & 255].map(function (v) { return limita(v + d, 0, 255); });
+  return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+}
+
+function creaTessere() {
+  const rnd = casuale(20261019);
+  const colonne = Math.ceil((LARG + PASSO / 2) / PASSO);     // ogni cella copre un bottoncino
+  const righe = Math.ceil((ALT + PASSO / 2) / PASSO);
+  const occupata = [];
+  for (let j = 0; j < righe; j++) occupata.push(new Array(colonne).fill(false));
+
+  // un gradiente per ogni colore
+  const defs = lavagna.querySelector('defs');
+  COLORI_TESSERE.forEach(function (g, n) {
+    const gr = crea('linearGradient', { id: 'gradTessera' + n, x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
+    crea('stop', { offset: '0%', 'stop-color': variaColore(g[0], 10) }, gr);
+    crea('stop', { offset: '100%', 'stop-color': variaColore(g[0], -10) }, gr);
+  });
+
+  const diagMax = colonne + righe;
+  for (let j = 0; j < righe; j++) {
+    for (let i = 0; i < colonne; i++) {
+      if (occupata[j][i]) continue;
+
+      // tra le forme, solo quelle che entrano nello spazio libero (1x1 entra sempre)
+      const possibili = FORME.filter(function (f) {
+        if (i + f[0] > colonne || j + f[1] > righe) return false;
+        for (let y = 0; y < f[1]; y++) {
+          for (let x = 0; x < f[0]; x++) if (occupata[j + y][i + x]) return false;
+        }
+        return true;
+      });
+      const forma = possibili[pesca(possibili, rnd, 2)];
+      for (let y = 0; y < forma[1]; y++) {
+        for (let x = 0; x < forma[0]; x++) occupata[j + y][i + x] = true;
+      }
+
+      const n = pesca(COLORI_TESSERE, rnd, 1);
+      const x0 = i * PASSO - PASSO / 2 + 0.8;
+      const y0 = j * PASSO - PASSO / 2 + 0.8;
+      const w = forma[0] * PASSO - 1.6;
+      const h = forma[1] * PASSO - 1.6;
+
+      const t = crea('g', { class: 'tessera' }, gTessere);
+      // corpo liscio con i bordi arrotondati, e un filo all'interno come il bordo di un vero tile
+      crea('rect', { x: x0, y: y0, width: w, height: h, rx: 3.5,
+        fill: 'url(#gradTessera' + n + ')', stroke: variaColore(COLORI_TESSERE[n][0], -48), 'stroke-width': 1.2 }, t);
+      crea('rect', { x: x0 + 2.6, y: y0 + 2.6, width: w - 5.2, height: h - 5.2, rx: 2,
+        fill: 'none', stroke: variaColore(COLORI_TESSERE[n][0], -30), 'stroke-opacity': .45, 'stroke-width': 1 }, t);
+
+      const diag = i + forma[0] / 2 + j + forma[1] / 2;
+      t.style.setProperty('--d', Math.round(diag * 28) + 'ms');                     // arrivo: dall'angolo in alto a sinistra
+      t.style.setProperty('--u', Math.round((diagMax - diag) * 22) + 'ms');         // partenza: al contrario
+    }
+  }
+}
+
+// i vertici scivolano fino al bottoncino più vicino
+function incastraVertici() {
+  const mio = ++numeroGlide;
+  const da = {}, a = {};
+  ['A', 'B', 'C'].forEach(function (k) {
+    da[k] = { x: V[k].x, y: V[k].y };
+    a[k] = {
+      x: limita(Math.round(V[k].x / PASSO) * PASSO, PASSO, LARG - PASSO),
+      y: limita(Math.round(V[k].y / PASSO) * PASSO, PASSO, ALT - PASSO)
+    };
+  });
+  const inizio = performance.now();
+  const durata = 450;
+  function passo(adesso) {
+    if (mio !== numeroGlide) return;                    // interrotto: qualcuno ha preso un vertice
+    const q = Math.min(1, (adesso - inizio) / durata);
+    const e = 1 - Math.pow(1 - q, 3);                   // rallenta verso la fine
+    for (const k in a) {
+      V[k] = { x: da[k].x + (a[k].x - da[k].x) * e, y: da[k].y + (a[k].y - da[k].y) * e };
+    }
+    disegna();
+    if (q < 1) requestAnimationFrame(passo);
+  }
+  requestAnimationFrame(passo);
+}
+
+function aggiornaModalita(animaVertici) {
+  const libero = !flagAggancio.checked;
+  gTessere.classList.toggle('coperto', libero);
+  document.body.classList.toggle('libero', libero);
+  if (!libero && animaVertici) incastraVertici();
+}
+flagAggancio.addEventListener('change', function () { aggiornaModalita(true); });
+
+prendi('btnRipristina').addEventListener('click', function () {
+  numeroGlide++;
+  ['A', 'B', 'C'].forEach(function (k) {
+    V[k] = { x: INIZIALE[k].x, y: INIZIALE[k].y };
+  });
+  disegna();
+});
+
+// ---- menu delle costruzioni e "Mostra altro" ----
+const voci = {
+  altezze: prendi('cAltezze'),
+  mediane: prendi('cMediane'),
+  bisettrici: prendi('cBisettrici'),
+  assi: prendi('cAssi')
+};
+const valori = {
+  distCirco: prendi('mDistCirco'),
+  distIn: prendi('mDistIn'),
+  partiMediana: prendi('mPartiMediana')
+};
+// per ogni valore, la costruzione che deve essere accesa
+const richiede = { distCirco: 'assi', distIn: 'bisettrici', partiMediana: 'mediane' };
+const btnAltro = prendi('btnAltro');
+const sottoMenu = prendi('sottoMenu');
+let altroAperto = false;
+
+function aggiornaMenu() {
+  for (const k in voci) voci[k].checked = stato[k];
+
+  // un valore si può spuntare solo se la sua costruzione è accesa:
+  // se la costruzione si spegne, si spegne anche il valore
+  for (const m in valori) {
+    const ok = acceso(richiede[m]);
+    if (!ok) stato[m] = false;
+    valori[m].disabled = !ok;
+    valori[m].checked = stato[m];
+  }
+  sottoMenu.hidden = !altroAperto;
+  btnAltro.setAttribute('aria-expanded', altroAperto ? 'true' : 'false');
+}
+
+Object.keys(voci).forEach(function (k) {
+  voci[k].addEventListener('change', function () {
+    stato[k] = voci[k].checked;
+    aggiornaMenu();
+    disegna();
+  });
+});
+Object.keys(valori).forEach(function (m) {
+  valori[m].addEventListener('change', function () {
+    stato[m] = valori[m].checked;
+    aggiornaMenu();
+    disegna();
+  });
+});
+btnAltro.addEventListener('click', function () {
+  altroAperto = !altroAperto;
+  aggiornaMenu();
+});
+
+prendi('flagLegenda').addEventListener('change', disegna);
+window.addEventListener('resize', function () {
+  misuraSchermo();
+  disegna();
+});
+
+creaTessere();
+aggiornaModalita(false);
+misuraSchermo();
+aggiornaMenu();
+disegna();
+</script>
+</body>
+</html>

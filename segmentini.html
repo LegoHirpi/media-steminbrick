@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Segmentini a Mattoncini — STEMinBrick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+  /* colori del sito per le scritte che stanno direttamente sullo sfondo */
+  --arancio-sito: #FB6500;
+  --azzurro-sito: #22D3EE;
+    --brick-red:#D4312A;
+    --plate-yellow:#F2C230;
+    --baseplate-green:#2E8B4E;
+    --sky-blue:#1E88C7;
+    --violet:#8B5FBF;
+    --orange:#E8792F;
+    --charcoal:#26241F;
+    --cream:#FFF8EC;
+    --cream-2:#FBF0DC;
+    --line:#E7D9BC;
+    --shadow: 0 6px 0 rgba(38,36,31,0.18);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:transparent;color:var(--charcoal);font-family:'Nunito',sans-serif;-webkit-font-smoothing:antialiased;}
+  .stud-row{display:flex;justify-content:center;gap:10px;padding:14px 0;background:var(--brick-red);}
+  .stud{width:16px;height:16px;border-radius:50%;background:#e0554d;box-shadow: inset 0 -2px 0 rgba(0,0,0,0.15), 0 2px 0 rgba(255,255,255,0.2);}
+  header{text-align:center;padding:36px 20px 20px;}
+  .eyebrow{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.08em;background:var(--charcoal);color:var(--plate-yellow);padding:5px 12px;border-radius:20px;margin-bottom:14px;}
+  h1{font-family:'Fredoka',sans-serif;font-size:clamp(28px,5vw,44px);margin:0 0 8px;color:var(--arancio-sito);}
+  header p{max-width:640px;margin:0 auto;color:var(--azzurro-sito);font-size:16px;}
+  main{max-width:880px;margin:0 auto;padding:0 20px 60px;}
+  .panel{background:#fff;border:3px solid var(--charcoal);border-radius:18px;box-shadow:var(--shadow);padding:26px;margin-bottom:26px;animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .panel-title{font-family:'Fredoka',sans-serif;font-size:20px;color:var(--charcoal);margin:0 0 18px;display:flex;align-items:center;gap:10px;}
+  .panel-title .num{
+    width:28px;height:28px;border-radius:50%;background:var(--charcoal);color:var(--cream);
+    display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
+  }
+
+  .n-tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
+  .n-btn{
+    flex:1;min-width:44px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;
+    padding:10px;border-radius:10px;border:2px solid var(--charcoal);background:var(--cream-2);cursor:pointer;
+  }
+  .n-btn.active{background:var(--sky-blue);color:#fff;}
+
+  .section-label{font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;margin:0 0 10px;color:#5b564a;}
+
+  .rel-head{display:grid;grid-template-columns:70px 1fr 70px;gap:8px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#8a8474;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;padding:0 4px;}
+  .rel-head span:nth-child(2){text-align:center;}
+  .rel-rows{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;}
+  .rel-row{
+    display:grid;grid-template-columns:70px 1fr 70px;gap:8px;align-items:center;
+    background:var(--cream-2);border:2px solid var(--line);border-radius:12px;padding:10px 12px;
+  }
+  .rel-row select{
+    font-family:'Fredoka',sans-serif;font-weight:700;font-size:15px;text-align:center;
+    padding:8px 4px;border-radius:8px;border:2px solid var(--charcoal);background:#fff;
+  }
+  .rel-frac{display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Fredoka',sans-serif;font-size:14px;}
+  .rel-frac input[type=number]{
+    width:52px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;
+    padding:6px;border-radius:8px;border:2px solid var(--charcoal);
+  }
+
+  .mode-tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .mode-btn{
+    flex:1;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;
+    padding:10px;border-radius:10px;border:2px solid var(--charcoal);background:var(--cream-2);cursor:pointer;
+  }
+  .mode-btn.active{background:var(--baseplate-green);color:#fff;}
+
+  .field-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .field{flex:1;min-width:150px;}
+  .field label{display:block;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;margin-bottom:6px;}
+  .field input[type=number], .field select{
+    width:100%;font-family:'Nunito',sans-serif;font-weight:700;font-size:15px;
+    padding:9px 12px;border-radius:10px;border:2px solid var(--charcoal);background:var(--cream-2);
+  }
+
+  .form-error{color:var(--brick-red);font-size:14px;font-family:'Nunito',sans-serif;font-weight:700;margin:0 0 12px;min-height:18px;}
+
+  .primary-btn{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;
+    padding:11px 22px;border-radius:10px;border:3px solid var(--charcoal);
+    background:var(--baseplate-green);color:#fff;cursor:pointer;
+  }
+  .primary-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .secondary-btn{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;
+    padding:8px 16px;border-radius:10px;border:2px solid var(--charcoal);
+    background:var(--cream-2);cursor:pointer;
+  }
+
+  .read-back{font-family:'Fredoka',sans-serif;font-size:15px;margin:0 0 22px;color:#5b564a;}
+  .read-back div{margin-bottom:4px;}
+  .read-back strong{color:var(--charcoal);}
+
+  .brick-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+  .brick-chip{
+    width:36px;height:36px;border-radius:8px;border:3px solid var(--charcoal);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:16px;flex-shrink:0;
+  }
+  .brick-svg-wrap{flex:1;min-width:60px;overflow-x:auto;display:flex;justify-content:center;}
+  .brick-svg-wrap svg{display:block;}
+  .brick-caption{font-family:'JetBrains Mono',monospace;font-size:13px;color:#8a8474;white-space:nowrap;}
+
+  .brick-svg-cell{stroke:var(--charcoal);stroke-width:2;stroke-linejoin:round;}
+  .brick-stud{stroke:var(--charcoal);stroke-width:1.3;stroke-linejoin:round;}
+  .stud-anim{transform-box:fill-box;transform-origin:center;animation:studPop .35s ease both;}
+  @keyframes studPop{from{opacity:0;transform:scale(.25);}to{opacity:1;transform:scale(1);}}
+  .diff-ring{fill:none;stroke:var(--brick-red);stroke-width:2.4;stroke-dasharray:3 3;animation:diffPulse 1.1s ease-in-out infinite;}
+  @keyframes diffPulse{0%,100%{stroke-opacity:1;}50%{stroke-opacity:.35;}}
+
+  .assembly-layer{overflow:visible;}
+  .slide-clone{
+    position:absolute;
+    transition: left .75s cubic-bezier(.4,0,.2,1), top .75s cubic-bezier(.4,0,.2,1);
+  }
+
+  .sum-block{margin-top:8px;padding-top:18px;border-top:2px dashed var(--line);animation:fadeIn .4s ease;}
+  .diff-caption{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--brick-red);animation:fadeIn .4s ease;}
+
+  .step-block{display:none;margin-top:18px;padding-top:18px;border-top:2px dashed var(--line);}
+  .step-block.visible{display:block;}
+  .step-line{font-family:'JetBrains Mono',monospace;font-size:15px;margin-bottom:6px;}
+  .step-line strong{color:var(--brick-red);}
+
+  .buttons-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+
+  #panel2{display:none;}
+  footer{text-align:center;padding:24px;font-size:13px;color:var(--azzurro-sito);}
+</style>
+</head>
+<body>
+
+<div class="stud-row">
+  <div class="stud"></div><div class="stud"></div><div class="stud"></div>
+  <div class="stud"></div><div class="stud"></div><div class="stud"></div>
+  <div class="stud"></div><div class="stud"></div>
+</div>
+
+<header>
+  <span class="eyebrow">STEMinBrick · Matematica con i mattoncini</span>
+  <h1>Segmentini a Mattoncini</h1>
+  <p>Schematizza un problema con più grandezze in rapporto frazionario tra loro. Ogni grandezza diventa un vero mattoncino LEGO con tanti stud quante sono le sue parti, e il calcolo dell'unità si costruisce passo passo.</p>
+</header>
+
+<main>
+
+  <div class="panel" id="panel1">
+    <p class="panel-title"><span class="num">1</span> Imposta il problema</p>
+
+    <p class="section-label">Grandezze in gioco</p>
+    <div class="n-tabs" id="nTabs">
+      <button class="n-btn" data-n="2">2</button>
+      <button class="n-btn active" data-n="3">3</button>
+      <button class="n-btn" data-n="4">4</button>
+      <button class="n-btn" data-n="5">5</button>
+      <button class="n-btn" data-n="6">6</button>
+    </div>
+
+    <p class="section-label">Relazioni tra le grandezze</p>
+    <div class="rel-head"><span>Variabile</span><span>è i ___ / ___ di</span><span>Variabile</span></div>
+    <div class="rel-rows" id="relRows"></div>
+
+    <div class="mode-tabs">
+      <button class="mode-btn active" data-mode="somma">Somma nota</button>
+      <button class="mode-btn" data-mode="differenza">Differenza nota</button>
+    </div>
+
+    <div class="field-row" id="modeFields"></div>
+
+    <p class="form-error" id="formError"></p>
+
+    <button class="primary-btn" id="buildBtn">Costruisci i mattoncini →</button>
+  </div>
+
+  <div class="panel" id="panel2">
+    <p class="panel-title"><span class="num">2</span> Mattoncini e soluzione</p>
+    <div class="read-back" id="readBack"></div>
+
+    <div id="bricksArea"></div>
+
+    <div class="buttons-row">
+      <button class="primary-btn" id="unitBtn">Calcola l'unità</button>
+      <button class="primary-btn" id="valuesBtn" disabled>Calcola i valori</button>
+    </div>
+
+    <div class="step-block" id="unitStep"></div>
+    <div class="step-block" id="valuesStep"></div>
+
+    <div class="buttons-row">
+      <button class="secondary-btn" id="resetBtn">Nuovo problema</button>
+    </div>
+  </div>
+
+</main>
+
+<footer>Realizzato da Andrea Gramazio per STEM in Brick</footer>
+
+<script>
+const LETTERS = ['A','B','C','D','E','F'];
+const COLOR_VARS = ['--brick-red','--sky-blue','--baseplate-green','--plate-yellow','--violet','--orange'];
+function getComputedColor(varName){ return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
+const COLORS = {};
+LETTERS.forEach((l,i)=>{ COLORS[l] = getComputedColor(COLOR_VARS[i]); });
+
+let N = 3;
+let edges = [];
+let mode = 'somma';
+let lastResult = null;
+
+const nTabs = document.getElementById('nTabs');
+const relRows = document.getElementById('relRows');
+const modeFields = document.getElementById('modeFields');
+const formError = document.getElementById('formError');
+const buildBtn = document.getElementById('buildBtn');
+const panel2 = document.getElementById('panel2');
+const readBack = document.getElementById('readBack');
+const bricksArea = document.getElementById('bricksArea');
+const unitBtn = document.getElementById('unitBtn');
+const valuesBtn = document.getElementById('valuesBtn');
+const unitStep = document.getElementById('unitStep');
+const valuesStep = document.getElementById('valuesStep');
+const resetBtn = document.getElementById('resetBtn');
+
+nTabs.querySelectorAll('.n-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    nTabs.querySelectorAll('.n-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    N = parseInt(btn.dataset.n);
+    setupPanel1();
+  });
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    renderModeFields();
+  });
+});
+
+function setupPanel1(){
+  edges = [];
+  for(let i=0;i<N-1;i++){
+    edges.push({num:1, den:2, x:LETTERS[i+1], y:LETTERS[0]});
+  }
+  renderRelRows();
+  renderModeFields();
+  formError.textContent = '';
+}
+
+function letterOptions(selected){
+  const letters = LETTERS.slice(0, N);
+  return letters.map(l=>`<option value="${l}" ${l===selected?'selected':''}>${l}</option>`).join('');
+}
+
+function renderRelRows(){
+  relRows.innerHTML = '';
+  edges.forEach((edge, i)=>{
+    const row = document.createElement('div');
+    row.className = 'rel-row';
+    row.innerHTML = `
+      <select class="rel-x" data-rel="${i}">${letterOptions(edge.x)}</select>
+      <div class="rel-frac">
+        è i
+        <input type="number" class="rel-num" data-rel="${i}" min="1" value="${edge.num}">
+        /
+        <input type="number" class="rel-den" data-rel="${i}" min="1" value="${edge.den}">
+        di
+      </div>
+      <select class="rel-y" data-rel="${i}">${letterOptions(edge.y)}</select>
+    `;
+    relRows.appendChild(row);
+  });
+
+  relRows.querySelectorAll('.rel-x').forEach(sel=>{
+    sel.addEventListener('change', ()=>{ edges[parseInt(sel.dataset.rel)].x = sel.value; });
+  });
+  relRows.querySelectorAll('.rel-y').forEach(sel=>{
+    sel.addEventListener('change', ()=>{ edges[parseInt(sel.dataset.rel)].y = sel.value; });
+  });
+  relRows.querySelectorAll('.rel-num').forEach(inp=>{
+    inp.addEventListener('input', ()=>{ edges[parseInt(inp.dataset.rel)].num = parseInt(inp.value) || 0; });
+  });
+  relRows.querySelectorAll('.rel-den').forEach(inp=>{
+    inp.addEventListener('input', ()=>{ edges[parseInt(inp.dataset.rel)].den = parseInt(inp.value) || 0; });
+  });
+}
+
+function renderModeFields(){
+  const letters = LETTERS.slice(0, N);
+  if(mode === 'somma'){
+    modeFields.innerHTML = `
+      <div class="field">
+        <label for="totalValue">Somma totale</label>
+        <input type="number" id="totalValue" value="200" min="0" step="any">
+      </div>
+    `;
+  } else {
+    const opts1 = letterOptions(letters[0]);
+    const opts2 = letterOptions(letters[1] || letters[0]);
+    modeFields.innerHTML = `
+      <div class="field">
+        <label for="totalValue">Differenza nota</label>
+        <input type="number" id="totalValue" value="20" min="0" step="any">
+      </div>
+      <div class="field">
+        <label for="diffVar1">Tra la variabile</label>
+        <select id="diffVar1">${opts1}</select>
+      </div>
+      <div class="field">
+        <label for="diffVar2">...e la variabile</label>
+        <select id="diffVar2">${opts2}</select>
+      </div>
+    `;
+  }
+}
+
+// ---- Fraction helpers ----
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); return b===0 ? (a||1) : gcd(b,a%b); }
+function lcm(a,b){ return Math.abs(a*b)/gcd(a,b); }
+function Frac(n,d){ if(d<0){n=-n;d=-d;} const g=gcd(n,d)||1; return {n:n/g, d:d/g}; }
+function fmul(f1,f2){ return Frac(f1.n*f2.n, f1.d*f2.d); }
+function fmt(n){ return Number(n).toLocaleString('it-IT', {maximumFractionDigits:2}); }
+
+function validateAndBuild(){
+  const letters = LETTERS.slice(0, N);
+
+  for(let i=0;i<edges.length;i++){
+    const e = edges[i];
+    if(e.x === e.y){
+      formError.textContent = 'In ogni relazione le due variabili devono essere diverse tra loro.';
+      return;
+    }
+    if(!e.num || !e.den || e.num < 1 || e.den < 1){
+      formError.textContent = 'Numeratore e denominatore devono essere numeri interi positivi.';
+      return;
+    }
+  }
+
+  const adj = {};
+  letters.forEach(l=> adj[l] = []);
+  edges.forEach(e=>{ adj[e.x].push(e); adj[e.y].push(e); });
+
+  const visited = new Set([letters[0]]);
+  const queue = [letters[0]];
+  while(queue.length){
+    const cur = queue.shift();
+    adj[cur].forEach(e=>{
+      const other = e.x === cur ? e.y : e.x;
+      if(!visited.has(other)){ visited.add(other); queue.push(other); }
+    });
+  }
+  if(visited.size !== N){
+    formError.textContent = 'Le relazioni non collegano tutte le variabili tra loro. Ogni variabile deve comparire in almeno una relazione collegata alle altre.';
+    return;
+  }
+
+  const totalValue = parseFloat(document.getElementById('totalValue').value);
+  if(!totalValue || totalValue <= 0){
+    formError.textContent = 'Inserisci un valore numerico maggiore di zero.';
+    return;
+  }
+
+  let diffVar1 = null, diffVar2 = null;
+  if(mode === 'differenza'){
+    diffVar1 = document.getElementById('diffVar1').value;
+    diffVar2 = document.getElementById('diffVar2').value;
+    if(diffVar1 === diffVar2){
+      formError.textContent = 'Scegli due variabili diverse per la differenza.';
+      return;
+    }
+  }
+
+  const value = {};
+  value[letters[0]] = Frac(1,1);
+  const visited2 = new Set([letters[0]]);
+  const queue2 = [letters[0]];
+  while(queue2.length){
+    const cur = queue2.shift();
+    adj[cur].forEach(e=>{
+      const other = e.x === cur ? e.y : e.x;
+      if(visited2.has(other)) return;
+      if(e.x === cur){
+        value[other] = fmul(value[cur], Frac(e.den, e.num));
+      } else {
+        value[other] = fmul(value[cur], Frac(e.num, e.den));
+      }
+      visited2.add(other);
+      queue2.push(other);
+    });
+  }
+
+  let commonDen = 1;
+  letters.forEach(l=>{ commonDen = lcm(commonDen, value[l].d); });
+  const segments = {};
+  let sumSegments = 0;
+  letters.forEach(l=>{
+    segments[l] = value[l].n * (commonDen / value[l].d);
+    sumSegments += segments[l];
+  });
+
+  if(sumSegments > 60 || commonDen > 90 || Math.max(...letters.map(l=>segments[l])) > 30){
+    formError.textContent = 'I rapporti inseriti generano numeri troppo grandi per un disegno leggibile. Prova con frazioni più semplici.';
+    return;
+  }
+
+  let unitValue, diffSegments = 0;
+  if(mode === 'somma'){
+    unitValue = totalValue / sumSegments;
+  } else {
+    diffSegments = Math.abs(segments[diffVar1] - segments[diffVar2]);
+    if(diffSegments === 0){
+      formError.textContent = 'Le due variabili scelte risultano uguali in base ai rapporti inseriti: la differenza non può essere il dato noto.';
+      return;
+    }
+    unitValue = totalValue / diffSegments;
+  }
+
+  formError.textContent = '';
+  lastResult = {letters, edges: edges.slice(), segments, unitValue, mode, totalValue, diffVar1, diffVar2, sumSegments, diffSegments};
+  renderPanel2();
+}
+
+// ---- Brick drawing (stessa grafica della Calcolatrice Geometrica) ----
+function darken(hex, amt){
+  const n = parseInt(hex.slice(1),16);
+  const r = Math.max(0,(n>>16)-amt), g=Math.max(0,((n>>8)&255)-amt), b=Math.max(0,(n&255)-amt);
+  return `rgb(${r},${g},${b})`;
+}
+function lighten(hex, amt){
+  const n = parseInt(hex.slice(1),16);
+  const r = Math.min(255,(n>>16)+amt), g=Math.min(255,((n>>8)&255)+amt), b=Math.min(255,(n&255)+amt);
+  return `rgb(${r},${g},${b})`;
+}
+const svgNS = 'http://www.w3.org/2000/svg';
+let studCounter = 0;
+let unitAnimationDone = false;
+
+function drawBrickRow(svgEl, colorArray, diffFlags){
+  svgEl.innerHTML = '';
+  const tileW = 22, tileH = 11, brickH = 30, studGap = 3;
+  const n = colorArray.length;
+
+  const halfDiamondH = (n + 1) * tileH;
+  const totalWidth = (n + 1) * tileW + 40;
+  const totalHeight = halfDiamondH * 2 + brickH + 50;
+  const originX = tileW + 20;
+  const originY = 25 + brickH;
+  svgEl.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+  // Larghezza e altezza fissate in pixel 1:1 con il viewBox (nessuno scaling
+  // automatico via CSS): così uno stud occupa sempre la stessa dimensione a
+  // schermo, sia che il mattoncino ne abbia 1 sia che ne abbia 20 — è il
+  // senso dell'unità di misura comune tra tutti i mattoncini.
+  svgEl.setAttribute('width', totalWidth);
+  svgEl.setAttribute('height', totalHeight);
+
+  function project(x,y,z){ return [originX + (x - y) * tileW, originY + (x + y) * tileH + z]; }
+
+  const defs = document.createElementNS(svgNS,'defs');
+  svgEl.appendChild(defs);
+  const gradientIds = {};
+  function getStudGradient(color){
+    if(gradientIds[color]) return gradientIds[color];
+    const id = 'studGrad-' + Math.abs(color.split('').reduce((a,c)=>a+c.charCodeAt(0),0)) + '-' + Math.random().toString(36).slice(2,7);
+    const grad = document.createElementNS(svgNS,'radialGradient');
+    grad.setAttribute('id', id);
+    grad.setAttribute('cx','38%'); grad.setAttribute('cy','32%'); grad.setAttribute('r','75%');
+    const stops = [[0, lighten(color,90)],[45, lighten(color,25)],[100, darken(color,10)]];
+    stops.forEach(([off,col])=>{
+      const s = document.createElementNS(svgNS,'stop');
+      s.setAttribute('offset', off+'%'); s.setAttribute('stop-color', col);
+      grad.appendChild(s);
+    });
+    defs.appendChild(grad);
+    gradientIds[color] = `url(#${id})`;
+    return gradientIds[color];
+  }
+
+  function mkPolygon(pts, fill, cls){
+    const p = document.createElementNS(svgNS,'polygon');
+    p.setAttribute('points', pts.map(pt=>pt.join(',')).join(' '));
+    p.setAttribute('fill', fill);
+    p.setAttribute('class', cls);
+    svgEl.appendChild(p);
+  }
+  function mkEllipse(parent, cx, cy, rx, ry, fill, cls){
+    const e = document.createElementNS(svgNS,'ellipse');
+    e.setAttribute('cx', cx); e.setAttribute('cy', cy);
+    e.setAttribute('rx', rx); e.setAttribute('ry', ry);
+    e.setAttribute('fill', fill);
+    if(cls) e.setAttribute('class', cls);
+    parent.appendChild(e);
+    return e;
+  }
+
+  function mkStud(cx, cyBase, rx, ry, baseColor, isDiff){
+    const g = document.createElementNS(svgNS,'g');
+    g.setAttribute('class','stud-anim');
+    g.style.animationDelay = (studCounter++ * 45) + 'ms';
+
+    const studHeight = rx * 1.05;
+    const cyTop = cyBase - studHeight;
+    const wallPath = document.createElementNS(svgNS,'path');
+    const d = `M ${cx-rx},${cyBase} Q ${cx},${cyBase + ry*2.1} ${cx+rx},${cyBase} `
+      + `L ${cx+rx},${cyTop} `
+      + `Q ${cx},${cyTop + ry*2.1} ${cx-rx},${cyTop} Z`;
+    wallPath.setAttribute('d', d);
+    wallPath.setAttribute('fill', darken(baseColor, 45));
+    wallPath.setAttribute('class', 'brick-stud');
+    g.appendChild(wallPath);
+
+    mkEllipse(g, cx, cyTop, rx, ry, getStudGradient(baseColor), 'brick-stud');
+    mkEllipse(g, cx - rx*0.3, cyTop - ry*0.35, rx*0.22, ry*0.22, lighten(baseColor, 95), '');
+
+    if(isDiff){
+      const ring = document.createElementNS(svgNS,'ellipse');
+      ring.setAttribute('cx', cx); ring.setAttribute('cy', cyTop);
+      ring.setAttribute('rx', rx*1.4); ring.setAttribute('ry', ry*1.4);
+      ring.setAttribute('class', 'diff-ring');
+      g.appendChild(ring);
+    }
+
+    svgEl.appendChild(g);
+  }
+
+  // Il corpo del mattoncino è un unico solido, senza giunture tra uno stud e
+  // l'altro: i "tratti" dello stesso colore vengono uniti in un solo blocco
+  // (come un vero mattoncino LEGO 1xN). Le giunture restano visibili solo
+  // dove cambia colore (es. nel mattoncino Somma, tra una variabile e l'altra).
+  const runs = [];
+  let runStart = 0;
+  for(let i=1;i<=n;i++){
+    if(i === n || colorArray[i] !== colorArray[runStart]){
+      runs.push({start:runStart, end:i, color:colorArray[runStart]});
+      runStart = i;
+    }
+  }
+  runs.forEach(run=>{
+    const {start,end,color} = run;
+    const top = [ project(start,0,0), project(end,0,0), project(end,1,0), project(start,1,0) ];
+    const leftFace = [ project(start,1,0), project(end,1,0), project(end,1,brickH), project(start,1,brickH) ];
+    const rightFace = [ project(end,0,0), project(end,1,0), project(end,1,brickH), project(end,0,brickH) ];
+    mkPolygon(rightFace, darken(color, 55), 'brick-svg-cell');
+    mkPolygon(leftFace, darken(color, 28), 'brick-svg-cell');
+    mkPolygon(top, color, 'brick-svg-cell');
+  });
+
+  // Gli stud si disegnano per ultimi, sopra il corpo del mattoncino, uno per
+  // ogni unità: la loro dimensione (tileW/tileH) è fissa, quindi è identica
+  // su tutti i mattoncini — è proprio il senso dell'"unità" di misura.
+  for(let xi=0; xi<n; xi++){
+    const color = colorArray[xi];
+    const top = [ project(xi,0,0), project(xi+1,0,0), project(xi+1,1,0), project(xi,1,0) ];
+    const cx = (top[0][0] + top[2][0]) / 2;
+    const cy = (top[0][1] + top[2][1]) / 2 - studGap;
+    mkStud(cx, cy, tileW*0.4, tileH*0.4, color, diffFlags && diffFlags.has(xi));
+  }
+}
+
+// ---- Animazioni: i mattoncini si spostano e si "incastrano" ----
+function makeAssemblyLayer(heightPx){
+  const layer = document.createElement('div');
+  layer.className = 'assembly-layer';
+  layer.style.position = 'relative';
+  layer.style.height = heightPx + 'px';
+  layer.style.marginTop = '4px';
+  bricksArea.appendChild(layer);
+  return layer;
+}
+
+function cloneSvgAt(layer, svgEl, layerRect){
+  const rect = svgEl.getBoundingClientRect();
+  const clone = svgEl.cloneNode(true);
+  clone.classList.add('slide-clone');
+  clone.style.width = rect.width + 'px';
+  clone.style.height = rect.height + 'px';
+  clone.style.left = (rect.left - layerRect.left) + 'px';
+  clone.style.top = (rect.top - layerRect.top) + 'px';
+  layer.appendChild(clone);
+  return {clone, width: rect.width, height: rect.height};
+}
+
+function animateSommaAssembly(onComplete){
+  const rows = Array.from(bricksArea.querySelectorAll('.brick-row'));
+  const svgs = rows.map(r => r.querySelector('svg'));
+  const maxH = Math.max(...svgs.map(s => s.getBoundingClientRect().height));
+  const layer = makeAssemblyLayer(maxH + 12);
+  const layerRect = layer.getBoundingClientRect();
+
+  const clones = svgs.map(svg => cloneSvgAt(layer, svg, layerRect));
+
+  layer.getBoundingClientRect(); // forza il reflow prima di cambiare posizione
+
+  requestAnimationFrame(()=>{
+    let x = 0;
+    clones.forEach(({clone, width, height})=>{
+      clone.style.left = x + 'px';
+      clone.style.top = ((maxH - height) / 2) + 'px';
+      x += width - 34; // le sagome si avvicinano fino quasi a toccarsi
+    });
+  });
+
+  setTimeout(()=>{
+    layer.remove();
+    onComplete();
+  }, 800);
+}
+
+// Disegna i due mattoncini della differenza impilati: il più corto sopra,
+// allineato a sinistra, appoggiato sul più lungo. Dove il corto copre il
+// lungo si vedono solo gli stud del corto; oltre la sua lunghezza, spuntano
+// gli stud "nudi" del mattoncino lungo — quelli sono la differenza.
+function drawDifferenzaComposite(svgEl, longerColor, L, shorterColor, S){
+  svgEl.innerHTML = '';
+  const tileW = 22, tileH = 11, brickH = 30, studGap = 3;
+
+  const halfDiamondH = (L + 1) * tileH;
+  const totalWidth = (L + 1) * tileW + 40;
+  const totalHeight = halfDiamondH * 2 + brickH * 2 + 60;
+  const originX = tileW + 20;
+  const originY = 30 + brickH * 2;
+  svgEl.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+  svgEl.setAttribute('width', totalWidth);
+  svgEl.setAttribute('height', totalHeight);
+
+  function project(x,y,z){ return [originX + (x - y) * tileW, originY + (x + y) * tileH + z]; }
+
+  const defs = document.createElementNS(svgNS,'defs');
+  svgEl.appendChild(defs);
+  const gradientIds = {};
+  function getStudGradient(color){
+    if(gradientIds[color]) return gradientIds[color];
+    const id = 'studGrad-' + Math.abs(color.split('').reduce((a,c)=>a+c.charCodeAt(0),0)) + '-' + Math.random().toString(36).slice(2,7);
+    const grad = document.createElementNS(svgNS,'radialGradient');
+    grad.setAttribute('id', id);
+    grad.setAttribute('cx','38%'); grad.setAttribute('cy','32%'); grad.setAttribute('r','75%');
+    [[0, lighten(color,90)],[45, lighten(color,25)],[100, darken(color,10)]].forEach(([off,col])=>{
+      const s = document.createElementNS(svgNS,'stop');
+      s.setAttribute('offset', off+'%'); s.setAttribute('stop-color', col);
+      grad.appendChild(s);
+    });
+    defs.appendChild(grad);
+    gradientIds[color] = `url(#${id})`;
+    return gradientIds[color];
+  }
+  function mkPolygon(pts, fill){
+    const p = document.createElementNS(svgNS,'polygon');
+    p.setAttribute('points', pts.map(pt=>pt.join(',')).join(' '));
+    p.setAttribute('fill', fill);
+    p.setAttribute('class', 'brick-svg-cell');
+    svgEl.appendChild(p);
+  }
+  function mkEllipse(parent, cx, cy, rx, ry, fill, cls){
+    const e = document.createElementNS(svgNS,'ellipse');
+    e.setAttribute('cx', cx); e.setAttribute('cy', cy);
+    e.setAttribute('rx', rx); e.setAttribute('ry', ry);
+    e.setAttribute('fill', fill);
+    if(cls) e.setAttribute('class', cls);
+    parent.appendChild(e);
+  }
+  function mkStud(cx, cyBase, rx, ry, baseColor, isDiff){
+    const g = document.createElementNS(svgNS,'g');
+    g.setAttribute('class','stud-anim');
+    g.style.animationDelay = (studCounter++ * 45) + 'ms';
+    const studHeight = rx * 1.05;
+    const cyTop = cyBase - studHeight;
+    const wallPath = document.createElementNS(svgNS,'path');
+    const d = `M ${cx-rx},${cyBase} Q ${cx},${cyBase + ry*2.1} ${cx+rx},${cyBase} `
+      + `L ${cx+rx},${cyTop} `
+      + `Q ${cx},${cyTop + ry*2.1} ${cx-rx},${cyTop} Z`;
+    wallPath.setAttribute('d', d);
+    wallPath.setAttribute('fill', darken(baseColor, 45));
+    wallPath.setAttribute('class', 'brick-stud');
+    g.appendChild(wallPath);
+    mkEllipse(g, cx, cyTop, rx, ry, getStudGradient(baseColor), 'brick-stud');
+    mkEllipse(g, cx - rx*0.3, cyTop - ry*0.35, rx*0.22, ry*0.22, lighten(baseColor, 95), '');
+    if(isDiff){
+      const ring = document.createElementNS(svgNS,'ellipse');
+      ring.setAttribute('cx', cx); ring.setAttribute('cy', cyTop);
+      ring.setAttribute('rx', rx*1.4); ring.setAttribute('ry', ry*1.4);
+      ring.setAttribute('class', 'diff-ring');
+      g.appendChild(ring);
+    }
+    svgEl.appendChild(g);
+  }
+
+  // Corpo del mattoncino lungo (in basso): parete e testata su tutta la
+  // lunghezza L; la superficie superiore si vede solo oltre S, dove non è
+  // coperta dal mattoncino corto.
+  const wallLong = [project(0,1,0), project(L,1,0), project(L,1,brickH), project(0,1,brickH)];
+  mkPolygon(wallLong, darken(longerColor, 28));
+  const capLong = [project(L,0,0), project(L,1,0), project(L,1,brickH), project(L,0,brickH)];
+  mkPolygon(capLong, darken(longerColor, 55));
+  if(S < L){
+    const topLong = [project(S,0,0), project(L,0,0), project(L,1,0), project(S,1,0)];
+    mkPolygon(topLong, longerColor);
+  }
+
+  // Corpo del mattoncino corto (in cima): appoggiato sul lungo, allineato a
+  // sinistra (stesso punto di partenza x=0), lungo S.
+  const z1 = -brickH;
+  const wallShort = [project(0,1,z1), project(S,1,z1), project(S,1,z1+brickH), project(0,1,z1+brickH)];
+  mkPolygon(wallShort, darken(shorterColor, 28));
+  const capShort = [project(S,0,z1), project(S,1,z1), project(S,1,z1+brickH), project(S,0,z1+brickH)];
+  mkPolygon(capShort, darken(shorterColor, 55));
+  const topShort = [project(0,0,z1), project(S,0,z1), project(S,1,z1), project(0,1,z1)];
+  mkPolygon(topShort, shorterColor);
+
+  // Stud in ordine da sinistra a destra: quelli del corto (in cima), poi
+  // quelli "nudi" del lungo che spuntano oltre S — questi ultimi sono la
+  // differenza e vengono evidenziati.
+  for(let xi=0; xi<L; xi++){
+    if(xi < S){
+      const cell = [project(xi,0,z1), project(xi+1,0,z1), project(xi+1,1,z1), project(xi,1,z1)];
+      const cx = (cell[0][0]+cell[2][0])/2, cy = (cell[0][1]+cell[2][1])/2 - studGap;
+      mkStud(cx, cy, tileW*0.4, tileH*0.4, shorterColor, false);
+    } else {
+      const cell = [project(xi,0,0), project(xi+1,0,0), project(xi+1,1,0), project(xi,1,0)];
+      const cx = (cell[0][0]+cell[2][0])/2, cy = (cell[0][1]+cell[2][1])/2 - studGap;
+      mkStud(cx, cy, tileW*0.4, tileH*0.4, longerColor, true);
+    }
+  }
+}
+
+function animateDifferenzaOverlap(varLonger, varShorter, onComplete){
+  const rows = Array.from(bricksArea.querySelectorAll('.brick-row'));
+  const rowLonger = rows.find(r => r.querySelector('.brick-chip').textContent === varLonger);
+  const rowShorter = rows.find(r => r.querySelector('.brick-chip').textContent === varShorter);
+  const svgLonger = rowLonger.querySelector('svg');
+  const svgShorter = rowShorter.querySelector('svg');
+  const rectLonger = svgLonger.getBoundingClientRect();
+  const rectShorter = svgShorter.getBoundingClientRect();
+  const maxH = Math.max(rectLonger.height, rectShorter.height);
+  const layer = makeAssemblyLayer(maxH + 12);
+  const layerRect = layer.getBoundingClientRect();
+
+  const cLonger = cloneSvgAt(layer, svgLonger, layerRect);
+  const cShorter = cloneSvgAt(layer, svgShorter, layerRect);
+
+  layer.getBoundingClientRect();
+
+  requestAnimationFrame(()=>{
+    // I due mattoncini scivolano l'uno verso l'altro, allineati a sinistra
+    // e in basso: il corto va ad appoggiarsi sopra il lungo, anticipando il
+    // risultato finale impilato.
+    cLonger.clone.style.left = '0px';
+    cLonger.clone.style.top = (maxH - cLonger.height) + 'px';
+    cShorter.clone.style.left = '0px';
+    cShorter.clone.style.top = (maxH - cLonger.height - cShorter.height * 0.6) + 'px';
+  });
+
+  setTimeout(()=>{
+    layer.remove();
+    onComplete();
+  }, 800);
+}
+
+function finalizeSomma(letters, segments, sumSegments){
+  const sumBlock = document.createElement('div');
+  sumBlock.className = 'sum-block';
+  sumBlock.innerHTML = `
+    <div class="brick-row">
+      <div class="brick-chip" style="background:var(--charcoal);">&Sigma;</div>
+      <div class="brick-svg-wrap"><svg xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <div class="brick-caption">${sumSegments} stud</div>
+    </div>
+  `;
+  bricksArea.appendChild(sumBlock);
+  const sumSvg = sumBlock.querySelector('svg');
+  let sumColors = [];
+  letters.forEach(l=>{ for(let i=0;i<segments[l];i++) sumColors.push(COLORS[l]); });
+  drawBrickRow(sumSvg, sumColors, null);
+}
+
+function finalizeDifferenza(longer, shorter, segments, diffSegments, totalValue){
+  // Il mattoncino corto è disegnato impilato sopra quello lungo, allineato
+  // a sinistra: dove i due si sovrappongono si vede solo il corto; gli stud
+  // del lungo che spuntano oltre sono la differenza, ed è lì che restano
+  // evidenziati e pulsanti.
+  const diffBlock = document.createElement('div');
+  diffBlock.className = 'sum-block';
+  diffBlock.innerHTML = `
+    <div class="brick-row">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="brick-chip" style="background:${COLORS[shorter]}">${shorter}</div>
+        <div class="brick-chip" style="background:${COLORS[longer]}">${longer}</div>
+      </div>
+      <div class="brick-svg-wrap"><svg xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <div class="brick-caption">${segments[shorter]} + ${diffSegments} stud</div>
+    </div>
+  `;
+  bricksArea.appendChild(diffBlock);
+  const svgEl = diffBlock.querySelector('svg');
+  drawDifferenzaComposite(svgEl, COLORS[longer], segments[longer], COLORS[shorter], segments[shorter]);
+
+  const cap = document.createElement('div');
+  cap.className = 'diff-caption';
+  cap.textContent = `Gli stud illuminati indicano la differenza: ${diffSegments} stud tra ${longer} e ${shorter} = ${fmt(totalValue)}`;
+  bricksArea.appendChild(cap);
+}
+
+function renderPanel2(){
+  const {letters, edges, segments, unitValue, mode, totalValue, diffVar1, diffVar2, sumSegments, diffSegments} = lastResult;
+  studCounter = 0;
+
+  readBack.innerHTML = edges.map(e=>`<div><strong>${e.x}</strong> è i ${e.num}/${e.den} di <strong>${e.y}</strong></div>`).join('')
+    + `<div>${mode==='somma' ? 'Somma nota' : 'Differenza nota tra ' + diffVar1 + ' e ' + diffVar2}: <strong>${fmt(totalValue)}</strong></div>`;
+
+  bricksArea.innerHTML = '';
+  letters.forEach(l=>{
+    const row = document.createElement('div');
+    row.className = 'brick-row';
+    row.innerHTML = `
+      <div class="brick-chip" style="background:${COLORS[l]}">${l}</div>
+      <div class="brick-svg-wrap"><svg xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <div class="brick-caption">${segments[l]} stud</div>
+    `;
+    bricksArea.appendChild(row);
+    const svgEl = row.querySelector('svg');
+    const colorArray = new Array(segments[l]).fill(COLORS[l]);
+    drawBrickRow(svgEl, colorArray, null);
+  });
+
+  unitAnimationDone = false;
+  unitStep.classList.remove('visible');
+  valuesStep.classList.remove('visible');
+  unitStep.innerHTML = '';
+  valuesStep.innerHTML = '';
+  valuesBtn.disabled = true;
+
+  panel2.style.display = 'block';
+  panel2.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+unitBtn.addEventListener('click', ()=>{
+  const {letters, segments, mode, totalValue, unitValue, sumSegments, diffSegments, diffVar1, diffVar2} = lastResult;
+
+  function showUnitLines(){
+    let line1, line2;
+    if(mode === 'somma'){
+      line1 = `${sumSegments} stud (${letters.join('+')}) = ${fmt(totalValue)}`;
+      line2 = `1 stud (l'unità) = ${fmt(unitValue)}`;
+    } else {
+      line1 = `${diffSegments} stud (${diffVar1}−${diffVar2}) = ${fmt(totalValue)}`;
+      line2 = `1 stud (l'unità) = ${fmt(unitValue)}`;
+    }
+    unitStep.innerHTML = `<div class="step-line">${line1}</div><div class="step-line"><strong>${line2}</strong></div>`;
+    unitStep.classList.add('visible');
+    valuesBtn.disabled = false;
+  }
+
+  if(unitAnimationDone){
+    // l'animazione è già arrivata a destinazione: non riparte più, mostra solo i risultati
+    showUnitLines();
+    return;
+  }
+
+  unitAnimationDone = true;
+  if(mode === 'somma'){
+    animateSommaAssembly(()=>{
+      finalizeSomma(letters, segments, sumSegments);
+      showUnitLines();
+    });
+  } else {
+    const longer = segments[diffVar1] >= segments[diffVar2] ? diffVar1 : diffVar2;
+    const shorter = longer === diffVar1 ? diffVar2 : diffVar1;
+    animateDifferenzaOverlap(longer, shorter, ()=>{
+      finalizeDifferenza(longer, shorter, segments, diffSegments, totalValue);
+      showUnitLines();
+    });
+  }
+});
+
+valuesBtn.addEventListener('click', ()=>{
+  const {letters, segments, unitValue} = lastResult;
+  valuesStep.innerHTML = letters.map(l=>{
+    const val = segments[l]*unitValue;
+    return `<div class="step-line"><strong>${l} = ${fmt(val)}</strong> (${segments[l]} stud)</div>`;
+  }).join('');
+  valuesStep.classList.add('visible');
+});
+
+resetBtn.addEventListener('click', ()=>{
+  panel2.style.display = 'none';
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+buildBtn.addEventListener('click', validateAndBuild);
+
+setupPanel1();
+</script>
+</body>
+</html>

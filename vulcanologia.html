@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Vulcanologia | STEM in brick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --mint:#00e49a; --orange:#e8862a; --yellow:#f2c230; --red:#e2453c; --blue:#2fb5e8; --green:#53c24a;
+    --ink:#e9f2ee; --soft:#9fb9ae; --cyan:#4fd8ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:transparent;font-family:"Roboto Mono",ui-monospace,monospace;color:var(--ink)}
+  /* ---------- palco 16:9 ---------- */
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #stage{position:relative;width:1280px;height:720px;flex:none;transform-origin:center center;
+    background:#000;border-radius:14px;overflow:hidden;box-shadow:0 0 0 2px #12271f, 0 20px 60px rgba(0,0,0,.6)}
+  #sky{position:absolute;inset:0}
+  .glow{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 60% 50% at 20% 115%, rgba(0,228,154,.16), transparent 70%),
+               radial-gradient(ellipse 55% 50% at 90% 110%, rgba(120,70,200,.22), transparent 70%)}
+
+  .slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .9s ease, visibility 0s linear .9s}
+  .slide.active{opacity:1;visibility:visible;transition:opacity .9s ease, visibility 0s}
+  .slide .in-r{transform:translateX(120px);opacity:0;transition:transform 1.2s cubic-bezier(.2,.8,.2,1) .25s, opacity 1s ease .25s}
+  .slide .in-l{transform:translateX(-120px);opacity:0;transition:transform 1.2s cubic-bezier(.2,.8,.2,1) .25s, opacity 1s ease .25s}
+  .slide .in-up{transform:translateY(40px);opacity:0;transition:transform 1s cubic-bezier(.2,.8,.2,1) .15s, opacity .9s ease .15s}
+  .slide.active .in-r,.slide.active .in-l,.slide.active .in-up{transform:none;opacity:1}
+
+  .abs{position:absolute}
+  h1,h2{font-weight:700;letter-spacing:-.5px;line-height:1.12;color:#fff}
+  h1{font-size:58px}
+  h2{font-size:50px}
+  h2 .bar{display:block;width:90px;height:6px;background:var(--orange);border-radius:3px;margin-top:14px}
+  p{font-size:22px;line-height:1.5;color:var(--ink)}
+  .small{font-size:18px}
+  .center{text-align:center}
+  .mint{color:var(--mint)} .orange{color:var(--orange)} .yel{color:var(--yellow)}
+  .hl{background:#fff;color:#000;padding:0 8px;border-radius:4px;font-weight:700}
+
+  /* comparse a clic */
+  .f{opacity:0;transform:translateY(16px);transition:opacity .6s ease, transform .6s ease}
+  .f.on{opacity:1;transform:none}
+  svg .f{transform:none}
+  path.draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s ease-in-out}
+  .on path.draw, path.draw.on, .slide.active path.draw.auto{stroke-dashoffset:0}
+  .dot{opacity:0;transition:opacity .15s}
+  .on .dot{opacity:1}
+
+  /* logo mattoncino */
+  .brick{position:absolute;right:22px;bottom:18px;width:46px;height:46px;z-index:5}
+  .author{position:absolute;right:80px;bottom:28px;font-weight:700;font-size:16px;color:#fff}
+  .red{color:var(--red)} .cyan{color:var(--cyan)} .blue{color:var(--blue)} .soft{color:var(--soft)} .grn{color:var(--green)}
+  sub,sup{font-size:.68em;line-height:0;position:relative;vertical-align:baseline}
+  sub{bottom:-.28em} sup{top:-.5em}
+  .nw{white-space:nowrap}
+
+  /* ---------- animazioni dei disegni ---------- */
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin{transform-box:fill-box;transform-origin:center;animation:spin 30s linear infinite}
+  .spin.r{animation-direction:reverse;animation-duration:44s}
+  .spin.s{animation-duration:60s}
+  /* orbite degli elettroni: ruotano attorno al centro dell'atomo (impostato in linea) */
+  .orb{transform-box:view-box;animation:spin 14s linear infinite}
+  .orb.o2{animation-duration:22s}.orb.o3{animation-duration:32s}
+  @keyframes legA{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.62)}}
+  @keyframes legB{0%,100%{transform:scaleY(.62)}50%{transform:scaleY(1)}}
+  .legA{transform-box:fill-box;transform-origin:50% 0;animation:legA .5s ease-in-out infinite}
+  .legB{transform-box:fill-box;transform-origin:50% 0;animation:legB .5s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .bob{animation:bob .25s ease-in-out infinite}
+  @keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.35) rotate(25deg)}}
+  .twinkle{transform-box:fill-box;transform-origin:center;animation:twinkle 1.6s ease-in-out infinite}
+  @keyframes pulseGlow{0%,100%{opacity:.75}50%{opacity:1}}
+  .pglow{animation:pulseGlow 3s ease-in-out infinite}
+  @keyframes bubble{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-70px);opacity:0}}
+  .bubble{animation:bubble 2.2s ease-in infinite}
+  @keyframes flicker{0%,100%{transform:scale(1,1)}25%{transform:scale(.92,1.08)}50%{transform:scale(1.06,.94)}75%{transform:scale(.96,1.05)}}
+  .flame{transform-box:fill-box;transform-origin:50% 100%;animation:flicker .35s ease-in-out infinite}
+  @keyframes steam{0%{transform:translateY(0) scale(.7);opacity:0}30%{opacity:.75}100%{transform:translateY(-60px) scale(1.25);opacity:0}}
+  .steam{transform-box:fill-box;transform-origin:center;animation:steam 2.6s ease-out infinite}
+  @keyframes drift{0%,100%{transform:translate(0,0)}25%{transform:translate(38px,-22px)}50%{transform:translate(64px,10px)}75%{transform:translate(22px,34px)}}
+  @keyframes drift2{0%,100%{transform:translate(0,0)}25%{transform:translate(-34px,28px)}50%{transform:translate(-62px,-8px)}75%{transform:translate(-24px,-36px)}}
+  .drift{animation:drift 6s ease-in-out infinite}.drift.b{animation-name:drift2;animation-duration:7.4s}
+  @keyframes ring{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+  .ring{transform-box:fill-box;transform-origin:center;animation:ring 1.8s ease-out infinite}
+  @keyframes rays{0%,100%{opacity:.35}50%{opacity:1}}
+  .rays{animation:rays 1.6s ease-in-out infinite}
+  @keyframes snap{0%,12%{transform:translateY(-70px)}40%,78%{transform:translateY(0)}100%{transform:translateY(-70px)}}
+  .snap{animation:snap 4s cubic-bezier(.5,0,.3,1) infinite}
+  @keyframes trackmove{from{transform:translateY(0)}to{transform:translateY(50px)}}
+  .trackmove{animation:trackmove .45s linear infinite}
+  @keyframes wobble{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+  .wobble{transform-box:fill-box;transform-origin:50% 0;animation:wobble 3s ease-in-out infinite}
+  @media (prefers-reduced-motion: reduce){
+    .spin,.orb,.legA,.legB,.bob,.twinkle,.pglow,.bubble,.flame,.steam,.drift,.ring,.rays,.snap,.wobble,.trackmove{animation:none}
+  }
+  /* ---------- comandi: barra a mattoncini ---------- */
+  .controls{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:12px;width:min(1180px,96vw);
+    background:rgba(10,14,18,.9);border:2px solid #1f3b31;border-radius:16px;padding:9px 16px;backdrop-filter:blur(4px);transition:opacity .4s}
+  .controls.hide{opacity:0}
+  .controls:hover{opacity:1}
+  .stud{flex:none;width:44px;height:44px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;cursor:pointer;
+    background:var(--mint);color:#04140e;box-shadow:inset 0 -3px 0 rgba(0,0,0,.22),0 4px 0 #00a26d}
+  .stud svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+  .stud.sec{background:#26343b;color:var(--mint);box-shadow:inset 0 -3px 0 rgba(0,0,0,.3),0 4px 0 #111b20}
+  .stud:active{transform:translateY(3px);box-shadow:inset 0 2px 0 rgba(0,0,0,.22)}
+  .stud:disabled{opacity:.35;cursor:default;filter:none}
+  /* mattoncini rettangolari con due bottoncini sopra */
+  .bricks{flex:1 1 auto;min-width:0;height:36px;display:flex;align-items:flex-end;justify-content:center;gap:5px;padding-bottom:4px}
+  .pb{position:relative;flex:1 1 0;min-width:9px;max-width:38px;height:19px;margin-top:6px;padding:0;
+    border:2px solid var(--c,#00e49a);border-radius:3px;background:#fff;cursor:pointer;transition:transform .16s ease}
+  .pb::before,.pb::after{content:"";position:absolute;top:-5px;width:20%;height:5px;
+    border:2px solid var(--c,#00e49a);border-bottom:0;border-radius:2px 2px 0 0;background:#fff}
+  .pb::before{left:12%}
+  .pb::after{right:12%}
+  .pb.done{background:var(--c,#00e49a)}
+  .pb.done::before,.pb.done::after{background:var(--c,#00e49a)}
+  .pb.now{transform:translateY(-6px);box-shadow:0 0 0 2px rgba(255,255,255,.4)}
+  .count{flex:none;min-width:4.2em;text-align:center;font:700 15px/1 "Roboto Mono",ui-monospace,monospace;color:#cfe;font-variant-numeric:tabular-nums}
+  @media (max-width:640px){ .stud{width:38px;height:38px} .stud svg{width:19px;height:19px} .count{min-width:3.4em;font-size:12px} .pb{min-width:6px} .bricks{gap:3px} }
+  /* ---------- componenti ---------- */
+  .tag{display:inline-block;background:var(--orange);color:#111;font-weight:700;font-size:16px;padding:3px 12px;border-radius:6px}
+  .tag.fis{background:var(--cyan)}
+  .chip{font-weight:700;font-size:20px;color:#111;background:var(--mint);border-radius:8px;padding:8px 14px;margin-bottom:14px;text-align:center}
+  .tbl{border-collapse:collapse;font-size:20px;border-radius:10px;overflow:hidden}
+  .tbl th{background:#2f5fb8;color:#fff;padding:8px 20px}
+  .tbl td{padding:7px 20px;text-align:center;border-top:1px solid #1d3a5f;color:#fff}
+  .tbl tr:nth-child(odd) td{background:rgba(47,95,184,.18)}
+  .tbl tr:nth-child(even) td{background:rgba(47,95,184,.32)}
+  .tbl td:first-child{text-align:left;color:#cfe}
+  .formula-box{display:inline-flex;align-items:center;gap:14px;font-size:30px;font-weight:700;color:#fff;
+    padding:14px 30px;border:3px solid var(--mint);border-radius:14px;background:rgba(0,228,154,.08)}
+  .formula-box.eq{display:inline-block;line-height:1.3}
+  .key{border-left:6px solid var(--orange);padding:6px 0 6px 18px}
+  .stag > *{opacity:0;transition:opacity .45s ease}
+  .stag.on > *{opacity:1}
+  svg text{font-family:"Roboto Mono",ui-monospace,monospace}
+
+  /* schede (stesso disegno del riepilogo delle formule) */
+  .card{background:rgba(255,255,255,.04);border:2px solid var(--cc);border-radius:16px;padding:20px 24px;box-shadow:0 7px 0 rgba(0,0,0,.35)}
+  .card-h{font-size:24px;font-weight:700;color:var(--cc);line-height:1.15}
+  .card-sub{font-size:16px;color:var(--soft);margin-top:4px}
+  .card p{font-size:18px;line-height:1.45}
+
+  /* ---------- sismologia ---------- */
+  /* le tre onde: testo a sinistra, animazione a destra */
+  .wrow{display:grid;grid-template-columns:500px 640px;gap:20px;align-items:center;width:1180px;height:156px;padding-left:22px;
+    background:rgba(255,255,255,.04);border:2px solid var(--wc);border-radius:16px;overflow:hidden;box-shadow:0 7px 0 rgba(0,0,0,.35)}
+  .wrow h3{font-size:22px;color:var(--wc);line-height:1.2}
+  .wrow p{font-size:16px;line-height:1.45;margin-top:6px}
+  /* schede del rischio */
+  .rcard{flex:1;display:flex;gap:16px;align-items:center;padding:18px 20px;min-height:200px}
+  .rcard svg{flex:none}
+  .rcard p{font-size:17px;margin-top:8px}
+  /* tabella dell'energia */
+  .etbl th{height:60px;padding:0 22px;line-height:1.2}
+  .etbl td{height:40px;padding:0 22px}
+  .etbl td:first-child{text-align:center;color:#fff;font-weight:700}
+  .etbl td:last-child{text-align:right}
+  .x32{position:absolute;font-size:15px;font-weight:700;color:#111;background:var(--orange);border-radius:6px;padding:2px 9px;white-space:nowrap}
+  /* risorse online: schede cliccabili */
+  .res{display:block;text-decoration:none;color:var(--ink);padding:12px 22px}
+  .res .card-h{font-size:22px}
+  .res p{font-size:16px;margin-top:6px}
+  .res .lnk{color:var(--cc);font-weight:700;font-size:15px}
+  .res:hover .lnk,.res:focus-visible .lnk{text-decoration:underline}
+  .res:focus-visible{outline:3px solid var(--mint);outline-offset:4px}
+  /* faglie in 3D da ruotare */
+  .fcard{flex:1;padding:12px 12px 14px;position:relative}
+  .fcard canvas{display:block;width:352px;height:250px;border-radius:10px;background:#0b1a24;cursor:grab;touch-action:none}
+  .fcard canvas:active{cursor:grabbing}
+  .fcard .card-h{font-size:21px;margin-top:10px}
+  .fcard p{font-size:15px;line-height:1.45;margin-top:6px}
+  .rhint{position:absolute;left:22px;top:20px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--soft);pointer-events:none;background:rgba(0,0,0,.5);padding:3px 8px;border-radius:6px}
+  .pf{color:#e0694f}
+  /* scosse: le case tremano quando compare la scena */
+  @keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-3px,1px)}40%{transform:translate(3px,-1px)}60%{transform:translate(-2px,-1px)}80%{transform:translate(2px,1px)}}
+  .quake.on .shk{animation:shake .16s linear 12}
+  /* la massa rocciosa che scivola lungo la faglia */
+  .slip{transition:transform .55s cubic-bezier(.6,0,.2,1.35) .25s}
+  .slip.on{transform:translate(var(--sx),var(--sy))}
+  /* onde che si allargano dall'ipocentro */
+  @keyframes ripple{0%{transform:scale(.06);opacity:.95}100%{transform:scale(1);opacity:0}}
+  .ripple{transform-box:fill-box;transform-origin:center;animation:ripple 3s ease-out infinite}
+  @media (prefers-reduced-motion: reduce){ .ripple{animation:none;opacity:.5} .quake.on .shk{animation:none} }
+
+  /* ---------- vulcanologia ---------- */
+  .vlist{display:grid;gap:12px}
+  .vitem{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start}
+  .vnum{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:16px;color:#111;background:var(--nc);margin-top:1px}
+  .vitem h3{font-size:18px;color:#fff;line-height:1.25}
+  .vitem p{font-size:15px;line-height:1.45;margin-top:2px}
+  .v3d canvas{display:block;width:660px;height:560px;border-radius:16px;background:#071019;cursor:grab;touch-action:none}
+  .v3d canvas:active{cursor:grabbing}
+  .lcard{flex:1;padding:14px 16px}
+  .lcard .card-h{font-size:21px;margin-top:8px}
+  .lcard p{font-size:15px;line-height:1.45;margin-top:6px}
+  .ecard{flex:1;padding:12px 14px}
+  .ecard svg.erupt{display:block;width:100%;height:auto;border-radius:10px;background:#0b1a24}
+  .ecard .card-h{font-size:19px;margin-top:8px}
+  .ecard p{font-size:14px;line-height:1.45;margin-top:5px}
+  .ecard p.soft{font-size:13px}
+  .pcard{display:flex;gap:16px;align-items:center;padding:12px 16px}
+  .pcard svg{flex:none}
+  .pcard .card-h{font-size:20px}
+  .pcard .card-h .soft{font-size:15px;font-weight:400;margin-left:6px}
+  .pcard p{font-size:15px;line-height:1.45;margin-top:4px}
+  /* animazioni delle eruzioni e del vulcanismo secondario */
+  @keyframes flowdash{to{stroke-dashoffset:-36}}
+  .lavaflow{stroke-dasharray:12 6;animation:flowdash 1.2s linear infinite}
+  @keyframes proj{0%{transform:translate(0,0);opacity:1;animation-timing-function:ease-out}50%{transform:translate(calc(var(--dx) * .5),calc(var(--h) * -1));animation-timing-function:ease-in}100%{transform:translate(var(--dx),var(--fall,24px));opacity:0}}
+  .proj{animation:proj var(--d,1.6s) linear infinite}
+  @keyframes bproj{0%{transform:translate(0,0);opacity:1;animation-timing-function:ease-out}30%{transform:translate(calc(var(--dx) * .5),calc(var(--h) * -1));animation-timing-function:ease-in}60%{transform:translate(var(--dx),var(--fall,24px));opacity:0}100%{transform:translate(var(--dx),var(--fall,24px));opacity:0}}
+  .bproj{animation:bproj var(--d,2.4s) linear infinite}
+  @keyframes ashburst{0%,8%{transform:scale(.15);opacity:0}20%{opacity:1}65%{transform:scale(1);opacity:.95}100%{transform:scale(1.1) translateY(-8px);opacity:0}}
+  .ashburst{transform-box:fill-box;transform-origin:50% 100%;animation:ashburst 3s ease-out infinite}
+  @keyframes nube{0%{transform:translate(0,0) scale(.4);opacity:0}12%{opacity:1}100%{transform:translate(var(--nx,80px),var(--ny,70px)) scale(1.3);opacity:0}}
+  .nube{transform-box:fill-box;transform-origin:center;animation:nube 3.2s ease-in infinite}
+  @keyframes column{0%{transform:scaleY(.08);opacity:1}35%{transform:scaleY(1)}88%{opacity:1}100%{transform:scaleY(1);opacity:0}}
+  .column{transform-box:fill-box;transform-origin:50% 100%;animation:column 5s ease-out infinite}
+  @keyframes umbrella{0%,30%{transform:scaleX(.1);opacity:0}55%,88%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1.05);opacity:0}}
+  .umbrella{transform-box:fill-box;transform-origin:50% 50%;animation:umbrella 5s ease-out infinite}
+  @keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:1}80%{opacity:1}100%{transform:translate(var(--dx,0px),var(--rh,-300px));opacity:0}}
+  .rise{animation:rise var(--d,6s) linear infinite}
+  @keyframes ashdrift{0%{transform:translate(0,0);opacity:0}10%{opacity:.9}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+  .ashdrift{animation:ashdrift var(--d,5s) linear infinite}
+  @keyframes geyser{0%,52%{transform:scaleY(.04);opacity:0}58%{opacity:1}66%{transform:scaleY(1)}84%{transform:scaleY(.92);opacity:.95}100%{transform:scaleY(.04);opacity:0}}
+  .geyser{transform-box:fill-box;transform-origin:50% 100%;animation:geyser 6s ease-out infinite}
+  @media (prefers-reduced-motion: reduce){ .lavaflow,.proj,.bproj,.ashburst,.nube,.column,.umbrella,.rise,.ashdrift,.geyser{animation:none} }
+</style>
+</head>
+<body>
+<div id="wrap">
+<div id="stage">
+  <canvas id="sky" width="1280" height="720"></canvas>
+  <div class="glow"></div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <filter id="neon" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+      <filter id="blurMap" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+      <radialGradient id="ballShade" cx=".35" cy=".3" r=".8"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></radialGradient>
+      <linearGradient id="fadeL" x1="0" x2="1"><stop offset=".72" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000"/></linearGradient>
+    </defs>
+  </svg>
+
+  <!-- ############ 1 · IL VULCANO ############ -->
+
+  <!-- =================== 1. COPERTINA =================== -->
+  <section class="slide" data-steps="0" data-lesson="1">
+    <h1 class="abs in-l" style="left:60px;top:70px;font-size:46px;width:700px">La Vulcanologia<br><span class="mint">La Scienza dei vulcani</span></h1>
+    <div class="abs in-r" style="left:800px;top:62px;width:440px">
+      <p class="small"><b class="orange">Il vulcano</b><br>Le parti di un vulcano, in 3D</p>
+      <p class="small" style="margin-top:18px"><b class="orange">Magma e lava</b><br>Silice, temperatura e viscosità</p>
+      <p class="small" style="margin-top:18px"><b class="orange">Eruzioni ed edifici vulcanici</b><br>Come erutta un vulcano e che forma prende</p>
+      <p class="small" style="margin-top:18px"><b class="orange">I prodotti dei vulcani</b><br>Piroclasti, gas e vulcanismo secondario</p>
+    </div>
+    <svg class="abs" style="left:0;top:330px" width="760" height="390" viewBox="0 0 760 390" id="coverArt" role="img" aria-label="Un vulcano che fuma, con una colata di lava sul fianco"></svg>
+    <div class="author">Andrea Gramazio</div>
+  </section>
+
+  <!-- =================== 2. LE PARTI DEL VULCANO (3D) =================== -->
+  <section class="slide" data-steps="4" data-lesson="1">
+    <div class="abs" style="left:50px;top:46px;width:500px">
+      <h2>Le parti del vulcano<span class="bar"></span></h2>
+      <div class="vlist" style="margin-top:22px">
+        <div class="vitem f" data-f="1" data-mk="1" style="--nc:var(--red)"><span class="vnum">1</span><div><h3>Camera magmatica</h3><p>Serbatoio di magma in profondità, nella crosta terrestre.</p></div></div>
+        <div class="vitem f" data-f="2" data-mk="2" style="--nc:var(--orange)"><span class="vnum">2</span><div><h3>Condotto vulcanico (camino)</h3><p>Il canale da cui il magma risale verso la superficie.</p></div></div>
+        <div class="vitem f" data-f="2" data-mk="3" style="--nc:var(--yellow)"><span class="vnum">3</span><div><h3>Cratere</h3><p>L’apertura in cima al vulcano da cui escono i materiali.</p></div></div>
+        <div class="vitem f" data-f="3" data-mk="4" style="--nc:var(--mint)"><span class="vnum">4</span><div><h3>Condotto secondario e cono avventizio</h3><p>Un ramo laterale porta il magma sul fianco, dove nasce un piccolo cono.</p></div></div>
+        <div class="vitem f" data-f="4" data-mk="5" style="--nc:var(--cyan)"><span class="vnum">5</span><div><h3>Colata di lava</h3><p>La lava che scorre lungo i fianchi del vulcano.</p></div></div>
+        <div class="vitem f" data-f="4" data-mk="6" style="--nc:#c9d3dd"><span class="vnum">6</span><div><h3>Nube eruttiva</h3><p>Gas, ceneri e lapilli spinti in alto dall’eruzione.</p></div></div>
+      </div>
+    </div>
+    <div class="abs v3d in-r" style="left:570px;top:60px">
+      <canvas class="rot3d" id="volc3d" width="1320" height="1120" role="img" aria-label="Modello 3D di uno stratovulcano tagliato a metà: si vedono la camera magmatica, il condotto, il cratere, un condotto secondario con un cono avventizio, una colata di lava e la nube eruttiva. Trascina per ruotarlo."></canvas>
+      <span class="rhint"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>trascina per ruotare</span>
+    </div>
+  </section>
+
+  <!-- ############ 2 · MAGMA E LAVA ############ -->
+
+  <!-- =================== 3. MAGMA E LAVA: LA SILICE =================== -->
+  <section class="slide" data-steps="4" data-lesson="2">
+    <h2 class="abs in-l" style="left:50px;top:36px">Magma e lava<span class="bar"></span></h2>
+    <p class="abs f" data-f="1" style="left:50px;top:130px;width:1180px;font-size:20px">Il <b class="orange">magma</b> è roccia fusa, ricca di gas, che si trova in profondità. Quando esce in superficie e perde parte dei gas si chiama <b class="red">lava</b>. Le lave si distinguono in base a quanta <b class="mint">silice</b> (SiO<sub>2</sub>) contengono.</p>
+    <div class="abs" style="left:50px;top:222px;width:1180px;display:flex;gap:26px">
+      <div class="card lcard f" data-f="2" style="--cc:#e2453c"><svg viewBox="0 0 340 150" width="340" height="150" class="lavasvg" data-t="basica" aria-hidden="true"></svg>
+        <div class="card-h">Basica (femica)</div>
+        <p>SiO<sub>2</sub> meno del 52%. Ricca di <b>ferro</b> e <b>magnesio</b> (Fe, Mg). Scura e molto calda: 1100–1250 °C.</p>
+        <p class="soft">Roccia che si forma: basalto</p></div>
+      <div class="card lcard f" data-f="3" style="--cc:#e8862a"><svg viewBox="0 0 340 150" width="340" height="150" class="lavasvg" data-t="intermedia" aria-hidden="true"></svg>
+        <div class="card-h">Intermedia</div>
+        <p>SiO<sub>2</sub> tra il 52% e il 65%. Colore e temperatura intermedi: 900–1100 °C.</p>
+        <p class="soft">Roccia che si forma: andesite</p></div>
+      <div class="card lcard f" data-f="4" style="--cc:#f2c230"><svg viewBox="0 0 340 150" width="340" height="150" class="lavasvg" data-t="acida" aria-hidden="true"></svg>
+        <div class="card-h">Acida (sialica)</div>
+        <p>SiO<sub>2</sub> più del 65%. Ricca di <b>silicio</b> e <b>alluminio</b> (Si, Al). Chiara e meno calda: 700–850 °C.</p>
+        <p class="soft">Roccia che si forma: riolite</p></div>
+    </div>
+    <svg class="abs f" data-f="4" style="left:50px;top:566px" width="1180" height="80" viewBox="0 0 1180 80" id="silicaBar" role="img" aria-label="Più silice: lava più viscosa, meno calda e più chiara"></svg>
+  </section>
+
+  <!-- =================== 4. LA VISCOSITÀ =================== -->
+  <section class="slide" data-steps="3" data-lesson="2">
+    <div class="abs" style="left:50px;top:46px;width:520px">
+      <h2>La viscosità<span class="bar"></span></h2>
+      <p class="small f" data-f="1" style="margin-top:24px">La <b class="mint">viscosità</b> è la resistenza di un fluido a scorrere: il miele, per esempio, è più viscoso dell’acqua.</p>
+      <p class="small f" data-f="2" style="margin-top:14px">Più <b class="orange">silice</b> contiene, più la lava è viscosa: la silice forma lunghe catene di atomi che ostacolano lo scorrimento. Conta anche il calore: più la lava è calda, più è fluida.</p>
+      <p class="small f key" data-f="3" style="margin-top:14px">Nella lava fluida i gas escono facilmente; in quella viscosa restano intrappolati e la pressione cresce fino all’<b class="red">esplosione</b>.</p>
+    </div>
+    <svg class="abs in-l" style="left:40px;top:486px" width="540" height="200" viewBox="0 0 540 200" id="magoVisc" role="img" aria-label="Il Mago Algebrick dice: più silice, più viscosità"></svg>
+    <div class="abs in-r" style="left:600px;top:56px;width:640px;height:600px" id="ill-visc"></div>
+  </section>
+
+  <!-- ############ 3 · ERUZIONI ED EDIFICI ############ -->
+
+  <!-- =================== 5. TIPI DI ERUZIONE =================== -->
+  <section class="slide" data-steps="5" data-lesson="3">
+    <h2 class="abs in-l" style="left:50px;top:36px">Tipi di eruzione<span class="bar"></span></h2>
+    <div class="abs" style="left:50px;top:132px;width:1180px;display:flex;gap:16px">
+      <div class="card ecard f" data-f="1" style="--cc:#ff9a3c"><svg viewBox="0 0 210 170" class="erupt" data-t="hawaiiana" aria-hidden="true"></svg>
+        <div class="card-h">Hawaiiana</div><p>Lava molto fluida: fontane e fiumi di lava, senza grandi esplosioni.</p><p class="soft">Es. Kilauea (Hawaii)</p></div>
+      <div class="card ecard f" data-f="2" style="--cc:#f2c230"><svg viewBox="0 0 210 170" class="erupt" data-t="stromboliana" aria-hidden="true"></svg>
+        <div class="card-h">Stromboliana</div><p>Esplosioni brevi e regolari che lanciano lapilli e bombe incandescenti.</p><p class="soft">Es. Stromboli</p></div>
+      <div class="card ecard f" data-f="3" style="--cc:#e8862a"><svg viewBox="0 0 210 170" class="erupt" data-t="vulcaniana" aria-hidden="true"></svg>
+        <div class="card-h">Vulcaniana</div><p>Lava viscosa che tappa il cratere: forti esplosioni e nubi di cenere scura.</p><p class="soft">Es. Vulcano (isole Eolie)</p></div>
+      <div class="card ecard f" data-f="4" style="--cc:#e2453c"><svg viewBox="0 0 210 170" class="erupt" data-t="peleana" aria-hidden="true"></svg>
+        <div class="card-h">Peleana</div><p>Lava viscosissima forma un duomo da cui si staccano nubi ardenti velocissime.</p><p class="soft">Es. Monte Pelée, 1902</p></div>
+      <div class="card ecard f" data-f="5" style="--cc:#b07cd8"><svg viewBox="0 0 210 170" class="erupt" data-t="pliniana" aria-hidden="true"></svg>
+        <div class="card-h">Pliniana</div><p>La più esplosiva: una colonna di gas, ceneri e pomici alta decine di chilometri.</p><p class="soft">Es. Vesuvio, 79 d.C.</p></div>
+    </div>
+    <svg class="abs f" data-f="5" style="left:50px;top:572px" width="1180" height="74" viewBox="0 0 1180 74" id="explBar" role="img" aria-label="Più la lava è viscosa, più l’eruzione è esplosiva"></svg>
+  </section>
+
+  <!-- =================== 6. GLI EDIFICI VULCANICI =================== -->
+  <section class="slide" data-steps="5" data-lesson="3">
+    <h2 class="abs in-l" style="left:50px;top:36px">Gli edifici vulcanici<span class="bar"></span></h2>
+    <svg class="abs" style="left:50px;top:126px" width="1180" height="250" viewBox="0 0 1180 250" id="edifici" role="img" aria-label="Le forme dei vulcani: a scudo, stratovulcano, cono di scorie, duomo di lava e caldera"></svg>
+    <div class="abs" style="left:50px;top:392px;width:1180px;display:flex;gap:16px">
+      <div class="card ecard f" data-f="1" style="--cc:#e2453c"><div class="card-h">Vulcano a scudo</div><p>Lava fluida che scorre lontano: pendii dolci e base larghissima.</p><p class="soft">Es. Mauna Loa (Hawaii)</p></div>
+      <div class="card ecard f" data-f="2" style="--cc:#e8862a"><div class="card-h">Stratovulcano</div><p>Strati alternati di lava e piroclasti: un cono alto e ripido.</p><p class="soft">Es. Etna e Vesuvio</p></div>
+      <div class="card ecard f" data-f="3" style="--cc:#f2c230"><div class="card-h">Cono di scorie</div><p>Piccolo e ripido, fatto di piroclasti accumulati attorno alla bocca.</p><p class="soft">Es. Parícutin (Messico)</p></div>
+      <div class="card ecard f" data-f="4" style="--cc:#b07cd8"><div class="card-h">Duomo di lava</div><p>Lava viscosissima che non scorre e si accumula sopra la bocca.</p><p class="soft">Es. Monte Pelée</p></div>
+      <div class="card ecard f" data-f="5" style="--cc:#4fd8ff"><div class="card-h">Caldera</div><p>Grande conca nata dallo sprofondamento del vulcano, dopo lo svuotamento della camera magmatica.</p><p class="soft">Es. Campi Flegrei</p></div>
+    </div>
+  </section>
+
+  <!-- ############ 4 · I PRODOTTI DEI VULCANI ############ -->
+
+  <!-- =================== 7. I PIROCLASTI =================== -->
+  <section class="slide" data-steps="3" data-lesson="4">
+    <h2 class="abs in-l" style="left:50px;top:36px;font-size:44px">I prodotti solidi: i piroclasti<span class="bar"></span></h2>
+    <p class="abs small f" data-f="1" style="left:50px;top:128px;width:1180px">I <b class="orange">piroclasti</b> sono frammenti di lava e di roccia lanciati in aria dalle esplosioni. Si classificano in base alla <b class="mint">granulometria</b>, cioè alle dimensioni dei frammenti.</p>
+    <div class="abs f stag" data-f="2" style="left:50px;top:206px;width:540px;display:grid;gap:14px">
+      <div class="card pcard" style="--cc:#e2453c"><svg viewBox="0 0 90 70" width="90" height="70" class="pico" data-t="bombe" aria-hidden="true"></svg>
+        <div><div class="card-h">Bombe <span class="soft">più di 64 mm</span></div><p>Brandelli di lava che si solidificano in volo e prendono una forma affusolata. I frammenti solidi e spigolosi si chiamano blocchi.</p></div></div>
+      <div class="card pcard" style="--cc:#e8862a;transition-delay:.3s"><svg viewBox="0 0 90 70" width="90" height="70" class="pico" data-t="lapilli" aria-hidden="true"></svg>
+        <div><div class="card-h">Lapilli <span class="soft">da 2 a 64 mm</span></div><p>Grandi come sassolini o chicchi di riso.</p></div></div>
+      <div class="card pcard" style="--cc:#c9d3dd;transition-delay:.6s"><svg viewBox="0 0 90 70" width="90" height="70" class="pico" data-t="ceneri" aria-hidden="true"></svg>
+        <div><div class="card-h">Ceneri <span class="soft">meno di 2 mm</span></div><p>Polvere finissima che il vento porta lontano. Quando si consolida forma il <b class="mint">tufo</b>.</p></div></div>
+    </div>
+    <div class="abs f" data-f="3" style="left:620px;top:206px;width:620px;height:440px" id="ill-piro"></div>
+  </section>
+
+  <!-- =================== 8. I PRODOTTI GASSOSI =================== -->
+  <section class="slide" data-steps="2" data-lesson="4">
+    <div class="abs" style="left:50px;top:46px;width:540px">
+      <h2>I prodotti gassosi<span class="bar"></span></h2>
+      <p class="small f" data-f="1" style="margin-top:24px">Dal magma escono gas: soprattutto <b class="cyan">vapore acqueo</b>, poi <b>anidride carbonica</b> (CO<sub>2</sub>), <b class="yel">anidride solforosa</b> (SO<sub>2</sub>) e <b class="yel">idrogeno solforato</b> (H<sub>2</sub>S), che ha l’odore di uova marce.</p>
+      <p class="small f key" data-f="2" style="margin-top:18px">Anche quando l’attività vulcanica si attenua, gas e acque calde continuano a uscire dal terreno: è il <b class="mint">vulcanismo secondario</b>.</p>
+    </div>
+    <div class="abs in-r" style="left:620px;top:50px;width:620px;height:600px" id="ill-gas"></div>
+  </section>
+
+  <!-- =================== 9. VULCANISMO SECONDARIO: I GAS =================== -->
+  <section class="slide" data-steps="3" data-lesson="4">
+    <div class="abs" style="left:50px;top:46px;width:520px">
+      <h2 style="font-size:42px">Il vulcanismo secondario<span class="bar"></span></h2>
+      <div class="vlist" style="margin-top:24px">
+        <div class="vitem f" data-f="1" style="--nc:#dff7ff"><span class="vnum">1</span><div><h3>Fumarole</h3><p>Getti di vapore acqueo e di gas caldi che escono da fessure del terreno.</p></div></div>
+        <div class="vitem f" data-f="2" style="--nc:var(--yellow)"><span class="vnum">2</span><div><h3>Solfatare</h3><p>Fumarole ricche di composti dello zolfo, che lasciano incrostazioni gialle. Es. la Solfatara di Pozzuoli.</p></div></div>
+        <div class="vitem f" data-f="3" style="--nc:var(--cyan)"><span class="vnum">3</span><div><h3>Mofete</h3><p>Emissioni di anidride carbonica fredda: è più pesante dell’aria, si accumula nelle cavità ed è pericolosa. Es. la Grotta del Cane, ai Campi Flegrei.</p></div></div>
+      </div>
+    </div>
+    <div class="abs in-r" style="left:600px;top:50px;width:640px;height:600px" id="ill-fum"></div>
+  </section>
+
+  <!-- =================== 10. VULCANISMO SECONDARIO: ACQUE E VAPORE =================== -->
+  <section class="slide" data-steps="4" data-lesson="4">
+    <div class="abs" style="left:50px;top:46px;width:520px">
+      <h2 style="font-size:42px">Acque calde e vapore<span class="bar"></span></h2>
+      <div class="vlist" style="margin-top:24px">
+        <div class="vitem f" data-f="1" style="--nc:var(--cyan)"><span class="vnum">1</span><div><h3>Geyser</h3><p>Getti di acqua bollente e vapore che si ripetono a intervalli. Es. Islanda.</p></div></div>
+        <div class="vitem f" data-f="2" style="--nc:#dff7ff"><span class="vnum">2</span><div><h3>Soffioni boraciferi</h3><p>Getti di vapore ad alta pressione. A Larderello (Toscana) servono a produrre energia elettrica geotermica.</p></div></div>
+        <div class="vitem f" data-f="3" style="--nc:var(--mint)"><span class="vnum">3</span><div><h3>Sorgenti termali</h3><p>Acque calde e ricche di sali minerali, usate nelle terme. Es. Ischia.</p></div></div>
+        <div class="vitem f" data-f="4" style="--nc:var(--orange)"><span class="vnum">4</span><div><h3>Bradisismo</h3><p>Lento sollevamento e abbassamento del suolo. Es. Pozzuoli, ai Campi Flegrei.</p></div></div>
+      </div>
+    </div>
+    <div class="abs in-r" style="left:600px;top:50px;width:640px;height:600px" id="ill-acque"></div>
+  </section>
+
+  <!-- =================== 11. CHIUSURA =================== -->
+  <section class="slide" data-steps="0" data-lesson="4">
+    <h1 class="abs in-l" style="left:60px;top:70px;font-size:52px;width:640px">Grazie<br><span class="mint">dell’attenzione!</span></h1>
+    <p class="abs in-l small soft" style="left:62px;top:250px;width:460px">Realizzato da Andrea Gramazio<br>per STEM in Brick</p>
+    <svg class="abs" style="left:0;top:452px" width="520" height="267" viewBox="0 0 760 390" id="endArt" aria-hidden="true"></svg>
+    <svg class="abs in-r" style="left:780px;top:70px" width="440" height="580" viewBox="0 0 440 580" id="magoEnd" role="img" aria-label="Il mago mascotte di STEM in brick saluta con il bastone e il grimorio"></svg>
+  </section>
+
+
+<svg class="brick" viewBox="0 0 46 46" aria-hidden="true">
+    <rect x="9" y="1" width="10" height="7" rx="2" fill="#c8453b"/><rect x="27" y="1" width="10" height="7" rx="2" fill="#c8453b"/>
+    <rect x="2" y="6" width="42" height="38" rx="6" fill="#e2534a"/>
+    <g fill="none" stroke="#fff" stroke-width="1.8" opacity=".9">
+      <ellipse cx="23" cy="25" rx="13" ry="5"/><ellipse cx="23" cy="25" rx="13" ry="5" transform="rotate(60 23 25)"/><ellipse cx="23" cy="25" rx="13" ry="5" transform="rotate(-60 23 25)"/>
+    </g><circle cx="23" cy="25" r="2.5" fill="#fff"/>
+  </svg>
+</div>
+</div>
+
+<div class="controls" id="controls">
+  <button class="stud sec" id="restart" title="Ricomincia" aria-label="Torna all'inizio"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2-5.3M4 4v4h4"/></svg></button>
+  <button class="stud" id="prev" title="Slide precedente" aria-label="Slide precedente"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <div class="bricks" id="bricks" aria-label="Avanzamento slide"></div>
+  <div class="count" id="counter"></div>
+  <button class="stud" id="next" title="Slide successiva" aria-label="Slide successiva"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button class="stud sec" id="fs" title="Schermo intero" aria-label="Schermo intero"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+
+
+<script>
+
+const NS = 'http://www.w3.org/2000/svg';
+
+/* ---------- omino LEGO (minifigure) ---------- */
+/* Omino in stile minifigure: testa cilindrica con perno, busto trapezoidale,
+   braccia inclinate con mani a "C", fianchi e gambe separate.
+   opts: run, seated, hair (colore), style ('short'|'long'|'cap'|'ponytail'|'helmet'), print ('jacket'|'tie'|'zip'|'number'|'stripe'), face ('smile'|'grin'|'glasses') */
+function fig(x, y, s, torso, legs, opts={}){
+  const run = opts.run, seated = opts.seated, H = opts.hair, style = opts.style || 'short';
+  const Y = '#f6c42c', Yd = '#d9a514', ink = '#1d1d1d';
+  const dark = 'rgba(0,0,0,.18)', light = 'rgba(255,255,255,.22)';
+  // capelli / copricapo
+  let hair = '';
+  if (H){
+    if (style==='short')    hair = `<path d="M-17,-2 L-17,-17 Q-17,-29 -5,-29 L5,-29 Q17,-29 17,-17 L17,-4 L14,-12 Q0,-17 -14,-12 L-14,-2 Z" fill="${H}"/>`;
+    if (style==='long')     hair = `<path d="M-18,-4 L-18,-17 Q-18,-30 -5,-30 L5,-30 Q18,-30 18,-17 L18,-4 L19,26 L12,24 L13,-10 C6,-16 -6,-16 -13,-10 L-12,24 L-19,26 Z" fill="${H}"/>`;
+    if (style==='ponytail') hair = `<path d="M-17,-2 L-17,-17 Q-17,-29 -5,-29 L5,-29 Q17,-29 17,-17 L17,-4 L14,-12 Q0,-17 -14,-12 L-14,-2 Z" fill="${H}"/><path d="M14,-20 C30,-18 30,6 22,20 C20,8 20,-6 12,-14 Z" fill="${H}"/>`;
+    if (style==='cap')      hair = `<path d="M-17,-8 L-17,-18 Q-17,-31 -5,-31 L5,-31 Q17,-31 17,-18 L17,-8 Z" fill="${H}"/><path d="M-19,-9 L26,-9 C26,-4 -19,-4 -19,-9 Z" fill="${H}"/><rect x="-17" y="-11" width="34" height="3" fill="${dark}"/>`;
+    if (style==='wizard')   hair = `<path d="M-17,-2 L-17,-16 L17,-16 L17,-2 L14,-10 L-14,-10 Z" fill="#e9e9e9"/>
+      <ellipse cx="0" cy="-17" rx="31" ry="7" fill="${H}"/><ellipse cx="0" cy="-18.5" rx="31" ry="5" fill="rgba(255,255,255,.12)"/>
+      <path d="M-17,-19 C-14,-40 -4,-60 6,-80 C9,-84 12,-82 11,-78 C9,-58 14,-36 17,-19 Z" fill="${H}"/>
+      <path d="M-17,-21 L17,-21 L16.5,-26 L-16,-26 Z" fill="rgba(0,0,0,.25)"/>
+      <path d="M2,-48 l2,4 4,.5 -3,3 1,4 -4,-2 -4,2 1,-4 -3,-3 4,-.5 Z" fill="#f2c230"/>
+      <path d="M8,-66 l1.4,2.6 2.8,.3 -2,2 .6,2.8 -2.8,-1.4 -2.8,1.4 .6,-2.8 -2,-2 2.8,-.3 Z" fill="#f2c230"/>`;
+    if (style==='chef')     hair = `<path d="M-16,-22 C-27,-25 -27,-45 -14,-44 C-12,-57 5,-59 8,-48 C21,-55 31,-39 17,-31 L16,-22 Z" fill="#fff"/><rect x="-17" y="-26" width="34" height="9" rx="2" fill="#f1f1f1"/><rect x="-17" y="-19" width="34" height="2" fill="rgba(0,0,0,.08)"/>`;
+    if (style==='wig')      hair = `<path d="M-17,-4 L-17,-18 Q-17,-31 -5,-31 L5,-31 Q17,-31 17,-18 L17,-4 L14,-13 Q0,-18 -14,-13 L-14,-4 Z" fill="${H}"/><circle cx="-19" cy="-7" r="5.5" fill="${H}"/><circle cx="-19" cy="3" r="5.5" fill="${H}"/><circle cx="19" cy="-7" r="5.5" fill="${H}"/><circle cx="19" cy="3" r="5.5" fill="${H}"/><path d="M-9,-26 Q0,-31 9,-26" stroke="rgba(0,0,0,.12)" stroke-width="1.5" fill="none"/>`;
+    if (style==='grimorio') hair = `<path d="M-17,-2 L-17,-15 L17,-15 L17,-2 L14,-10 L-14,-10 Z" fill="#f4f4f4"/>
+      <ellipse cx="0" cy="-19" rx="30" ry="6" fill="${H}"/><ellipse cx="0" cy="-20.5" rx="30" ry="4" fill="rgba(255,255,255,.1)"/>
+      <path d="M-15,-21 C-12,-42 -6,-60 2,-80 C4,-84 7,-83 7,-79 C6,-62 11,-40 15,-21 Z" fill="${H}"/>
+      <path d="M-15.3,-23 L15.3,-23 L14.4,-30 L-14.4,-30 Z" fill="#7a4a1e"/>`;
+    if (style==='helmet')   hair = `<path d="M-19,-2 C-22,-36 22,-36 19,-2 L19,6 L14,6 L14,-6 L-14,-6 L-14,6 L-19,6 Z" fill="${H}"/><rect x="-3" y="-34" width="6" height="22" rx="2" fill="${light}"/>`;
+  }
+  // stampa sul busto
+  const pr = opts.print || '';
+  let print = '';
+  if (pr==='jacket') print = `<path d="M-4,13 L0,30 L4,13 Z" fill="#fff"/><path d="M-14,13 L-4,13 L-2,58 L-21,58 Z" fill="${dark}"/><path d="M14,13 L4,13 L2,58 L21,58 Z" fill="${dark}"/><circle cx="0" cy="38" r="1.6" fill="${ink}"/><circle cx="0" cy="47" r="1.6" fill="${ink}"/>`;
+  if (pr==='tie')    print = `<path d="M-6,13 L0,20 L6,13 Z" fill="#fff"/><path d="M-2.5,18 L2.5,18 L4,42 L0,47 L-4,42 Z" fill="#e2453c"/>`;
+  if (pr==='zip')    print = `<line x1="0" y1="13" x2="0" y2="58" stroke="${ink}" stroke-width="1.6"/><rect x="-11" y="40" width="7" height="2" fill="${ink}"/><rect x="4" y="40" width="7" height="2" fill="${ink}"/><path d="M-6,13 Q0,19 6,13" stroke="${ink}" stroke-width="1.6" fill="none"/>`;
+  if (pr==='number') print = `<text x="0" y="44" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" font-family="Roboto Mono, monospace">${opts.num||7}</text><path d="M-8,13 Q0,20 8,13" stroke="#fff" stroke-width="2" fill="none"/>`;
+  if (pr==='stars')  print = `<path d="M-14,12 L14,12 L20,58 L-20,58 Z" fill="rgba(0,0,0,.12)"/><rect x="-19" y="50" width="38" height="5" fill="#f2c230"/>
+      <path d="M-11,22 l1.5,3 3,.4 -2.2,2.1 .5,3 -2.8,-1.5 -2.8,1.5 .5,-3 -2.2,-2.1 3,-.4 Z" fill="#f2c230"/>
+      <path d="M10,32 l1.2,2.4 2.6,.3 -1.9,1.8 .5,2.6 -2.4,-1.3 -2.4,1.3 .5,-2.6 -1.9,-1.8 2.6,-.3 Z" fill="#f2c230"/>
+      <path d="M-6,40 a5,5 0 1,0 5,-6 a4,4 0 1,1 -5,6 Z" fill="#f2c230"/>`;
+  if (pr==='robe')   print = `<path d="M-2,13 L-4,58 M2,13 L4,58" stroke="rgba(255,255,255,.28)" stroke-width="2.4"/><rect x="-18.5" y="44" width="37" height="5" fill="#6b4a2b"/><rect x="-3.5" y="43" width="7" height="7" rx="1.2" fill="#e9c46a"/>`;
+  if (pr==='stripe') print = `<rect x="-17" y="28" width="34" height="6" fill="#fff" opacity=".85"/><rect x="-18" y="40" width="36" height="6" fill="#fff" opacity=".85"/>`;
+  // faccia
+  const fc = opts.face || 'smile';
+  let face = `<ellipse cx="-6" cy="-6" rx="2" ry="2.6" fill="${ink}"/><ellipse cx="6" cy="-6" rx="2" ry="2.6" fill="${ink}"/>
+    <circle cx="-5.4" cy="-6.8" r=".7" fill="#fff"/><circle cx="6.6" cy="-6.8" r=".7" fill="#fff"/>
+    <path d="M-9,-11 L-3,-12" stroke="${ink}" stroke-width="1.5" stroke-linecap="round"/><path d="M3,-12 L9,-11" stroke="${ink}" stroke-width="1.5" stroke-linecap="round"/>`;
+  if (fc==='grin')    face += `<path d="M-7,0 Q0,7 7,0 Z" fill="${ink}"/><path d="M-5.5,1 L5.5,1 L5,2.2 L-5,2.2 Z" fill="#fff"/>`;
+  else if (fc==='glasses') face += `<circle cx="-6" cy="-6" r="4.5" fill="none" stroke="${ink}" stroke-width="1.3"/><circle cx="6" cy="-6" r="4.5" fill="none" stroke="${ink}" stroke-width="1.3"/><path d="M-1.5,-6 L1.5,-6" stroke="${ink}" stroke-width="1.3"/><path d="M-5,1 Q0,5 5,1" stroke="${ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+  else if (fc==='goggles') face += `<rect x="-16" y="-10" width="32" height="3" fill="${ink}" opacity=".75"/><rect x="-14" y="-13" width="12" height="10" rx="3.5" fill="rgba(170,235,255,.5)" stroke="${ink}" stroke-width="1.4"/><rect x="2" y="-13" width="12" height="10" rx="3.5" fill="rgba(170,235,255,.5)" stroke="${ink}" stroke-width="1.4"/><path d="M-6,1 Q0,6.5 6,1" stroke="${ink}" stroke-width="1.7" fill="none" stroke-linecap="round"/>`;
+  else face += `<path d="M-6,0 Q0,5.5 6,0" stroke="${ink}" stroke-width="1.7" fill="none" stroke-linecap="round"/>`;
+  if (opts.blush) face += `<ellipse cx="-11" cy="-1" rx="2.5" ry="1.4" fill="#f08a6a" opacity=".6"/><ellipse cx="11" cy="-1" rx="2.5" ry="1.4" fill="#f08a6a" opacity=".6"/>`;
+  // braccio: dalla spalla verso il basso con mano a C
+  const arm = (side, ang) => {
+    const sx = side*15;
+    const wave = side===1 && opts.wave ? `<animateTransform attributeName="transform" type="rotate" values="${ang} ${sx} 16;${ang+22} ${sx} 16;${ang} ${sx} 16" dur="1.1s" repeatCount="indefinite"/>` : '';
+    return `<g transform="rotate(${ang} ${sx} 16)">${wave}
+      <path d="M${sx-side*1},13 C${sx+side*8},12 ${sx+side*11},18 ${sx+side*12},26 L${sx+side*13},42 L${sx+side*4},43 L${sx+side*3},26 Z" fill="${torso}"/>
+      <path d="M${sx+side*1},40 L${sx+side*10},40 L${sx+side*9.5},45 L${sx+side*1.5},45 Z" fill="${Y}"/>
+      <circle cx="${sx+side*6}" cy="50" r="6" fill="${Y}"/><circle cx="${sx+side*6}" cy="52" r="2.6" fill="${Yd}"/>
+    </g>`;
+  };
+  const leg = (side, cls) => `<g class="${cls}"><path d="M${side>0?1:-19},66 L${side>0?19:-1},66 L${side>0?19:-1},104 L${side>0?1:-19},104 Z" fill="${legs}"/>
+      <rect x="${side>0?1:-19}" y="100" width="18" height="6" rx="1.5" fill="${dark}"/><rect x="${side>0?1:-19}" y="66" width="18" height="4" fill="${light}"/></g>`;
+  return `<g transform="translate(${x},${y}) scale(${s})"><g class="${run?'bob':''}">
+    ${seated ? `<path d="M-19,66 L19,66 L19,80 L-19,80 Z" fill="${legs}"/><rect x="-19" y="76" width="38" height="4" fill="${dark}"/>`
+             : `${leg(-1, run?'legA':'')}${leg(1, run?'legB':'')}`}
+    <rect x="-20" y="57" width="40" height="10" rx="1.5" fill="${legs}"/><rect x="-3" y="58" width="6" height="9" fill="${dark}"/>
+    ${arm(-1, opts.armL ?? (run?28:6))}
+    <path d="M-14,12 L14,12 L20,58 L-20,58 Z" fill="${torso}"/>
+    <path d="M-14,12 L-10,12 L-15,58 L-20,58 Z" fill="${light}"/>
+    ${print}
+    ${arm(1, opts.armR ?? (opts.wave ? -150 : (run?-28:-6)))}
+    <rect x="-6" y="6" width="12" height="7" fill="${Yd}"/>
+    ${H ? '' : `<rect x="-7" y="-31" width="14" height="7" rx="2" fill="${Y}"/><rect x="-7" y="-31" width="14" height="2" rx="1" fill="${light}"/>`}
+    <rect x="-15" y="-25" width="30" height="32" rx="7" fill="${Y}"/>
+    <rect x="5" y="-25" width="10" height="32" rx="6" fill="${dark}" opacity=".45"/>
+    ${face}
+    ${opts.beard ? `<path d="M-15,-3 C-13,4 -7,6 0,4 C7,6 13,4 15,-3 C17,8 14,22 9,34 C6,42 3,48 0,52 C-3,48 -6,42 -9,34 C-14,22 -17,8 -15,-3 Z" fill="${opts.beard}"/>
+      <path d="M0,-1 C-5,-3 -11,-1 -15,5 C-18,10 -18,17 -15,24 C-14,16 -10,8 -4,5 C-2,4 -1,4 0,4 C1,4 2,4 4,5 C10,8 14,16 15,24 C18,17 18,10 15,5 C11,-1 5,-3 0,-1 Z" fill="${opts.beard}" stroke="rgba(0,0,0,.18)" stroke-width="1"/>
+      <path d="M-4,14 C-3,24 -2,34 0,46 M4,14 C3,24 2,34 0,46 M-9,10 C-8,20 -6,28 -4,36 M9,10 C8,20 6,28 4,36" stroke="rgba(0,0,0,.1)" stroke-width="1.2" fill="none"/>` : ''}
+    ${opts.beardLong ? `<path d="M-15,-6 C-18,6 -17,14 -14,20 C-16,26 -13,32 -10,36 C-11,42 -6,46 -4,50 C-2,54 2,54 4,50 C6,46 11,42 10,36 C13,32 16,26 14,20 C17,14 18,6 15,-6 C11,0 6,3 0,2 C-6,3 -11,0 -15,-6 Z" fill="${opts.beardLong}"/>
+      <path d="M-6,12 C-5,22 -3,32 -1,44 M5,12 C4,24 3,32 1,42" stroke="rgba(0,0,0,.1)" stroke-width="1.3" fill="none"/>
+      <path d="M-1,0 C-5,-4 -11,-2 -13,3 C-9,1 -5,2 -1,3 Z M1,0 C5,-4 11,-2 13,3 C9,1 5,2 1,3 Z" fill="${opts.beardLong}" stroke="rgba(0,0,0,.15)" stroke-width="1"/>` : ''}
+    ${opts.wand ? `<g><line x1="${-21}" y1="50" x2="${-36}" y2="8" stroke="#6b4a2b" stroke-width="3.5" stroke-linecap="round"/>
+      <g class="twinkle" style="transform-box:fill-box;transform-origin:center"><path d="M-37,-6 l3.2,6.5 7,1 -5.1,5 1.2,7 -6.3,-3.3 -6.3,3.3 1.2,-7 -5.1,-5 7,-1 Z" fill="#fff6a8"/></g></g>` : ''}
+    ${hair}
+    ${opts.brows ? `<path d="M-12,-11 C-9,-15 -3,-15 -1,-11 C-4,-12.5 -8,-12 -12,-9.5 Z M12,-11 C9,-15 3,-15 1,-11 C4,-12.5 8,-12 12,-9.5 Z" fill="${opts.brows}"/>` : ''}
+  </g></g>`;
+}
+function tree(x, y, s=1){ return `<g transform="translate(${x},${y}) scale(${s})"><rect x="-5" y="0" width="10" height="34" fill="#6b4a2b"/><circle cx="0" cy="-12" r="26" fill="#2f9e5a"/><circle cx="-14" cy="0" r="18" fill="#35b064"/><circle cx="14" cy="-2" r="19" fill="#2a8f50"/></g>`; }
+
+/* =========================================================
+   STRUMENTI DI DISEGNO
+   ========================================================= */
+const $id = id => document.getElementById(id);
+const R2 = n => Math.round(n * 100) / 100;
+const RAD = a => a * Math.PI / 180;
+const MONO = 'font-family="Roboto Mono, monospace"';
+const HW = 'font-family="Patrick Hand, Roboto Mono, cursive"';
+const COL = { mint:'#00e49a', orange:'#e8862a', yellow:'#f2c230', red:'#e2453c', blue:'#2fb5e8', green:'#53c24a', cyan:'#4fd8ff', ink:'#e9f2ee', soft:'#9fb9ae' };
+
+/* mattoncino tondo visto dall'alto: gli atomi delle molecole */
+function ball(cx, cy, r, fill, label, txt){
+  const sw = Math.max(1.5, r * .07);
+  return `<g><circle cx="${R2(cx)}" cy="${R2(cy)}" r="${r}" fill="${fill}"/>
+    <circle cx="${R2(cx)}" cy="${R2(cy)}" r="${r}" fill="url(#ballShade)"/>
+    <circle cx="${R2(cx)}" cy="${R2(cy)}" r="${R2(r * .62)}" fill="none" stroke="rgba(0,0,0,.16)" stroke-width="${R2(sw)}"/>
+    <path d="M${R2(cx - r * .42)},${R2(cy - r * .12)} A${R2(r * .45)},${R2(r * .45)} 0 0 1 ${R2(cx - r * .1)},${R2(cy - r * .45)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${R2(sw * 1.4)}" stroke-linecap="round"/>
+    ${label ? `<text x="${R2(cx)}" y="${R2(cy)}" fill="${txt || '#fff'}" font-size="${R2(r * .66)}" font-weight="700" text-anchor="middle" dominant-baseline="central" ${MONO}>${label}</text>` : ''}</g>`;
+}
+
+/* mattoncino visto di lato: (x, y) è l'angolo in alto a sinistra del corpo */
+function brickS(x, y, w, h, fill, n){
+  n = n || Math.max(1, Math.round(w / 46));
+  const sw = Math.min(w / n * .46, 24), sh = Math.max(6, h * .2);
+  let s = '';
+  for (let i = 0; i < n; i++){ const cx = x + w * (i + .5) / n; s += `<rect x="${R2(cx - sw / 2)}" y="${R2(y - sh + 2)}" width="${R2(sw)}" height="${R2(sh)}" rx="2.5" fill="${fill}"/>`; }
+  s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="${fill}"/>
+    <rect x="${x}" y="${y}" width="${w}" height="${R2(Math.max(6, h * .18))}" rx="4" fill="rgba(255,255,255,.2)"/>
+    <rect x="${x}" y="${R2(y + h - Math.max(4, h * .1))}" width="${w}" height="${R2(Math.max(4, h * .1))}" rx="3" fill="rgba(0,0,0,.14)"/>`;
+  return s;
+}
+
+/* nucleo fatto di palline: protoni rossi con il +, neutroni grigi */
+function nucleusBalls(x, y, p, n, br){
+  const total = p + n, pts = [];
+  for (let k = 0; k < total; k++){ const r = total === 1 ? 0 : br * 1.05 * Math.sqrt(k + .5), a = k * 2.399963; pts.push([r * Math.cos(a), r * Math.sin(a)]); }
+  const mx = pts.reduce((a, q) => a + q[0], 0) / total, my = pts.reduce((a, q) => a + q[1], 0) / total;
+  const types = []; let pp = p, nn = n;
+  for (let k = 0; k < total; k++){ if (pp > 0 && (k % 2 === 0 || nn === 0)) { types.push('p'); pp--; } else { types.push('n'); nn--; } }
+  let s = '';
+  for (let k = total - 1; k >= 0; k--){
+    const cx = x + pts[k][0] - mx, cy = y + pts[k][1] - my, isP = types[k] === 'p';
+    s += `<circle cx="${R2(cx)}" cy="${R2(cy)}" r="${br}" fill="${isP ? COL.red : '#9aa5b1'}" stroke="#0a0f14" stroke-width="1.2"/>`;
+    s += `<circle cx="${R2(cx - br * .32)}" cy="${R2(cy - br * .32)}" r="${R2(br * .3)}" fill="rgba(255,255,255,.35)"/>`;
+    if (isP && br >= 8) s += `<text x="${R2(cx)}" y="${R2(cy + 1)}" fill="#fff" font-size="${R2(br * 1.3)}" font-weight="700" text-anchor="middle" dominant-baseline="central" ${MONO}>+</text>`;
+  }
+  return s;
+}
+
+/* posizione di un elettrone su un guscio */
+const slotXY = (x, y, R, start, slots, j) => { const a = RAD(start + j * 360 / slots); return [x + R * Math.cos(a), y + R * Math.sin(a)]; };
+
+/* atomo luminoso a gusci
+   o = {x, y, shells:[2,8,1], r0, gap, er, sym, spin, slots:[], start:[], skip:[[]], steps:[], ringCol:[], dimRing:[], balls, p, n, ball} */
+function atomN(o){
+  const x = o.x, y = o.y, r0 = o.r0 || 26, gap = o.gap || 32, er = o.er || 7;
+  let s = '';
+  (o.shells || []).forEach((n, i) => {
+    const R = r0 + gap * (i + 1);
+    const slots = (o.slots && o.slots[i]) || Math.max(n, 1);
+    const start = (o.start && o.start[i] != null) ? o.start[i] : -90;
+    const skip = (o.skip && o.skip[i]) || [];
+    const stepF = o.steps && o.steps[i];
+    const ringCol = (o.ringCol && o.ringCol[i]) || COL.cyan;
+    const dim = o.dimRing && o.dimRing.includes(i);
+    let g = `<circle cx="${x}" cy="${y}" r="${R}" fill="none" stroke="${ringCol}" stroke-width="2.2" opacity="${dim ? .3 : .75}"${dim ? ' stroke-dasharray="6 6"' : ''}/>`;
+    let placed = 0;
+    for (let j = 0; j < slots && placed < n; j++){
+      if (skip.includes(j)) continue;
+      const [ex, ey] = slotXY(x, y, R, start, slots, j);
+      g += `<circle cx="${R2(ex)}" cy="${R2(ey)}" r="${er}" fill="${(o.eCol && o.eCol[i]) || '#bff3ff'}"${stepF ? ` style="transition-delay:${(.25 + placed * .16).toFixed(2)}s"` : ''}/>`;
+      placed++;
+    }
+    const inner = stepF ? `<g class="f stag" data-f="${stepF}" filter="url(#neon)">${g}</g>` : `<g filter="url(#neon)">${g}</g>`;
+    s += o.spin ? `<g class="orb o${i + 1}" style="transform-origin:${x}px ${y}px">${inner}</g>` : inner;
+  });
+  if (o.balls) s += nucleusBalls(x, y, o.p, o.n, o.ball || 9);
+  else if (o.sym != null){
+    s += `<circle cx="${x}" cy="${y}" r="${r0 + 6}" fill="none" stroke="${COL.orange}" stroke-width="2" opacity=".35"/><circle cx="${x}" cy="${y}" r="${r0}" fill="url(#nucG)"/>`;
+    if (o.sym) s += `<text x="${x}" y="${y + 1}" fill="#3a1d00" font-size="${R2(r0 * (o.sym.length > 1 ? .74 : .92))}" font-weight="700" text-anchor="middle" dominant-baseline="central" ${MONO}>${o.sym}</text>`;
+  }
+  return s;
+}
+/* elettrone singolo (per quelli che si spostano) */
+const elec = (x, y, r, col) => `<circle cx="${R2(x)}" cy="${R2(y)}" r="${r}" fill="${col || '#bff3ff'}" filter="url(#neon)"/>`;
+/* etichetta su fondo scuro, come quelle della cinematica */
+function pill(cx, cy, text, col, fs){
+  fs = fs || 17;
+  const w = Math.round(text.replace(/<[^>]+>/g, '').length * fs * .62 + 26);
+  return `<rect x="${R2(cx - w / 2)}" y="${R2(cy - fs * .95)}" width="${w}" height="${R2(fs * 1.9)}" rx="7" fill="rgba(0,0,0,.78)" stroke="${col || 'none'}" stroke-width="2"/>
+    <text x="${cx}" y="${R2(cy + fs * .34)}" fill="#fff" font-size="${fs}" font-weight="700" text-anchor="middle" ${MONO}>${text}</text>`;
+}
+/* piccole molecole */
+const MOL = {
+  co2: (x, y, r) => ball(x - r * 1.55, y, r * .9, COL.red) + ball(x + r * 1.55, y, r * .9, COL.red) + ball(x, y, r, '#3a3f45'),
+  o2: (x, y, r) => ball(x - r * .85, y, r, COL.red) + ball(x + r * .85, y, r, COL.red),
+  h2o: (x, y, r) => ball(x - r * .95, y + r * .8, r * .62, '#f4f4f4') + ball(x + r * .95, y + r * .8, r * .62, '#f4f4f4') + ball(x, y, r, COL.red)
+};
+
+
+
+/* il mago mascotte di STEM in brick: bastone con la sfera luminosa nella destra, grimorio nella sinistra */
+function mago(x, y, s){
+  const hr = [x + 32.27 * s, y + 45.9 * s], hl = [x - 41.45 * s, y + 38.2 * s], k = s / 1.9;
+  const staff = `<line x1="${R2(hr[0])}" y1="${R2(y - 66.3 * s)}" x2="${R2(hr[0] + 3.2 * s)}" y2="${R2(y + 66.3 * s)}" stroke="#7a4a1e" stroke-width="${R2(4.2 * s)}" stroke-linecap="round"/>
+    <g class="pglow"><circle cx="${R2(hr[0])}" cy="${R2(y - 75 * s)}" r="${R2(14.2 * s)}" fill="#4fd8ff" opacity=".45" filter="url(#soft)"/></g>
+    <circle cx="${R2(hr[0])}" cy="${R2(y - 75 * s)}" r="${R2(7.4 * s)}" fill="#2fb5e8"/>
+    <g transform="translate(${R2(hr[0])},${R2(y - 75 * s)}) scale(${R2(k)})"><path d="M-7,0 a7,7 0 1,1 7,7 a4,4 0 1,1 -4,-4" fill="none" stroke="#dff7ff" stroke-width="2.4" stroke-linecap="round"/></g>
+    <g transform="translate(${R2(hr[0])},${R2(y - 67 * s)}) scale(${R2(k)})"><path d="M-10,0 C-6,-5 6,-5 10,0" fill="none" stroke="#7a4a1e" stroke-width="5" stroke-linecap="round"/></g>`;
+  const book = `<g transform="translate(${R2(hl[0])},${R2(hl[1])}) scale(${R2(k)}) rotate(-8 -3 -9)">
+      <path d="M-39,-31 L-3,-23 L33,-31 L33,7 L-3,15 L-39,7 Z" fill="#7a3b1e"/>
+      <path d="M-35,-29 L-5,-22 L-5,10 L-35,4 Z" fill="#f6ecd2"/><path d="M29,-29 L-1,-22 L-1,10 L29,4 Z" fill="#fbf4e2"/>
+      <g stroke="#b9a988" stroke-width="1.6"><line x1="-30" y1="-18" x2="-11" y2="-14"/><line x1="-30" y1="-11" x2="-11" y2="-7"/><line x1="-30" y1="-4" x2="-15" y2="-1"/><line x1="5" y1="-14" x2="24" y2="-18"/><line x1="5" y1="-7" x2="24" y2="-11"/></g>
+      <circle cx="15" cy="-1" r="4" fill="none" stroke="#2fb5e8" stroke-width="1.6"/></g>`;
+  return staff + fig(x, y, s, '#3462b5', '#3462b5', {hair:'#2b4ea2', style:'grimorio', print:'robe', beardLong:'#f4f4f4', brows:'#f4f4f4', armL:40, armR:-20}) + book;
+}
+
+/* casetta di mattoncini vista di fronte: (x, y) è l'angolo in basso a sinistra */
+function house(x, y, w, h, wall, roof){
+  const rh = h * .55;
+  let s = `<rect x="${x}" y="${R2(y - h)}" width="${w}" height="${h}" fill="${wall}"/>`;
+  for (let r = 1; r < 4; r++) s += `<line x1="${x}" y1="${R2(y - h * r / 4)}" x2="${x + w}" y2="${R2(y - h * r / 4)}" stroke="rgba(0,0,0,.12)" stroke-width="1.5"/>`;
+  s += `<path d="M${x - 6},${R2(y - h)} L${R2(x + w / 2)},${R2(y - h - rh)} L${x + w + 6},${R2(y - h)} Z" fill="${roof}"/>
+    <rect x="${R2(x + w * .4)}" y="${R2(y - h * .55)}" width="${R2(w * .2)}" height="${R2(h * .55)}" fill="#6b4a2b"/>
+    <rect x="${R2(x + w * .1)}" y="${R2(y - h * .82)}" width="${R2(w * .2)}" height="${R2(h * .25)}" fill="#9fd8ff"/>
+    <rect x="${R2(x + w * .7)}" y="${R2(y - h * .82)}" width="${R2(w * .2)}" height="${R2(h * .25)}" fill="#9fd8ff"/>`;
+  return s;
+}
+
+
+/* =========================================================
+   VULCANOLOGIA: DISEGNI
+   ========================================================= */
+const BLOB = 'M0,40 C120,10 260,0 360,30 C450,55 520,20 600,60 C660,90 640,150 690,190 C740,230 700,300 730,390 L0,390 Z';
+
+/* ---------- 1. copertina e chiusura: un vulcano che fuma ---------- */
+(function(){
+  const B = '#7a2e1d';
+  const puffs = [[338, 136, 20, 0], [318, 104, 26, .8], [354, 80, 30, 1.6], [326, 56, 24, 2.4]]
+    .map(([x, y, r, dl]) => `<circle class="steam" cx="${x}" cy="${y}" r="${r}" fill="#fff" style="animation-delay:${dl}s;animation-duration:3.2s"/>`).join('');
+  const art = `
+    <path class="in-up" d="${BLOB}" fill="#e8b21f"/>
+    ${puffs}
+    <path class="draw auto" pathLength="1" d="M372,170 C398,214 418,252 466,292 C498,318 540,334 590,346" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" style="transition-delay:2.3s;transition-duration:1.6s"/>
+    <g fill="none" stroke="${B}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path class="draw auto" pathLength="1" d="M70,350 C150,330 232,252 302,170 L322,182 L348,176 L372,168 C432,252 520,330 610,350" style="transition-delay:.7s;transition-duration:2s"/>
+    </g>
+    <circle cx="70" cy="350" r="12" fill="#fff"/>
+    <path d="M622,334 L658,350 L622,366 Z" fill="#fff"/>`;
+  $id('coverArt').innerHTML = art;
+  $id('endArt').innerHTML = art;
+})();
+
+/* ---------- 2. il vulcano in 3D, tagliato a metà, da ruotare ---------- */
+(function(){
+  const cv = $id('volc3d'), g = cv.getContext('2d'), slide = cv.closest('.slide');
+  const RS = 1.75, DS = 1.15, R0 = 1.4, RC = .22, H = 1.25, NA = 28, NZ = 7;
+  const XP = .92, RP = .2, HP = .18, TL = .36;                     // cono avventizio e colata (sul fianco destro, visibile dal davanti)
+  const zs = r => H * Math.max(0, (R0 - r)) / (R0 - RC);           // quota del fianco a distanza r dall'asse
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const view = { th: -.3, ph: .32, sc: 235, cx: 660, cy: 690 }, base = { th: view.th, ph: view.ph };
+  let drag = null, touched = false;
+  const P3 = ([x, y, z]) => { const ct = Math.cos(view.th), st = Math.sin(view.th), cp = Math.cos(view.ph), sp = Math.sin(view.ph), x1 = x * ct - y * st, y1 = x * st + y * ct; return [view.cx + x1 * view.sc, view.cy - (y1 * sp + z * cp) * view.sc]; };
+  const camY = ([x, y, z]) => (x * Math.sin(view.th) + y * Math.cos(view.th)) * Math.cos(view.ph) - z * Math.sin(view.ph);
+  const LIGHT = (() => { const v = [-.4, -.55, .8], m = Math.hypot(...v); return v.map(q => q / m); })();
+  const shade = (hex, f) => { const n = parseInt(hex.slice(1), 16), c = v => Math.min(255, Math.round(v * f)); return `rgb(${c(n >> 16)},${c(n >> 8 & 255)},${c(n & 255)})`; };
+  const lit = (n, col) => shade(col, .58 + .5 * Math.max(0, n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2]));
+  const norm = v => { const m = Math.hypot(...v) || 1; return v.map(q => q / m); };
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  function fillPoly(pts, fill, stroke){
+    g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath();
+    g.fillStyle = fill; g.fill(); if (stroke){ g.strokeStyle = stroke; g.lineWidth = 1.5; g.stroke(); }
+  }
+  const face = (pts3, n, col, edge) => { if (camY(n) < 0) fillPoly(pts3.map(P3), lit(n, col), edge || 'rgba(0,0,0,.18)'); };
+  const sec = (pts2, fill) => fillPoly(pts2.map(([x, z]) => P3([x, -.0005, z])), fill);   // poligono sul piano del taglio (y = 0)
+
+  // superfici esterne (metà posteriore, y ≥ 0)
+  const ang = i => Math.PI * i / NA;
+  const slope = (R0 - RC) / H;
+  function exterior(){
+    for (let i = 0; i < NA; i++){
+      const a0 = ang(i), a1 = ang(i + 1), am = (a0 + a1) / 2, c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
+      // fianco della crosta e terreno attorno
+      face([[RS * c0, RS * s0, -DS], [RS * c1, RS * s1, -DS], [RS * c1, RS * s1, 0], [RS * c0, RS * s0, 0]], [Math.cos(am), Math.sin(am), 0], '#8a6a50');
+      face([[R0 * c0, R0 * s0, 0], [RS * c0, RS * s0, 0], [RS * c1, RS * s1, 0], [R0 * c1, R0 * s1, 0]], [0, 0, 1], '#5f9a4c');
+    }
+    for (let i = 0; i < NA; i++) for (let k = 0; k < NZ; k++){
+      const a0 = ang(i), a1 = ang(i + 1), am = (a0 + a1) / 2;
+      const z0 = H * k / NZ, z1 = H * (k + 1) / NZ, r0 = R0 - slope * z0, r1 = R0 - slope * z1;
+      const n = norm([Math.cos(am), Math.sin(am), slope]);
+      face([[r0 * Math.cos(a0), r0 * Math.sin(a0), z0], [r0 * Math.cos(a1), r0 * Math.sin(a1), z0], [r1 * Math.cos(a1), r1 * Math.sin(a1), z1], [r1 * Math.cos(a0), r1 * Math.sin(a0), z1]], n, k % 2 ? '#7a6656' : '#806b5b', 'rgba(0,0,0,.12)');
+    }
+    // cratere: bordo scuro e lava incandescente
+    const disk = (r, z) => Array.from({length:NA + 1}, (_, i) => [r * Math.cos(ang(i)), r * Math.sin(ang(i)), z]);
+    if (camY([0, 0, 1]) < 0){ fillPoly(disk(RC, H).map(P3), '#3a2a22'); fillPoly(disk(RC * .62, H + .002).map(P3), '#ff7a2a'); }
+    // colata di lava sul fianco
+    const LW = z => .1 + .14 * (1 - z / H);
+    for (let k = 0; k < 10; k++){
+      const z0 = H * .98 * (1 - k / 10), z1 = H * .98 * (1 - (k + 1) / 10) + .01, r0 = R0 - slope * z0 + .01, r1 = R0 - slope * z1 + .01;
+      const w0 = LW(z0) / Math.max(r0, .3), w1 = LW(z1) / Math.max(r1, .3), wig = .05 * Math.sin(k * 1.3);
+      const n = norm([Math.cos(TL), Math.sin(TL), slope]);
+      const pts = [[r0 * Math.cos(TL - w0 + wig), r0 * Math.sin(TL - w0 + wig), z0], [r0 * Math.cos(TL + w0 + wig), r0 * Math.sin(TL + w0 + wig), z0],
+                   [r1 * Math.cos(TL + w1 + wig), r1 * Math.sin(TL + w1 + wig), z1], [r1 * Math.cos(TL - w1 + wig), r1 * Math.sin(TL - w1 + wig), z1]];
+      if (camY(n) < 0) fillPoly(pts.map(P3), k < 6 ? '#ff8a2a' : '#e2453c');
+    }
+    // la colata arriva ai piedi del vulcano e si allarga sul terreno
+    if (camY([0, 0, 1]) < 0) for (let k = 0; k < 8; k++){
+      const r0 = R0 - .04 + k * .035, r1 = r0 + .035, w0 = .06 + k * .016, w1 = w0 + .016, wig = .03 * Math.sin(k * 1.7);
+      fillPoly([[r0 * Math.cos(TL - w0 + wig), r0 * Math.sin(TL - w0 + wig), .004], [r1 * Math.cos(TL - w1 + wig), r1 * Math.sin(TL - w1 + wig), .004],
+                [r1 * Math.cos(TL + w1 + wig), r1 * Math.sin(TL + w1 + wig), .004], [r0 * Math.cos(TL + w0 + wig), r0 * Math.sin(TL + w0 + wig), .004]].map(P3), k < 4 ? '#e2453c' : '#b5472e');
+    }
+    // cono avventizio (metà posteriore)
+    const apex = [XP, 0, zs(XP) + HP];
+    for (let i = 0; i < 12; i++){
+      const b0 = Math.PI * i / 12, b1 = Math.PI * (i + 1) / 12;
+      const p0 = [XP + RP * Math.cos(b0), RP * Math.sin(b0)], p1 = [XP + RP * Math.cos(b1), RP * Math.sin(b1)];
+      const q0 = [p0[0], p0[1], zs(Math.hypot(p0[0], p0[1]))], q1 = [p1[0], p1[1], zs(Math.hypot(p1[0], p1[1]))];
+      let n = norm(cross(sub(q1, apex), sub(q0, apex)));
+      if (n[0] * Math.cos((b0 + b1) / 2) + n[1] * Math.sin((b0 + b1) / 2) < 0) n = n.map(q => -q);
+      face([apex, q0, q1], n, '#6a5646');
+    }
+  }
+
+  // il taglio: crosta, strati del cono, camera magmatica e condotti
+  function cutFace(){
+    const bands = ['#8a6a50', '#76593f', '#9a7a5c', '#6a4e3a'];
+    bands.forEach((c, i) => sec([[-RS, -DS * i / 4], [RS, -DS * i / 4], [RS, -DS * (i + 1) / 4], [-RS, -DS * (i + 1) / 4]], c));
+    const cone = [[-R0, 0], [-RC, H], [RC, H], [R0, 0]];
+    sec(cone, '#9a8068');
+    // strati alternati di lava e piroclasti, paralleli ai fianchi
+    g.save(); g.beginPath(); cone.map(([x, z]) => P3([x, 0, z])).forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.clip();
+    const len = Math.hypot(R0 - RC, H), ux = (R0 - RC) / len, uz = H / len, nx = H / len, nz = -(R0 - RC) / len;
+    for (let j = 1; j <= 7; j++){
+      const d = j * .085;
+      g.strokeStyle = j % 2 ? '#4f4a4e' : '#b49a76'; g.lineWidth = .045 * view.sc;
+      [-1, 1].forEach(sx => {
+        const A = [sx * (-R0 + d * nx - 1 * ux), d * nz - 1 * uz], B = [sx * (-R0 + d * nx + 3 * ux), d * nz + 3 * uz];
+        const pa = P3([A[0], 0, A[1]]), pb = P3([B[0], 0, B[1]]);
+        g.beginPath(); g.moveTo(pa[0], pa[1]); g.lineTo(pb[0], pb[1]); g.stroke();
+      });
+    }
+    g.restore();
+    // camera magmatica
+    const ell = Array.from({length:40}, (_, i) => { const a = i / 40 * 2 * Math.PI; return [.6 * Math.cos(a), -.72 + .24 * Math.sin(a)]; });
+    sec(ell, '#e2453c');
+    sec(ell.map(([x, z]) => [x * .72, -.72 + (z + .72) * .62]), '#ff8a3c');
+    // condotto principale
+    sec([[-.07, -.5], [.07, -.5], [.05, H], [-.05, H]], '#ff7a2a');
+    sec([[-.022, -.52], [.022, -.52], [.016, H], [-.016, H]], '#ffd27a');
+    // condotto secondario verso il cono avventizio
+    const top = [XP, zs(XP) + HP - .02];
+    const curve = Array.from({length:16}, (_, i) => { const t = i / 15, a = [.04, -.12], c = [.55, .02]; return [(1 - t) ** 2 * a[0] + 2 * (1 - t) * t * c[0] + t * t * top[0], (1 - t) ** 2 * a[1] + 2 * (1 - t) * t * c[1] + t * t * top[1]]; });
+    const band = [];
+    curve.forEach((p, i) => { const q = curve[Math.min(i + 1, 15)], r = curve[Math.max(i - 1, 0)], dx = q[0] - r[0], dz = q[1] - r[1], m = Math.hypot(dx, dz) || 1; band.push([p[0] - dz / m * .03, p[1] + dx / m * .03]); });
+    for (let i = 15; i >= 0; i--){ const p = curve[i], q = curve[Math.min(i + 1, 15)], r = curve[Math.max(i - 1, 0)], dx = q[0] - r[0], dz = q[1] - r[1], m = Math.hypot(dx, dz) || 1; band.push([p[0] + dz / m * .03, p[1] - dx / m * .03]); }
+    // sezione del cono avventizio
+    sec([[XP - RP, zs(XP - RP)], [XP, zs(XP) + HP], [XP + RP, zs(XP + RP)]], '#6a5646');
+    sec(band, '#ff7a2a');
+  }
+
+  // nube eruttiva: sbuffi che salgono e si allargano
+  function plume(t){
+    for (let i = 0; i < 10; i++){
+      const a = ((t / 5.5 + i / 10) % 1), z = H + .1 + a * 1.05, r = .07 + .2 * a, x = .2 * a * a;
+      const [px, py] = P3([x, .05, z]);
+      g.beginPath(); g.arc(px, py, r * view.sc, 0, 2 * Math.PI);
+      g.fillStyle = `rgba(${Math.round(150 + 50 * (1 - a))},${Math.round(150 + 45 * (1 - a))},${Math.round(155 + 45 * (1 - a))},${(.9 * Math.sin(Math.PI * a)).toFixed(3)})`; g.fill();
+    }
+  }
+
+  // numeri delle parti, visibili quando compare la voce corrispondente
+  const MK = { 1:[[-.32, -.002, -.72], '#e2453c', true], 2:[[.13, -.002, -.2], '#e8862a', true], 3:[[0, .14, H + .03], '#f2c230', false],
+               4:[[XP + .06, -.002, zs(XP) + HP + .13], '#00e49a', false], 5:[[1.52 * Math.cos(TL), 1.52 * Math.sin(TL), .04], '#4fd8ff', false], 6:[[.14, .06, H + .8], '#c9d3dd', false] };
+  const items = [...slide.querySelectorAll('.vitem[data-mk]')];
+  function markers(cutVisible){
+    items.forEach(el => {
+      if (!el.classList.contains('on')) return;
+      const [p, col, inside] = MK[el.dataset.mk];
+      if (inside && !cutVisible) return;
+      const [x, y] = P3(p);
+      g.beginPath(); g.arc(x, y, 19, 0, 2 * Math.PI); g.fillStyle = col; g.fill(); g.lineWidth = 4; g.strokeStyle = '#fff'; g.stroke();
+      g.fillStyle = '#111'; g.font = '700 22px "Roboto Mono", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(el.dataset.mk, x, y + 1);
+    });
+  }
+
+  function draw(t){
+    g.clearRect(0, 0, cv.width, cv.height);
+    exterior();
+    const cutVisible = camY([0, -1, 0]) < 0;
+    if (cutVisible) cutFace();
+    plume(t);
+    markers(cutVisible);
+  }
+  const t0 = performance.now();
+  (function frame(now){
+    if (slide.classList.contains('active')){
+      if (!touched && !reduce) view.th = base.th + .2 * Math.sin((now - t0) / 1000 * .45);
+      draw(reduce ? 2 : (now - t0) / 1000);
+    }
+    requestAnimationFrame(frame);
+  })(t0);
+  draw(2);
+  cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, th: view.th, ph: view.ph }; touched = true; cv.setPointerCapture(e.pointerId); e.stopPropagation(); });
+  cv.addEventListener('pointermove', e => { if (!drag) return; view.th = drag.th + (e.clientX - drag.x) * .01; view.ph = Math.min(1.2, Math.max(.1, drag.ph + (e.clientY - drag.y) * .007)); });
+  const end = () => { drag = null; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  cv.addEventListener('click', e => e.stopPropagation());
+  cv.addEventListener('dblclick', e => { e.stopPropagation(); view.th = base.th; view.ph = base.ph; });
+})();
+
+/* ---------- 3. le tre lave: roccia, silice e temperatura ---------- */
+(function(){
+  const P = {
+    basica:     { rock:'#3b3d44', dots:'#26272c', si:48, siTxt:'< 52%',  temp:.92, tTxt:'1100–1250 °C' },
+    intermedia: { rock:'#7d7f86', dots:'#5f6168', si:58, siTxt:'52–65%', temp:.68, tTxt:'900–1100 °C' },
+    acida:      { rock:'#d9c3b3', dots:'#b9a090', si:72, siTxt:'> 65%',  temp:.44, tTxt:'700–850 °C' }
+  };
+  document.querySelectorAll('.lavasvg').forEach(svg => {
+    const p = P[svg.dataset.t];
+    let dots = '';
+    for (let i = 0; i < 14; i++) dots += `<circle cx="${40 + (i * 37) % 70}" cy="${48 + (i * 23) % 58}" r="${1.6 + (i % 3)}" fill="${p.dots}"/>`;
+    const fillH = p.si * 1.2, tH = 78 * p.temp;
+    svg.innerHTML = `
+      <path d="M30,74 L48,40 L90,32 L118,54 L114,98 L84,120 L42,114 L22,94 Z" fill="${p.rock}"/>${dots}
+      <path d="M48,44 L86,37" stroke="rgba(255,255,255,.35)" stroke-width="4" stroke-linecap="round"/>
+      <text x="172" y="14" fill="${COL.soft}" font-size="13" text-anchor="middle" ${MONO}>SiO₂</text>
+      <rect x="157" y="22" width="30" height="96" rx="8" fill="rgba(255,255,255,.08)" stroke="#dfeaf2" stroke-width="2"/>
+      <rect x="160" y="${R2(118 - fillH * .8)}" width="24" height="${R2(fillH * .8 - 3)}" rx="6" fill="${COL.mint}"/>
+      <g stroke="#fff" stroke-width="1.5" opacity=".7"><line x1="150" y1="${R2(118 - 52 * 1.2 * .8)}" x2="157" y2="${R2(118 - 52 * 1.2 * .8)}"/><line x1="150" y1="${R2(118 - 65 * 1.2 * .8)}" x2="157" y2="${R2(118 - 65 * 1.2 * .8)}"/></g>
+      <text x="172" y="140" fill="#fff" font-size="14" font-weight="700" text-anchor="middle" ${MONO}>${p.siTxt}</text>
+      <text x="266" y="14" fill="${COL.soft}" font-size="13" text-anchor="middle" ${MONO}>°C</text>
+      <rect x="259" y="22" width="14" height="88" rx="7" fill="rgba(255,255,255,.08)" stroke="#dfeaf2" stroke-width="2"/>
+      <rect x="262" y="${R2(108 - tH)}" width="8" height="${R2(tH)}" rx="4" fill="${COL.red}"/>
+      <circle cx="266" cy="114" r="11" fill="${COL.red}" stroke="#dfeaf2" stroke-width="2"/>
+      <text x="266" y="140" fill="#fff" font-size="13" font-weight="700" text-anchor="middle" ${MONO}>${p.tTxt}</text>`;
+  });
+  $id('silicaBar').innerHTML = `
+    <defs><linearGradient id="siG" x1="0" x2="1"><stop offset="0" stop-color="#e2453c"/><stop offset=".5" stop-color="#e8862a"/><stop offset="1" stop-color="#f2c230"/></linearGradient></defs>
+    <rect x="0" y="30" width="1150" height="14" rx="7" fill="url(#siG)"/>
+    <path d="M1146,22 L1176,37 L1146,52 Z" fill="#f2c230"/>
+    <g font-size="16" ${MONO}>
+      <text x="0" y="18" fill="#fff" font-weight="700">meno silice</text><text x="1150" y="18" fill="#fff" font-weight="700" text-anchor="end">più silice</text>
+      <text x="0" y="68" fill="${COL.soft}">lava più fluida, più calda, più scura</text>
+      <text x="1150" y="68" fill="${COL.soft}" text-anchor="end">lava più viscosa, meno calda, più chiara</text>
+    </g>`;
+})();
+
+/* ---------- 4. la viscosità: tre lave sullo stesso pendio ---------- */
+(function(){
+  const rows = [
+    { y:80,  label:'lava basica · fluida',    col:COL.red,    lava:'#ffb347', v:190, max:520, th:9 },
+    { y:270, label:'lava intermedia',         col:COL.orange, lava:'#e8862a', v:70,  max:300, th:18 },
+    { y:460, label:'lava acida · viscosa',    col:COL.yellow, lava:'#b5472e', v:22,  max:112, th:40 }
+  ];
+  const U = [560 / Math.hypot(560, 90), 90 / Math.hypot(560, 90)], N = [U[1], -U[0]];
+  let s = `<rect width="640" height="600" rx="18" fill="#0d1a17" stroke="#1f3b31" stroke-width="3"/>`;
+  rows.forEach((r, i) => {
+    s += `<text x="26" y="${r.y - 20}" fill="${r.col}" font-size="17" font-weight="700" ${MONO}>${r.label}</text>
+      <path d="M30,${r.y + 20} L610,${r.y + 113} L610,${r.y + 150} L30,${r.y + 150} Z" fill="#2a211b"/>
+      <path d="M30,${r.y + 20} L610,${r.y + 113}" stroke="#4a3a30" stroke-width="3"/>
+      <ellipse cx="62" cy="${r.y + 25}" rx="22" ry="6" fill="#120c09"/>
+      <path class="lv" data-i="${i}" fill="${r.lava}"/>`;
+  });
+  $id('ill-visc').innerHTML = `<svg viewBox="0 0 640 600" width="640" height="600" role="img" aria-label="Tre colate sullo stesso pendio: la lava basica scorre veloce e lontano, quella acida avanza appena e si accumula">${s}</svg>`;
+  const paths = [...$id('ill-visc').querySelectorAll('.lv')], slide = $id('ill-visc').closest('.slide');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function draw(t){
+    rows.forEach((r, i) => {
+      const l = Math.max(4, Math.min(r.max, r.v * t)), V = [62, r.y + 24];
+      const top = [], bot = [];
+      for (let k = 0; k <= 24; k++){
+        const sk = l * k / 24, th = r.th * Math.sqrt(Math.max(0, 1 - Math.pow(sk / l, 3))) + 2;
+        const B = [V[0] + U[0] * sk, V[1] + U[1] * sk];
+        bot.push(B); top.push([B[0] + N[0] * th, B[1] + N[1] * th]);
+      }
+      paths[i].setAttribute('d', 'M' + top.map(p => `${R2(p[0])},${R2(p[1])}`).join(' L') + ' L' + bot.reverse().map(p => `${R2(p[0])},${R2(p[1])}`).join(' L') + ' Z');
+    });
+  }
+  const t0 = performance.now();
+  (function frame(now){
+    if (slide.classList.contains('active')) draw(reduce ? 6 : ((now - t0) / 1000) % 8);
+    requestAnimationFrame(frame);
+  })(t0);
+  draw(6);
+  // il Mago Algebrick con la sua nuvoletta
+  $id('magoVisc').innerHTML = `
+    ${mago(72, 92, .95)}
+    <rect x="160" y="38" width="372" height="78" rx="14" fill="#fff"/>
+    <path d="M176,108 L118,94 L196,114 Z" fill="#fff"/>
+    <text x="180" y="64" fill="${COL.orange}" font-size="15" font-weight="700" ${MONO}>Mago Algebrick</text>
+    <text x="180" y="96" fill="#111" font-size="20" font-weight="700" ${MONO}>Più silice, più viscosità!</text>`;
+})();
+
+/* ---------- 5. i tipi di eruzione, animati ---------- */
+(function(){
+  const ground = `<rect x="0" y="152" width="210" height="18" fill="#3a2a20"/>`;
+  const pr = (cls, x, y, r, fill, dx, h, d, dl, fall) => `<circle class="${cls}" cx="${x}" cy="${y}" r="${r}" fill="${fill}" style="--dx:${dx}px;--h:${h}px;--d:${d}s;--fall:${fall || 30}px;animation-delay:${dl}s"/>`;
+  let seed = 5; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const E = {
+    hawaiiana: () => {
+      let f = '';
+      for (let i = 0; i < 12; i++) f += pr('proj', 105, 104, 3.5, i % 2 ? '#ffd27a' : '#ff9a3c', R2(-34 + rnd() * 68), R2(36 + rnd() * 36), R2(1.1 + rnd() * .6), R2(rnd() * 1.6), 8);
+      return `${ground}<path d="M0,160 L70,106 L140,106 L210,160 Z" fill="#4e423b"/>
+        <path d="M128,108 C150,120 160,136 176,146 C188,153 198,156 208,158" fill="none" stroke="#ff7a2a" stroke-width="12" opacity=".35" filter="url(#soft)"/>
+        <path class="lavaflow" d="M128,108 C150,120 160,136 176,146 C188,153 198,156 208,158" fill="none" stroke="#ff8a2a" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="105" cy="106" rx="30" ry="5" fill="#ff9a3c"/>${f}`;
+    },
+    stromboliana: () => {
+      let f = '';
+      for (let i = 0; i < 12; i++) f += pr('bproj', 105, 72, 3.2, i % 3 ? '#ffb347' : '#ff7a2a', R2(-72 + rnd() * 144), R2(58 + rnd() * 34), 2.4, 0, 60);
+      return `${ground}<path d="M15,160 L88,72 L122,72 L195,160 Z" fill="#4a3e38"/>
+        <ellipse cx="105" cy="72" rx="17" ry="4" fill="#ff7a2a"/>
+        <circle class="ashburst" cx="105" cy="56" r="14" fill="#8a8f96" style="animation-duration:2.4s"/>${f}`;
+    },
+    vulcaniana: () => {
+      let f = '';
+      for (let i = 0; i < 5; i++) f += `<rect class="bproj" x="102" y="66" width="7" height="6" fill="#2b2b2b" style="--dx:${R2(-60 + rnd() * 120)}px;--h:${R2(50 + rnd() * 30)}px;--d:3s;--fall:70px"/>`;
+      return `${ground}<path d="M15,160 L88,72 L122,72 L195,160 Z" fill="#4a3e38"/>
+        <rect x="88" y="68" width="34" height="6" rx="3" fill="#2b2b2b"/>
+        <circle class="ashburst" cx="105" cy="46" r="26" fill="#4f5359"/>
+        <circle class="ashburst" cx="84" cy="36" r="20" fill="#5e6269" style="animation-delay:.2s"/>
+        <circle class="ashburst" cx="126" cy="34" r="22" fill="#5e6269" style="animation-delay:.35s"/>
+        <circle class="ashburst" cx="104" cy="20" r="18" fill="#6e737b" style="animation-delay:.5s"/>${f}`;
+    },
+    peleana: () => {
+      let f = '';
+      for (let i = 0; i < 4; i++) f += `<g class="nube" style="--nx:78px;--ny:76px;animation-delay:${i * .8}s"><circle cx="126" cy="74" r="12" fill="#c9a27a"/><circle cx="136" cy="80" r="9" fill="#e8862a" opacity=".85"/><circle cx="118" cy="82" r="8" fill="#a8896a"/></g>`;
+      return `${ground}<path d="M20,160 L92,66 L118,66 L190,160 Z" fill="#4a3e38"/>
+        <path d="M86,68 C84,40 126,40 124,68 Z" fill="#6b5a52"/>
+        <path d="M96,52 L102,60 L98,66 M112,48 L108,58 L114,64" stroke="#ff8a2a" stroke-width="2.5" fill="none"/>${f}`;
+    },
+    pliniana: () => `${ground}<path d="M20,160 L92,82 L118,82 L190,160 Z" fill="#4a3e38"/>
+        <path class="column" d="M94,82 L116,82 L126,30 L84,30 Z" fill="#8a8f96"/>
+        <ellipse class="umbrella" cx="105" cy="24" rx="96" ry="15" fill="#9aa0a7"/>
+        <g class="umbrella" opacity=".7">${Array.from({length:9}, (_, i) => `<line x1="${24 + i * 20}" y1="36" x2="${20 + i * 20}" y2="60" stroke="#9aa0a7" stroke-width="2" stroke-dasharray="3 4"/>`).join('')}</g>
+        <ellipse cx="105" cy="82" rx="12" ry="3" fill="#ff7a2a"/>`
+  };
+  document.querySelectorAll('svg.erupt').forEach(svg => { svg.innerHTML = E[svg.dataset.t](); });
+  $id('explBar').innerHTML = `
+    <defs><linearGradient id="exG" x1="0" x2="1"><stop offset="0" stop-color="#ff9a3c"/><stop offset=".5" stop-color="#e2453c"/><stop offset="1" stop-color="#b07cd8"/></linearGradient></defs>
+    <rect x="0" y="26" width="1150" height="14" rx="7" fill="url(#exG)"/>
+    <path d="M1146,18 L1176,33 L1146,48 Z" fill="#b07cd8"/>
+    <g font-size="16" ${MONO}>
+      <text x="0" y="16" fill="#fff" font-weight="700">lava fluida: eruzioni effusive</text>
+      <text x="1150" y="16" fill="#fff" font-weight="700" text-anchor="end">lava viscosa: eruzioni esplosive</text>
+      <text x="575" y="66" fill="${COL.soft}" text-anchor="middle">più la lava è viscosa, più l’eruzione è esplosiva</text>
+    </g>`;
+})();
+
+/* ---------- 6. le forme degli edifici vulcanici ---------- */
+(function(){
+  const G = 236, cx = [111.5, 350.5, 589.5, 828.5, 1067.5];
+  let s = `<rect x="0" y="${G}" width="1180" height="14" fill="#3a2a20"/>`;
+  // a scudo
+  let c = cx[0];
+  s += `<g class="f" data-f="1"><path d="M${c - 110},${G} C${c - 64},${G - 16} ${c - 32},${G - 38} ${c - 12},${G - 42} L${c + 12},${G - 42} C${c + 32},${G - 38} ${c + 64},${G - 16} ${c + 110},${G} Z" fill="#4a4448"/>
+    <path d="M${c - 4},${G - 41} C${c + 26},${G - 32} ${c + 50},${G - 20} ${c + 86},${G - 6}" stroke="#ff8a2a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M${c - 8},${G - 41} C${c - 34},${G - 30} ${c - 60},${G - 16} ${c - 90},${G - 4}" stroke="#ff8a2a" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/></g>`;
+  // stratovulcano, con gli strati
+  c = cx[1];
+  const strato = `M${c - 100},${G} L${c - 18},${G - 168} L${c + 18},${G - 168} L${c + 100},${G} Z`;
+  let bands = '';
+  for (let j = 0; j < 9; j++){ const o = 12 + j * 16; bands += `<path d="M${c - 120},${G + 10 - o * 1.4} L${c},${G - 190 + o * 1.1} L${c + 120},${G + 10 - o * 1.4}" fill="none" stroke="${j % 2 ? '#5b5050' : '#a08a6a'}" stroke-width="9"/>`; }
+  s += `<g class="f" data-f="2"><defs><clipPath id="stratoC"><path d="${strato}"/></clipPath></defs><path d="${strato}" fill="#7d6a5a"/><g clip-path="url(#stratoC)">${bands}</g>
+    <circle class="steam" cx="${c}" cy="${G - 182}" r="12" fill="#e9edf0"/><circle class="steam" cx="${c + 6}" cy="${G - 196}" r="10" fill="#e9edf0" style="animation-delay:1.2s"/></g>`;
+  // cono di scorie
+  c = cx[2];
+  let sc = '';
+  for (let i = 0; i < 26; i++) sc += `<circle cx="${R2(c - 46 + (i * 37) % 92)}" cy="${R2(G - 8 - (i * 23) % 60)}" r="${2 + i % 3}" fill="#5a2c1e"/>`;
+  s += `<g class="f" data-f="3"><defs><clipPath id="sconoC"><path d="M${c - 70},${G} L${c - 22},${G - 78} L${c + 22},${G - 78} L${c + 70},${G} Z"/></clipPath></defs>
+    <path d="M${c - 70},${G} L${c - 22},${G - 78} L${c + 22},${G - 78} L${c + 70},${G} Z" fill="#7a3e2a"/><g clip-path="url(#sconoC)">${sc}</g></g>`;
+  // duomo di lava
+  c = cx[3];
+  s += `<g class="f" data-f="4"><path d="M${c - 78},${G} C${c - 74},${G - 52} ${c - 40},${G - 86} ${c},${G - 86} C${c + 40},${G - 86} ${c + 74},${G - 52} ${c + 78},${G} Z" fill="#6b5a52"/>
+    <path d="M${c - 30},${G - 70} L${c - 18},${G - 50} L${c - 26},${G - 30} M${c + 22},${G - 74} L${c + 12},${G - 52} L${c + 26},${G - 36} M${c},${G - 84} L${c + 4},${G - 64}" stroke="#ff8a2a" stroke-width="3" fill="none" stroke-linecap="round"/></g>`;
+  // caldera, con il lago sul fondo
+  c = cx[4];
+  s += `<g class="f" data-f="5"><path d="M${c - 115},${G} L${c - 96},${G - 46} L${c - 70},${G - 50} L${c - 58},${G - 20} L${c + 58},${G - 20} L${c + 70},${G - 50} L${c + 96},${G - 46} L${c + 115},${G} Z" fill="#5a4a42"/>
+    <path d="M${c - 58},${G - 20} L${c + 58},${G - 20} L${c + 50},${G - 10} L${c - 50},${G - 10} Z" fill="#2fb5e8"/>
+    <path d="M${c - 96},${G - 46} L${c - 120},${G - 76} M${c + 96},${G - 46} L${c + 120},${G - 76}" stroke="#dfeaf2" stroke-width="2.5" stroke-dasharray="5 6" opacity=".7"/>
+    <text x="${c}" y="${G - 84}" fill="${COL.soft}" font-size="13" text-anchor="middle" ${MONO}>il vecchio vulcano</text></g>`;
+  $id('edifici').innerHTML = s;
+})();
+
+/* ---------- 7. i piroclasti ---------- */
+let seedP = 11; const rndP = () => (seedP = (seedP * 9301 + 49297) % 233280) / 233280;
+const spindle = (x, y, s, rot) => `<g transform="translate(${x},${y}) rotate(${rot || 0}) scale(${s})"><path d="M-40,0 C-28,-16 -8,-18 0,-10 C10,-20 30,-18 40,-4 C30,10 10,12 0,4 C-8,14 -28,14 -40,0 Z" fill="#3b3d44"/>
+  <path d="M-46,2 C-44,-3 -42,-5 -40,0 M40,-4 C44,-8 47,-6 48,-2" stroke="#3b3d44" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M-20,-6 L-10,0 L-16,6 M12,-8 L18,-1 L12,4" stroke="#ff8a2a" stroke-width="2.4" fill="none"/></g>`;
+(function(){
+  const I = {
+    bombe: spindle(45, 35, .9, -12),
+    lapilli: [[22, 30, 9], [44, 22, 7], [62, 36, 10], [34, 50, 8], [58, 54, 6], [76, 22, 5]].map(([x, y, r], i) => `<path d="M${x - r},${y} L${x - r * .4},${y - r} L${x + r * .7},${y - r * .7} L${x + r},${y + r * .3} L${x + r * .2},${y + r} L${x - r * .8},${y + r * .6} Z" fill="${['#5a4f4a', '#6e625b', '#7d6f66'][i % 3]}"/>`).join(''),
+    ceneri: Array.from({length:60}, () => `<circle cx="${R2(10 + rndP() * 70)}" cy="${R2(14 + rndP() * 44)}" r="${R2(.8 + rndP() * 1.4)}" fill="${rndP() > .5 ? '#9aa0a7' : '#c9cdd2'}"/>`).join('')
+  };
+  document.querySelectorAll('svg.pico').forEach(svg => { svg.innerHTML = I[svg.dataset.t]; });
+
+  const C = [140, 150];
+  let parts = '';
+  for (let i = 0; i < 4; i++){
+    const dx = R2(130 + rndP() * 60), h = R2(70 + rndP() * 40), d = R2(2.6 + rndP() * .6), dl = R2(i * .7);
+    parts += `<g class="proj" style="--dx:${dx}px;--h:${h}px;--d:${d}s;--fall:180px;animation-delay:${dl}s">${spindle(C[0], C[1], .22, rndP() * 60)}</g>`;
+  }
+  for (let i = 0; i < 9; i++) parts += `<circle class="proj" cx="${C[0]}" cy="${C[1]}" r="4" fill="#5a4f4a" style="--dx:${R2(230 + rndP() * 90)}px;--h:${R2(50 + rndP() * 30)}px;--d:${R2(2.3 + rndP() * .6)}s;--fall:180px;animation-delay:${R2(rndP() * 2.4)}s"/>`;
+  for (let i = 0; i < 22; i++) parts += `<circle class="ashdrift" cx="${R2(C[0] - 10 + rndP() * 30)}" cy="${R2(80 + rndP() * 40)}" r="2.3" fill="#5e6269" style="--dx:${R2(330 + rndP() * 130)}px;--dy:${R2(205 + rndP() * 30)}px;--d:${R2(5 + rndP() * 3)}s;animation-delay:${R2(rndP() * 6)}s"/>`;
+  const pebbles = Array.from({length:14}, (_, i) => `<circle cx="${R2(380 + rndP() * 95)}" cy="${R2(326 + rndP() * 6)}" r="${R2(2.5 + rndP() * 2.5)}" fill="${i % 2 ? '#5a4f4a' : '#6e625b'}"/>`).join('');
+  $id('ill-piro').innerHTML = `
+  <svg viewBox="0 0 620 440" width="620" height="440" role="img" aria-label="Un’esplosione: le bombe cadono vicino al cratere, i lapilli più lontano, le ceneri trasportate dal vento arrivano lontanissimo">
+    <defs><clipPath id="piroC"><rect width="620" height="440" rx="18"/></clipPath></defs>
+    <g clip-path="url(#piroC)">
+      <rect width="620" height="440" fill="#7ec8f2"/>
+      <rect y="330" width="620" height="110" fill="#5a9a4a"/><rect y="352" width="620" height="88" fill="#6b4a2b"/>
+      <path d="M20,332 L120,150 L160,150 L260,332 Z" fill="#6b5a52"/>
+      <ellipse cx="140" cy="150" rx="20" ry="4" fill="#ff7a2a"/>
+      <circle class="ashburst" cx="140" cy="118" r="26" fill="#6e737b"/>
+      <circle class="ashburst" cx="124" cy="96" r="20" fill="#7d828a" style="animation-delay:.6s"/>
+      <circle class="ashburst" cx="158" cy="90" r="22" fill="#7d828a" style="animation-delay:1.2s"/>
+      ${parts}
+      ${spindle(286, 322, .26, 8)}${spindle(318, 326, .2, -14)}${spindle(342, 320, .24, 20)}
+      ${pebbles}
+      <path d="M484,331 C520,326 570,327 620,324 L620,334 L484,334 Z" fill="#9aa0a7"/>
+      ${fig(584, 270, .55, '#c9d1d8', '#9aa5b1', {hair:'#e8862a', style:'helmet', face:'goggles'})}
+      <path d="M452,44 L556,44 M544,36 L556,44 L544,52" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="500" y="30" fill="#fff" font-size="15" font-weight="700" text-anchor="middle" ${MONO}>vento</text>
+      ${pill(314, 392, 'bombe', COL.red, 15)}${pill(428, 392, 'lapilli', COL.orange, 15)}${pill(548, 392, 'ceneri', '#c9d3dd', 15)}
+    </g>
+  </svg>`;
+})();
+
+/* ---------- 8. i gas vulcanici ---------- */
+const MOL2 = {
+  so2: (x, y, r) => ball(x - r * .95, y + r * .7, r * .85, COL.red) + ball(x + r * .95, y + r * .7, r * .85, COL.red) + ball(x, y, r, COL.yellow, 'S', '#111'),
+  h2s: (x, y, r) => ball(x - r * .95, y + r * .8, r * .62, '#f4f4f4') + ball(x + r * .95, y + r * .8, r * .62, '#f4f4f4') + ball(x, y, r, COL.yellow, 'S', '#111')
+};
+(function(){
+  const mols = [];
+  for (let i = 0; i < 9; i++) mols.push(['h2o', MOL.h2o]);
+  for (let i = 0; i < 4; i++) mols.push(['co2', MOL.co2]);
+  for (let i = 0; i < 2; i++) mols.push(['so2', MOL2.so2], ['h2s', MOL2.h2s]);
+  const rising = mols.map(([, f], i) => `<g class="rise" style="--rh:-290px;--dx:${R2(-30 + rndP() * 60)}px;--d:${R2(6 + rndP() * 3)}s;animation-delay:-${R2(rndP() * 9)}s">${f(R2(220 + rndP() * 180), 530, 11)}</g>`).join('');
+  const cell = (x, y, f, name, note) => `<g>${f(x + 40, y + 34, 13)}
+    <text x="${x + 86}" y="${y + 30}" fill="#fff" font-size="16" font-weight="700" ${MONO}>${name}</text>
+    ${note ? `<text x="${x + 86}" y="${y + 52}" fill="${COL.soft}" font-size="13" ${MONO}>${note}</text>` : ''}</g>`;
+  $id('ill-gas').innerHTML = `
+  <svg viewBox="0 0 620 600" width="620" height="600" role="img" aria-label="Dal cratere salgono molecole di vapore acqueo, anidride carbonica, anidride solforosa e idrogeno solforato">
+    <defs><clipPath id="gasC"><rect width="620" height="600" rx="18"/></clipPath>
+      <linearGradient id="gasSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1a24"/><stop offset="1" stop-color="#2a1a14"/></linearGradient></defs>
+    <g clip-path="url(#gasC)">
+      <rect width="620" height="600" fill="url(#gasSky)"/>
+      <rect x="14" y="14" width="592" height="196" rx="14" fill="rgba(255,255,255,.05)" stroke="#1f3b31" stroke-width="2"/>
+      ${cell(22, 26, MOL.h2o, 'H₂O vapore acqueo', 'il più abbondante')}
+      ${cell(322, 26, MOL.co2, 'CO₂', 'anidride carbonica')}
+      ${cell(22, 116, MOL2.so2, 'SO₂', 'anidride solforosa')}
+      ${cell(322, 116, MOL2.h2s, 'H₂S', 'odore di uova marce')}
+      <ellipse cx="310" cy="560" rx="200" ry="40" fill="#ff7a2a" opacity=".35" filter="url(#soft)"/>
+      ${rising}
+      <path d="M0,600 L0,520 C80,500 140,470 200,500 C240,520 380,520 420,500 C480,470 540,500 620,520 L620,600 Z" fill="#3b2e28"/>
+      <ellipse cx="310" cy="512" rx="112" ry="16" fill="#ff7a2a"/>
+      <ellipse cx="310" cy="512" rx="80" ry="9" fill="#ffd27a"/>
+    </g>
+  </svg>`;
+})();
+
+/* ---------- 9. fumarole, solfatare e mofete ---------- */
+(function(){
+  const steam = (x, y, r, dl) => `<ellipse class="steam" cx="${x}" cy="${y}" rx="${r}" ry="${R2(r * 1.3)}" fill="#fff" opacity=".9" style="animation-delay:${dl}s;animation-duration:3s"/>`;
+  const mk = (n, x, y, col, f) => `<g class="f" data-f="${f}"><circle cx="${x}" cy="${y}" r="18" fill="${col}" stroke="#fff" stroke-width="3"/><text x="${x}" y="${y + 6}" fill="#111" font-size="18" font-weight="700" text-anchor="middle" ${MONO}>${n}</text></g>`;
+  $id('ill-fum').innerHTML = `
+  <svg viewBox="0 0 640 600" width="640" height="600" role="img" aria-label="Un paesaggio vulcanico con fumarole, una solfatara con incrostazioni gialle e la grotta di una mofeta">
+    <defs><clipPath id="fumC"><rect width="640" height="600" rx="18"/></clipPath></defs>
+    <g clip-path="url(#fumC)">
+      <rect width="640" height="600" fill="#9fd8ff"/>
+      <path d="M0,270 C120,220 240,250 340,230 C440,210 540,240 640,226 L640,600 L0,600 Z" fill="#b8ab8a"/>
+      <rect y="300" width="640" height="300" fill="#d8cfb8"/>
+      <g stroke="#6b5a4a" stroke-width="4" fill="none" stroke-linecap="round"><path d="M70,370 L100,356 L132,372 L168,354 L206,368"/><path d="M110,392 L136,384 L160,396"/></g>
+      ${steam(100, 340, 14, 0)}${steam(140, 344, 18, .9)}${steam(180, 336, 13, 1.8)}${steam(124, 380, 11, 1.3)}
+      <path d="M268,446 C276,414 312,400 340,404 C372,400 404,418 402,446 C392,470 290,474 268,446 Z" fill="#f2c230"/>
+      <path d="M300,440 C306,428 326,424 340,428 C354,426 366,434 364,444 C352,452 312,454 300,440 Z" fill="#c9a227"/>
+      <ellipse cx="334" cy="438" rx="20" ry="7" fill="#5a4a32"/>
+      ${steam(330, 410, 16, .4)}${steam(344, 396, 13, 1.5)}
+      ${fig(438, 380, .7, '#2f5fb8', '#24427a', {hair:'#7a4a1e', style:'short'})}
+      ${fig(488, 384, .7, '#e2453c', '#333', {hair:'#e46a8b', style:'ponytail', face:'grin'})}
+      <path d="M548,500 C548,420 600,396 640,396 L640,500 Z" fill="#3b3128"/>
+      <path d="M548,500 C556,486 600,488 640,484 L640,500 Z" fill="#7fa6c9" opacity=".7"/>
+      <path d="M520,402 L544,446 L496,446 Z" fill="${COL.yellow}" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+      <text x="520" y="440" fill="#111" font-size="22" font-weight="700" text-anchor="middle" ${MONO}>!</text>
+      ${pill(596, 524, 'CO₂', COL.cyan, 15)}
+      ${mk(1, 150, 300, '#dff7ff', 1)}${mk(2, 334, 486, COL.yellow, 2)}${mk(3, 596, 380, COL.cyan, 3)}
+    </g>
+  </svg>`;
+})();
+
+/* ---------- 10. geyser, soffioni, terme e bradisismo ---------- */
+(function(){
+  const steam = (x, y, r, dl) => `<ellipse class="steam" cx="${x}" cy="${y}" rx="${r}" ry="${R2(r * 1.3)}" fill="#fff" opacity=".9" style="animation-delay:${dl}s;animation-duration:3.2s"/>`;
+  const mk = (n, x, y, col, f) => `<g class="f" data-f="${f}"><circle cx="${x}" cy="${y}" r="18" fill="${col}" stroke="#fff" stroke-width="3"/><text x="${x}" y="${y + 6}" fill="#111" font-size="18" font-weight="700" text-anchor="middle" ${MONO}>${n}</text></g>`;
+  const col = x => `<rect x="${x - 9}" y="300" width="18" height="160" fill="#e9e2d0"/><rect x="${x - 12}" y="292" width="24" height="10" fill="#d8cfb8"/><rect x="${x - 9}" y="356" width="18" height="26" fill="#8a7a62"/>
+    ${[0, 1, 2, 3].map(k => `<circle cx="${x - 5 + (k % 2) * 9}" cy="${362 + k * 5}" r="1.8" fill="#4a3a2a"/>`).join('')}`;
+  $id('ill-acque').innerHTML = `
+  <svg viewBox="0 0 640 600" width="640" height="600" role="img" aria-label="Un geyser, una centrale geotermica, una piscina termale con una persona e le colonne del Serapeo di Pozzuoli">
+    <defs><clipPath id="acqC"><rect width="640" height="600" rx="18"/></clipPath></defs>
+    <g clip-path="url(#acqC)">
+      <rect width="640" height="600" fill="#9fd8ff"/>
+      <path d="M0,330 C110,290 220,310 320,292 C430,272 540,300 640,286 L640,600 L0,600 Z" fill="#7fb36a"/>
+      <rect y="440" width="640" height="160" fill="#6aa85a"/>
+      <path class="geyser" d="M100,468 C96,400 92,300 98,214 L124,214 C130,300 126,400 122,468 Z" fill="#dff7ff" opacity=".95"/>
+      <ellipse cx="111" cy="470" rx="56" ry="12" fill="#c9c2b0"/><ellipse cx="111" cy="468" rx="40" ry="7" fill="#4fd8ff"/>
+      ${steam(96, 452, 12, 0)}${steam(128, 456, 10, 1.4)}
+      <path d="M286,430 C302,380 298,340 290,306 L368,306 C360,340 356,380 372,430 Z" fill="#c9d1d8"/>
+      <path d="M290,306 L368,306" stroke="#aab4bd" stroke-width="5"/>
+      ${steam(316, 288, 20, 0)}${steam(344, 270, 24, 1.1)}${steam(328, 246, 28, 2.1)}
+      <path d="M372,420 L430,420 L430,404 M232,424 L286,424" stroke="#8a96a3" stroke-width="7" fill="none"/>
+      <rect x="196" y="398" width="42" height="34" fill="#e8e8e8"/><rect x="190" y="390" width="54" height="10" fill="#c8453b"/>
+      ${fig(468, 452, .7, '#e8862a', '#2f5fb8', {hair:'#222', style:'short', face:'grin'})}
+      <path d="M380,486 C392,470 548,470 560,486 L548,530 C500,540 440,540 392,530 Z" fill="#3fd0c9" opacity=".88"/>
+      <path d="M380,486 C392,470 548,470 560,486" stroke="#c9c2b0" stroke-width="8" fill="none"/>
+      ${steam(420, 470, 10, .3)}${steam(530, 468, 12, 1.6)}
+      ${col(586)}${col(612)}${col(638)}
+      ${mk(1, 111, 180, COL.cyan, 1)}${mk(2, 330, 196, '#dff7ff', 2)}${mk(3, 470, 560, COL.mint, 3)}${mk(4, 600, 262, COL.orange, 4)}
+    </g>
+  </svg>`;
+})();
+
+/* ---------- 11. il mago saluta ---------- */
+(function(){
+  let studs = '';
+  for (let i = 0; i < 10; i++) studs += `<rect x="${36 + i * 38}" y="466" width="22" height="9" rx="2.5" fill="#2f9e5a"/>`;
+  $id('magoEnd').innerHTML = `
+    <ellipse cx="220" cy="300" rx="190" ry="230" fill="${COL.orange}" opacity=".08" filter="url(#soft)"/>
+    ${studs}<rect x="24" y="473" width="392" height="26" rx="5" fill="#2f9e5a"/><rect x="24" y="473" width="392" height="6" rx="3" fill="rgba(255,255,255,.2)"/>
+    ${mago(220, 278, 1.9)}`;
+})();
+
+/* =========================================================
+   NAVIGAZIONE: slide e comparse a clic
+   ========================================================= */
+const slides = [...document.querySelectorAll('.slide')];
+let cur = 0, step = 0;
+const counter = document.getElementById('counter');
+
+// barra di avanzamento fatta di mattoncini: uno per slide, colorato per lezione
+const bricksEl = document.getElementById('bricks');
+const LESSON = { 1:'#5a9be8', 2:'#f2c230', 3:'#53c24a', 4:'#e8862a' };
+const pbs = slides.map(function(s, i){
+  const b = document.createElement('button');
+  b.className = 'pb'; b.type = 'button'; b.title = 'Slide ' + (i + 1);
+  b.style.setProperty('--c', LESSON[s.dataset.lesson] || '#00e49a');
+  b.onclick = function(){ cur = i; step = 0; render(); };
+  bricksEl.appendChild(b);
+  return b;
+});
+
+function render(){
+  slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+  const s = slides[cur];
+  s.querySelectorAll('[data-f]').forEach(el => {
+    const f = +el.dataset.f, out = el.dataset.out ? +el.dataset.out : Infinity;
+    el.classList.toggle('on', step >= f && step < out);
+  });
+  counter.textContent = `${cur + 1} / ${slides.length}`;
+  pbs.forEach(function(b, i){ b.classList.toggle('done', i <= cur); b.classList.toggle('now', i === cur); });
+  document.getElementById('prev').disabled = cur === 0 && step === 0;
+  document.getElementById('next').disabled = cur === slides.length - 1 && step >= +slides[cur].dataset.steps;
+}
+function next(){
+  if (step < +slides[cur].dataset.steps) step++;
+  else if (cur < slides.length - 1){ cur++; step = 0; }
+  render();
+}
+function prev(){
+  if (step > 0) step--;
+  else if (cur > 0){ cur--; step = +slides[cur].dataset.steps; }
+  render();
+}
+document.getElementById('next').onclick = next;
+document.getElementById('prev').onclick = prev;
+document.getElementById('restart').onclick = () => { cur = 0; step = 0; render(); };
+document.getElementById('fs').onclick = () => {
+  if (document.fullscreenElement || document.webkitFullscreenElement){
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    return;
+  }
+  const el = document.documentElement, rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen;
+  const ok = document.fullscreenEnabled || document.webkitFullscreenEnabled;
+  if (rfs && ok){ try { const r = rfs.call(el); if (r && r.catch) r.catch(function(){}); } catch(e){} }
+  else if (window.top !== window) window.open(location.href, '_blank', 'noopener');   // iframe senza permesso per lo schermo intero
+};
+document.getElementById('stage').addEventListener('click', e => { if (!e.target.closest('a, .rot3d')) next(); });   // link e blocchi da ruotare non cambiano slide
+addEventListener('keydown', e => {
+  if (['ArrowRight', 'PageDown', ' ', 'Enter', 'ArrowDown'].includes(e.key)){ e.preventDefault(); next(); }
+  else if (['ArrowLeft', 'PageUp', 'Backspace', 'ArrowUp'].includes(e.key)){ e.preventDefault(); prev(); }
+  else if (e.key === 'Home'){ cur = 0; step = 0; render(); }
+});
+// scorrimento con le dita
+let tx = null;
+addEventListener('touchstart', e => { tx = e.target.closest && e.target.closest('.rot3d') ? null : e.touches[0].clientX; }, {passive:true});
+addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50){ dx < 0 ? next() : prev(); } tx = null; });
+
+/* adatta il palco alla finestra */
+function fit(){
+  const s = Math.min(innerWidth / 1280, (innerHeight - 70) / 720);
+  document.getElementById('stage').style.transform = `scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+/* nasconde i comandi quando il mouse è fermo */
+let hideT; const ctr = document.getElementById('controls');
+addEventListener('mousemove', () => { ctr.classList.remove('hide'); clearTimeout(hideT); hideT = setTimeout(() => ctr.classList.add('hide'), 2500); });
+
+/* cielo stellato */
+const cv = document.getElementById('sky'), cx = cv.getContext('2d');
+const stars = Array.from({length:260}, () => ({x:Math.random() * 1280, y:Math.random() * 720, r:Math.random() < .9 ? 1 : 2, p:Math.random() * 6.28, sp:.4 + Math.random() * 1.4}));
+(function tick(t){
+  cx.clearRect(0, 0, 1280, 720);
+  for (const s of stars){ cx.fillStyle = `rgba(255,255,255,${.3 + .7 * Math.abs(Math.sin(s.p + t / 1000 * s.sp * .6))})`; cx.fillRect(s.x, s.y, s.r, s.r); }
+  requestAnimationFrame(tick);
+})(0);
+
+// la copertina entra con la sua animazione
+requestAnimationFrame(() => requestAnimationFrame(render));
+</script>
+</body>
+</html>

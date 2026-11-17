@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Cinematica – Lezioni 1, 2 e 3 | STEM in brick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --mint:#00e49a; --orange:#e8862a; --yellow:#f2c230; --red:#e2453c; --blue:#2fb5e8; --green:#53c24a;
+    --ink:#e9f2ee; --soft:#9fb9ae; --cyan:#4fd8ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:transparent;font-family:"Roboto Mono",ui-monospace,monospace;color:var(--ink)}
+
+  /* ---------- palco 16:9 ---------- */
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #stage{position:relative;width:1280px;height:720px;flex:none;transform-origin:center center;
+    background:#000;border-radius:14px;overflow:hidden;box-shadow:0 0 0 2px #12271f, 0 20px 60px rgba(0,0,0,.6)}
+  #sky{position:absolute;inset:0}
+  .glow{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 60% 50% at 20% 115%, rgba(0,228,154,.16), transparent 70%),
+               radial-gradient(ellipse 55% 50% at 90% 110%, rgba(120,70,200,.22), transparent 70%)}
+
+  .slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .9s ease, visibility 0s linear .9s}
+  .slide.active{opacity:1;visibility:visible;transition:opacity .9s ease, visibility 0s}
+  .slide .in-r{transform:translateX(120px);opacity:0;transition:transform 1.2s cubic-bezier(.2,.8,.2,1) .25s, opacity 1s ease .25s}
+  .slide .in-l{transform:translateX(-120px);opacity:0;transition:transform 1.2s cubic-bezier(.2,.8,.2,1) .25s, opacity 1s ease .25s}
+  .slide .in-up{transform:translateY(40px);opacity:0;transition:transform 1s cubic-bezier(.2,.8,.2,1) .15s, opacity .9s ease .15s}
+  .slide.active .in-r,.slide.active .in-l,.slide.active .in-up{transform:none;opacity:1}
+
+  .abs{position:absolute}
+  h1,h2{font-weight:700;letter-spacing:-.5px;line-height:1.12;color:#fff}
+  h1{font-size:58px}
+  h2{font-size:50px}
+  h2 .bar{display:block;width:90px;height:6px;background:var(--orange);border-radius:3px;margin-top:14px}
+  p{font-size:22px;line-height:1.5;color:var(--ink)}
+  .small{font-size:18px}
+  .center{text-align:center}
+  .mint{color:var(--mint)} .orange{color:var(--orange)} .yel{color:var(--yellow)}
+  .hl{background:#fff;color:#000;padding:0 8px;border-radius:4px;font-weight:700}
+
+  /* comparse a clic */
+  .f{opacity:0;transform:translateY(16px);transition:opacity .6s ease, transform .6s ease}
+  .f.on{opacity:1;transform:none}
+  svg .f{transform:none}
+  path.draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s ease-in-out}
+  .on path.draw, path.draw.on, .slide.active path.draw.auto{stroke-dashoffset:0}
+  .dot{opacity:0;transition:opacity .15s}
+  .on .dot{opacity:1}
+
+  /* logo mattoncino */
+  .brick{position:absolute;right:22px;bottom:18px;width:46px;height:46px;z-index:5}
+  .author{position:absolute;right:80px;bottom:28px;font-weight:700;font-size:16px;color:#fff}
+
+  /* ---------- animazioni dei disegni ---------- */
+  @keyframes scroll800{from{transform:translateX(0)}to{transform:translateX(-800px)}}
+  @keyframes scroll640{from{transform:translateX(0)}to{transform:translateX(-640px)}}
+  .scroll{animation:scroll800 9s linear infinite}
+  .scroll.fast{animation:scroll640 2.5s linear infinite}
+  @keyframes trackmove{from{transform:translateY(0)}to{transform:translateY(50px)}}
+  .trackmove{animation:trackmove .45s linear infinite}
+  @keyframes trainPass{0%{transform:translateX(900px)}100%{transform:translateX(-1500px)}}
+  .train{animation:trainPass 7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin{transform-box:fill-box;transform-origin:center;animation:spin 30s linear infinite}
+  .spin.r{animation-direction:reverse;animation-duration:44s}
+  .spin.s{animation-duration:60s}
+  .spin.hand{animation-duration:6s}
+  @keyframes earth{from{transform:translateX(0)}to{transform:translateX(-400px)}}
+  .earth{animation:earth 12s linear infinite}
+  /* corsa vista di fronte: le gambe si alzano a turno (si accorciano in prospettiva) */
+  @keyframes legA{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.62)}}
+  @keyframes legB{0%,100%{transform:scaleY(.62)}50%{transform:scaleY(1)}}
+  .legA{transform-box:fill-box;transform-origin:50% 0;animation:legA .5s ease-in-out infinite}
+  .legB{transform-box:fill-box;transform-origin:50% 0;animation:legB .5s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .bob{animation:bob .25s ease-in-out infinite}
+  @keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.35) rotate(25deg)}}
+  .twinkle{animation:twinkle 1.6s ease-in-out infinite}
+  @keyframes pulseGlow{0%,100%{opacity:.75}50%{opacity:1}}
+  .pglow{animation:pulseGlow 3s ease-in-out infinite}
+  @media (prefers-reduced-motion: reduce){
+    .scroll,.train,.spin,.earth,.legA,.legB,.bob,.pglow,.trackmove,.twinkle{animation:none}
+  }
+
+  /* ---------- comandi: barra a mattoncini ---------- */
+  .controls{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:12px;width:min(1180px,96vw);
+    background:rgba(10,14,18,.9);border:2px solid #1f3b31;border-radius:16px;padding:9px 16px;backdrop-filter:blur(4px);transition:opacity .4s}
+  .controls.hide{opacity:0}
+  .controls:hover{opacity:1}
+  .stud{flex:none;width:44px;height:44px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;cursor:pointer;
+    background:var(--mint);color:#04140e;box-shadow:inset 0 -3px 0 rgba(0,0,0,.22),0 4px 0 #00a26d}
+  .stud svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+  .stud.sec{background:#26343b;color:var(--mint);box-shadow:inset 0 -3px 0 rgba(0,0,0,.3),0 4px 0 #111b20}
+  .stud:active{transform:translateY(3px);box-shadow:inset 0 2px 0 rgba(0,0,0,.22)}
+  .stud:disabled{opacity:.35;cursor:default;filter:none}
+  /* mattoncini rettangolari con due bottoncini sopra */
+  .bricks{flex:1 1 auto;min-width:0;height:36px;display:flex;align-items:flex-end;justify-content:center;gap:5px;padding-bottom:4px}
+  .pb{position:relative;flex:1 1 0;min-width:9px;max-width:38px;height:19px;margin-top:6px;padding:0;
+    border:2px solid var(--c,#00e49a);border-radius:3px;background:#fff;cursor:pointer;transition:transform .16s ease}
+  .pb::before,.pb::after{content:"";position:absolute;top:-5px;width:20%;height:5px;
+    border:2px solid var(--c,#00e49a);border-bottom:0;border-radius:2px 2px 0 0;background:#fff}
+  .pb::before{left:12%}
+  .pb::after{right:12%}
+  .pb.done{background:var(--c,#00e49a)}
+  .pb.done::before,.pb.done::after{background:var(--c,#00e49a)}
+  .pb.now{transform:translateY(-6px);box-shadow:0 0 0 2px rgba(255,255,255,.4)}
+  .count{flex:none;min-width:4.2em;text-align:center;font:700 15px/1 "Roboto Mono",ui-monospace,monospace;color:#cfe;font-variant-numeric:tabular-nums}
+  @media (max-width:640px){ .stud{width:38px;height:38px} .stud svg{width:19px;height:19px} .count{min-width:3.4em;font-size:12px} .pb{min-width:6px} .bricks{gap:3px} }
+  /* ---------- lezione 2 ---------- */
+  .tag{display:inline-block;background:var(--orange);color:#111;font-weight:700;font-size:18px;padding:4px 14px;border-radius:6px}
+  .ovl{text-decoration:overline}
+  .eq{display:flex;align-items:center;justify-content:center;gap:12px;font-size:24px;margin-top:22px}
+  .frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1.25}
+  .frac>span:first-child{border-bottom:2px solid currentColor;padding:0 6px 2px}
+  .frac>span:last-child{padding:2px 6px 0}
+  .chip{font-weight:700;font-size:20px;color:#111;background:var(--mint);border-radius:8px;padding:8px 14px;margin-bottom:16px;text-align:center}
+  .tbl{border-collapse:collapse;font-size:22px;min-width:420px;border-radius:10px;overflow:hidden}
+  .tbl th{background:#2f5fb8;color:#fff;padding:10px 22px}
+  .tbl td{padding:8px 22px;text-align:center;border-top:1px solid #1d3a5f;color:#fff}
+  .tbl tr:nth-child(odd) td{background:rgba(47,95,184,.18)}
+  .tbl tr:nth-child(even) td{background:rgba(47,95,184,.32)}
+  .tbl tr{opacity:0;transition:opacity .4s}
+  .tbl.on tr{opacity:1}
+  .tbl.on tr:nth-child(2){transition-delay:.3s}.tbl.on tr:nth-child(3){transition-delay:.6s}.tbl.on tr:nth-child(4){transition-delay:.9s}
+  .tbl.on tr:nth-child(5){transition-delay:1.2s}.tbl.on tr:nth-child(6){transition-delay:1.5s}.tbl.on tr:nth-child(7){transition-delay:1.8s}.tbl.on tr:nth-child(8){transition-delay:2.1s}
+  @keyframes drive{from{transform:translateX(-260px)}to{transform:translateX(760px)}}
+  .drive{animation:drive 4.5s linear infinite}
+  @keyframes flash{0%,40%,60%,100%{opacity:0}48%{opacity:1}}
+  .flash{animation:flash 4.5s linear infinite}
+  @keyframes needle{0%{transform:rotate(-90deg)}20%{transform:rotate(-20deg)}35%{transform:rotate(30deg)}50%{transform:rotate(-10deg)}62%{transform:rotate(-90deg)}75%{transform:rotate(10deg)}90%{transform:rotate(45deg)}100%{transform:rotate(-90deg)}}
+  .needle{transform-box:view-box;transform-origin:0 0;animation:needle 8s ease-in-out infinite}
+  @keyframes sleepers{from{transform:translateY(0)}to{transform:translateY(60px)}}
+  .sleepers{animation:sleepers .35s linear infinite}
+  @keyframes bubble{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-70px);opacity:0}}
+  .bubble{animation:bubble 2.2s ease-in infinite}
+  @keyframes mru{from{transform:translateX(0)}to{transform:translateX(500px)}}
+  .mru{animation:mru 5s linear infinite}
+  .vmove{transition:transform 2.2s ease-in-out}
+  @media (prefers-reduced-motion: reduce){.drive,.flash,.needle,.sleepers,.bubble,.mru{animation:none}}
+  /* ---------- lezione 3 ---------- */
+  .stag > *{opacity:0;transition:opacity .45s ease}
+  .stag.on > *{opacity:1}
+  .still .legA,.still .legB,.still .bob{animation:none}
+
+  /* ---------- grafici, M.U.A., formula ---------- */
+  .small-tbl{font-size:19px;min-width:300px}
+  .small-tbl th,.small-tbl td{padding:6px 18px}
+  .strike{text-decoration:line-through;text-decoration-color:#e2453c;text-decoration-thickness:3px}
+  .formula-box{display:inline-flex;align-items:center;gap:14px;font-size:44px;font-weight:700;color:#fff;margin:14px 0 8px;
+    padding:14px 34px;border:3px solid var(--mint);border-radius:14px;background:rgba(0,228,154,.08)}
+  .sqrt{display:inline-flex;align-items:flex-end}
+  .sq{font-size:58px;line-height:1;color:var(--mint)}
+  .rad{border-top:4px solid var(--mint);padding:4px 8px 0;margin-left:-2px;line-height:1.1}
+  .tip{opacity:0;transition:opacity .25s}
+  .on .tip{opacity:1}
+  /* ---------- riepilogo formule ---------- */
+  .moto-card{flex:1;max-width:372px;background:rgba(255,255,255,.04);border:2px solid var(--cc);border-radius:16px;padding:22px 26px;box-shadow:0 7px 0 rgba(0,0,0,.35);display:flex;flex-direction:column}
+  .mc-h{font-size:24px;font-weight:700;color:var(--cc);line-height:1.15}
+  .mc-sub{font-size:16px;color:#9fb9ae;margin:4px 0 14px}
+  .mc-eq{font-size:30px;font-weight:700;color:#fff;margin:8px 0;display:flex;align-items:center;gap:8px}
+  .mc-eq i{font-style:italic}
+  .mc-g{width:100%;height:118px;margin-top:auto}
+  .mc-note{font-size:16px;color:#cfe;margin-top:10px}
+  /* ---------- slide 16: pallina trascinabile ---------- */
+  #gHint{transition:opacity .35s ease}
+  #ill-walk.touched #gHint{opacity:0}
+  .playbtn{display:inline-flex;align-items:center;gap:10px;padding:13px 24px;border:0;border-radius:999px;cursor:pointer;
+    background:var(--mint);color:#04140e;font:700 21px/1 "Roboto Mono",ui-monospace,monospace;
+    box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 5px 0 #00a26d}
+  .playbtn:active{transform:translateY(3px);box-shadow:inset 0 2px 0 rgba(0,0,0,.18)}
+  .playbtn svg{width:20px;height:20px;fill:currentColor;display:block}
+</style>
+</head>
+<body>
+<div id="wrap">
+<div id="stage">
+  <canvas id="sky" width="1280" height="720"></canvas>
+  <div class="glow"></div>
+
+  <!-- =================== 1. COPERTINA =================== -->
+  <section class="slide active" data-steps="0">
+    <h1 class="abs in-l" style="left:60px;top:70px;font-size:46px;width:700px">La Cinematica<br><span class="mint">La Scienza del Movimento</span></h1>
+    <div class="abs in-r" style="left:800px;top:70px;width:440px">
+      <p class="small"><b class="orange">I fattori e le grandezze in gioco</b><br>Sistema di riferimento, traiettoria, tempo e spazio</p>
+      <p class="small" style="margin-top:22px"><b class="orange">I vettori</b><br>Un nuovo tipo di grandezza fisica: spostamenti, velocità ed accelerazioni</p>
+      <p class="small" style="margin-top:22px"><b class="orange">I diversi tipi di moto</b><br>Moto rettilineo uniforme, moto uniformemente accelerato</p>
+    </div>
+    <svg class="abs" style="left:0;top:330px" width="760" height="390" viewBox="0 0 760 390">
+      <path class="in-up" d="M0,40 C120,10 260,0 360,30 C450,55 520,20 600,60 C660,90 640,150 690,190 C740,230 700,300 730,390 L0,390 Z" fill="#e8b21f"/>
+      <g fill="none" stroke="#7a2e1d" stroke-width="5" stroke-linecap="round">
+        <path class="draw auto" pathLength="1" d="M75,135 L380,135" style="transition-delay:1s"/>
+        <path class="draw auto" pathLength="1" style="transition-delay:1.6s;transition-duration:2.4s"
+          d="M75,285 C120,285 130,240 170,250 C220,262 150,320 200,315 C250,310 200,240 250,245 C300,250 240,320 290,310 C340,300 280,250 320,255 C360,262 330,300 360,295 C380,292 385,285 400,285"/>
+      </g>
+      <circle cx="70" cy="135" r="17" fill="#fff"/><circle cx="70" cy="285" r="17" fill="#fff"/>
+      <path d="M380,118 L416,135 L380,152 Z" fill="#fff"/><path d="M400,268 L436,285 L400,302 Z" fill="#fff"/>
+    </svg>
+    <div class="author">Andrea Gramazio</div>
+  </section>
+
+  <!-- =================== 2. SISTEMA DI RIFERIMENTO (treno) =================== -->
+  <section class="slide" data-steps="1">
+    <div class="abs in-r" style="left:430px;top:40px;width:820px;height:640px" id="ill-train"></div>
+    <div class="abs" style="left:40px;top:300px;width:380px">
+      <p class="small f" data-f="1">La <b class="mint">posizione</b> di un corpo sono le sue <b class="mint">coordinate</b> (cartesiane oppure geografiche)</p>
+      <h2 style="margin-top:22px;font-size:40px">Il sistema di riferimento<span class="bar"></span></h2>
+    </div>
+  </section>
+
+  <!-- =================== 3. SISTEMA DI RIFERIMENTO (metro + Terra) =================== -->
+  <section class="slide" data-steps="4">
+    <div class="abs in-l" style="left:0;top:0;width:760px;height:720px" id="ill-metro"></div>
+    <div class="abs" style="left:800px;top:60px;width:440px">
+      <h2>Il sistema di riferimento<span class="bar"></span></h2>
+      <div class="f" data-f="1" data-out="4"><p class="small" style="margin-top:34px">Il sistema di riferimento è il <b class="mint">punto di vista</b> da cui osserviamo un corpo e il suo stato di <b>quiete</b> (è fermo) o di <b>moto</b> (si muove).</p></div>
+      <div class="f" data-f="2" data-out="4"><p class="small" style="margin-top:20px">Se immaginiamo un punto che cambia la sua posizione (cioè le sue coordinate) nel piano cartesiano, il sistema di riferimento è il <b class="mint">punto O</b>.</p></div>
+      <div class="f" data-f="3" data-out="4"><p class="small" style="margin-top:20px" ><b class="orange">In questo momento tu sei fermo o in movimento?</b></p></div>
+    </div>
+    <div class="abs f" data-f="4" style="left:830px;top:230px;width:380px;height:380px" id="ill-earth"></div>
+  </section>
+
+  <!-- =================== 4. LA TRAIETTORIA =================== -->
+  <section class="slide" data-steps="8">
+    <h2 class="abs in-l" style="left:50px;top:50px">La traiettoria<span class="bar"></span></h2>
+    <svg class="abs in-up" style="left:0;top:300px" width="520" height="420" viewBox="0 0 520 420">
+      <path d="M0,60 C110,20 240,10 330,50 C410,85 440,140 470,200 C500,260 470,330 500,420 L0,420 Z" fill="#e8b21f"/>
+      <g fill="none" stroke="#7a2e1d" stroke-width="5" stroke-linecap="round">
+        <path d="M70,150 L300,150"/>
+        <path d="M70,300 C110,300 120,260 155,268 C200,278 140,330 185,326 C230,322 185,262 230,265 C275,268 220,330 265,322 C300,315 300,300 320,300"/>
+      </g>
+      <circle cx="65" cy="150" r="16" fill="#fff"/><circle cx="65" cy="300" r="16" fill="#fff"/>
+      <path d="M300,134 L332,150 L300,166 Z" fill="#fff"/><path d="M320,284 L352,300 L320,316 Z" fill="#fff"/>
+    </svg>
+    <svg class="abs" style="left:420px;top:60px" width="600" height="600" viewBox="0 0 600 600" id="plane"></svg>
+    <div class="abs" style="left:1010px;top:70px;width:250px">
+      <p class="small f center" data-f="5">La <b class="mint">traiettoria</b> è la linea che otteniamo unendo tutte le posizioni di un corpo che si muove.</p>
+      <p class="small f center" data-f="6" style="margin-top:22px">Rettilinee</p>
+      <p class="small f center" data-f="7" style="margin-top:16px">Curvilinee<br>(circolari, ellittiche, paraboliche)</p>
+      <p class="small f center" data-f="8" style="margin-top:16px">Miste</p>
+    </div>
+  </section>
+
+  <!-- =================== 5. IL TEMPO =================== -->
+  <section class="slide" data-steps="8">
+    <div class="abs in-l" style="left:0;top:0;width:720px;height:720px" id="ill-clock"></div>
+    <h2 class="abs" style="left:780px;top:50px;width:460px;text-align:center">Il tempo<span class="bar" style="margin:14px auto 0"></span></h2>
+    <div class="abs center" style="left:780px;top:170px;width:460px">
+      <p class="f" data-f="1" data-out="5">Il tempo <b class="orange">non segue</b> il sistema decimale.</p>
+      <p class="f" data-f="2" data-out="5" style="margin-top:30px">1 h = 60 min</p>
+      <p class="f" data-f="3" data-out="5" style="margin-top:16px">1 min = 60 s</p>
+      <p class="f" data-f="4" data-out="5" style="margin-top:30px"><b class="mint">Quanti secondi ci sono in un'ora?</b></p>
+    </div>
+    <svg class="abs f" data-f="5" style="left:760px;top:150px" width="500" height="520" viewBox="0 0 500 520" id="timelines"></svg>
+  </section>
+
+  <!-- =================== 6. LO SPOSTAMENTO =================== -->
+  <section class="slide" data-steps="3">
+    <div class="abs in-l" style="left:0;top:0;width:560px;height:720px" id="ill-track"></div>
+    <h2 class="abs" style="left:640px;top:50px">Lo spostamento<span class="bar"></span></h2>
+    <svg class="abs" style="left:600px;top:150px" width="660" height="520" viewBox="0 0 660 520" id="axes"></svg>
+  </section>
+
+  <!-- =================== 7. LA VELOCITÀ =================== -->
+  <section class="slide" data-steps="3">
+    <div class="abs" style="left:50px;top:60px;width:560px">
+      <h2 class="center">La velocità<span class="bar" style="margin:14px auto 0"></span></h2>
+      <p class="f center" data-f="1" style="margin-top:46px">Rapporto tra <b class="mint">spostamento</b> e <span class="hl">tempo</span></p>
+      <p class="f center small" data-f="2" style="margin-top:28px">L'unità di misura è il rapporto tra metri e secondi (<b>metri al secondo</b>) o, nella nostra quotidianità il rapporto tra chilometri e ore (<b>chilometri orari</b>).</p>
+      <p class="f center small" data-f="3" style="margin-top:28px"><b class="orange">Passare da m/s a km/h è semplice.</b></p>
+    </div>
+    <div class="abs in-r" style="left:620px;top:40px;width:640px;height:640px" id="ill-run"></div>
+  </section>
+
+  <!-- ############ LEZIONE 2 ############ -->
+  <!-- =================== 2. CALCOLI DI VELOCITÀ: unità di misura =================== -->
+  <section class="slide" data-steps="4">
+    <div class="abs in-l" style="left:0;top:0;width:440px;height:720px" id="ill-rails"></div>
+    <div class="abs" style="left:500px;top:60px;width:740px">
+      <h2>Calcoli di velocità<span class="bar"></span></h2>
+    </div>
+    <div class="abs center" style="left:520px;top:200px;width:700px">
+      <p class="f" data-f="1" data-out="4">L'unità di misura della velocità nel <b class="mint">S.I.</b> è il <b class="mint">m/s</b>.</p>
+      <p class="f" data-f="2" data-out="4" style="margin-top:28px">È comune, nella nostra quotidianità, esprimere questa grandezza in <b>km/h</b> o, in altri luoghi, in <b>miglia orarie</b>.</p>
+      <p class="f" data-f="3" data-out="4" style="margin-top:28px">In effetti qualsiasi rapporto tra un'unità di <b class="orange">spazio</b> (km, miglia, metri) e un'unità di <b class="orange">tempo</b> (secondi, ore, minuti) esprime una velocità, cioè uno spostamento nel tempo.</p>
+    </div>
+    <div class="abs center" style="left:520px;top:260px;width:700px">
+      <p class="f" data-f="4">Bisogna quindi assicurarsi che le due grandezze nel rapporto, cioè <b class="mint">spostamento</b> e <b class="mint">intervallo di tempo</b>, siano espresse coerentemente con quanto noi vogliamo ottenere.</p>
+    </div>
+  </section>
+
+  <!-- =================== 3. CALCOLI DI VELOCITÀ: problema =================== -->
+  <section class="slide" data-steps="4">
+    <div class="abs" style="left:0;top:0;width:440px;height:720px" id="ill-rails2"></div>
+    <div class="abs" style="left:500px;top:60px;width:740px">
+      <h2>Calcoli di velocità<span class="bar"></span></h2>
+      <p class="center in-up" style="margin-top:30px;font-size:20px">Per andare da Benevento ad Avellino, parto alle <b>7:10</b> e arrivo alle <b>7:45</b>. La distanza da casa a scuola è di <b>28 km</b>. Calcola la velocità, esprimendola in <b class="mint">m/s</b> e <b class="mint">km/h</b>.</p>
+      <div style="margin-top:26px;font-size:21px;line-height:1.7">
+        <div class="f" data-f="1">Δs = 28 km = 28 000 m</div>
+        <div class="f" data-f="2">Δt = t<sub>f</sub> − t<sub>i</sub> = 35 min = 2100 s = 0,58<span class="ovl">3</span> h</div>
+      </div>
+      <div class="f eq" data-f="3"><i>v</i> = <span class="frac"><span>Δs</span><span>Δt</span></span> = <span class="frac"><span>28 km</span><span>0,58<span class="ovl">3</span> h</span></span> = <b class="mint">48 km/h</b></div>
+      <div class="f eq" data-f="4"><i>v</i> = <span class="frac"><span>Δs</span><span>Δt</span></span> = <span class="frac"><span>28 000 m</span><span>2100 s</span></span> = <b class="mint">13,<span class="ovl">3</span> m/s</b></div>
+    </div>
+  </section>
+
+  <!-- =================== 4. VELOCITÀ MEDIA E ISTANTANEA =================== -->
+  <section class="slide" data-steps="7">
+    <h2 class="abs in-l" style="left:50px;top:50px;width:560px">Velocità media e velocità istantanea<span class="bar"></span></h2>
+    <div class="abs in-l" style="left:0;top:250px;width:620px;height:470px" id="ill-road"></div>
+    <div class="abs center" style="left:650px;top:50px;width:590px">
+      <p class="small f" data-f="1" data-out="4">Nel percorso da casa a scuola la velocità non è costantemente quella che abbiamo calcolato:</p>
+      <p class="small f" data-f="2" data-out="4" style="margin-top:14px">Appena entrato in macchina la velocità è 0 (la macchina è ferma).</p>
+      <p class="small f" data-f="3" data-out="4" style="margin-top:14px">Lentamente accelero e arrivo a una certa velocità che continua ad oscillare tra valori più alti (ad esempio in corrispondenza di un lungo rettilineo) e valori più bassi (ad esempio in una parte di percorso ricca di tornanti, curve o traffico) o addirittura valori nulli (velocità 0 quando mi fermo a un incrocio o per un ingorgo).</p>
+    </div>
+    <div class="abs center" style="left:650px;top:50px;width:590px">
+      <p class="small f" data-f="4">Ciò vuol dire che durante il mio viaggio, <b class="mint">in ogni istante</b>, possiedo diverse velocità. Queste diverse velocità si definiscono <b class="mint">«velocità istantanee»</b>.</p>
+      <p class="small f" data-f="5" style="margin-top:14px">Sono quelle che vengono misurate da un <i>autovelox</i>, oppure quella che leggo se fotografo il tachimetro.</p>
+      <p class="small f" data-f="6" style="margin-top:22px">Il calcolo che abbiamo fatto prima, invece, che considera l'intero viaggio (28 km in 35 min) ci ha restituito una velocità che è la <b class="orange">media</b> di tutte le velocità che io ho tenuto istante dopo istante.</p>
+      <p class="small f" data-f="7" style="margin-top:14px">Questo tipo di velocità verrebbe misurata con un <i>tutor</i>.</p>
+    </div>
+  </section>
+
+  <!-- =================== 5. LE GRANDEZZE VETTORIALI =================== -->
+  <section class="slide" data-steps="10">
+    <h2 class="abs in-l" style="left:50px;top:50px">Le grandezze<br>vettoriali<span class="bar"></span></h2>
+    <svg class="abs in-up" style="left:0;top:330px" width="480" height="390" viewBox="0 0 480 390">
+      <path d="M0,50 C110,15 230,5 310,40 C390,75 420,130 440,190 C460,250 440,320 465,390 L0,390 Z" fill="#e8b21f"/>
+      <g fill="none" stroke="#7a2e1d" stroke-width="5" stroke-linecap="round">
+        <path d="M70,140 L290,140"/>
+        <path d="M70,280 C110,280 120,240 155,248 C200,258 140,310 185,306 C230,302 185,242 230,245 C275,248 220,310 265,302 C300,295 300,280 315,280"/>
+      </g>
+      <circle cx="65" cy="140" r="16" fill="#fff"/><circle cx="65" cy="280" r="16" fill="#fff"/>
+      <path d="M290,124 L322,140 L290,156 Z" fill="#fff"/><path d="M315,264 L347,280 L315,296 Z" fill="#fff"/>
+    </svg>
+    <svg class="abs" style="left:430px;top:80px" width="660" height="560" viewBox="0 0 660 560" id="vplane"></svg>
+    <div class="abs" style="left:1090px;top:140px;width:170px">
+      <div class="chip f" data-f="4">Modulo</div>
+      <div class="chip f" data-f="7">Direzione</div>
+      <div class="chip f" data-f="8">Verso</div>
+      <p class="f" data-f="7" data-out="8" style="font-size:16px;line-height:1.45;margin-top:10px"><b>Stesso modulo</b>: 25 km da Avellino.<br><span class="mint">Ma se non dico la direzione, dove arrivo?</span><br>In infiniti posti diversi!</p>
+    </div>
+  </section>
+
+  <!-- =================== 6. GRANDEZZE SCALARI =================== -->
+  <section class="slide" data-steps="2">
+    <div class="abs" style="left:60px;top:90px;width:520px">
+      <h2 class="center">Grandezze scalari<span class="bar" style="margin:14px auto 0"></span></h2>
+      <p class="f center" data-f="1" style="margin-top:44px">Le grandezze scalari, al contrario, sono quelle che si esprimono solo con il loro <b class="mint">modulo</b>, ovvero la quantità e l'unità di misura.</p>
+      <p class="f center" data-f="2" style="margin-top:28px">Ad esempio la <b class="orange">massa</b> di zucchero per preparare un dolce, il <b class="orange">peso corporeo</b>, la <b class="orange">temperatura</b> di una stanza.</p>
+    </div>
+    <div class="abs in-r" style="left:620px;top:40px;width:640px;height:640px" id="ill-lab"></div>
+  </section>
+
+  <!-- =================== 7. IL MOTO RETTILINEO UNIFORME =================== -->
+  <section class="slide" data-steps="4">
+    <h2 class="abs" style="left:50px;top:50px;font-size:44px">Il moto rettilineo uniforme<span class="bar"></span></h2>
+    <div class="abs" style="left:50px;top:170px;width:560px">
+      <div class="f" data-f="1" data-out="4"><p><b class="mint">Un particolare tipo di moto</b></p>
+        <p class="small" style="margin-top:10px">Immagina di percorrere una strada dritta ad una velocità costante, ad esempio di <b>2 m/s</b>.</p></div>
+      <p class="small f" data-f="2" data-out="4" style="margin-top:16px">Sulla strada sono disegnate, ad ogni metro, delle linee che servono a misurare la distanza percorsa.</p>
+      <p class="small f" data-f="3" data-out="4" style="margin-top:16px">Prendiamo un cronometro e compiliamo una tabella.</p>
+    </div>
+    <table class="abs f tbl" data-f="4" style="left:120px;top:190px">
+      <tr><th>Istante (s)</th><th>Distanza (m)</th></tr>
+      <tr><td>0</td><td>0</td></tr><tr><td>1</td><td>2</td></tr><tr><td>2</td><td>4</td></tr>
+      <tr><td>3</td><td>6</td></tr><tr><td>4</td><td>8</td></tr><tr><td>5</td><td>10</td></tr><tr><td>…</td><td>…</td></tr>
+    </table>
+    <div class="abs in-r" style="left:640px;top:150px;width:620px;height:520px" id="ill-mru"></div>
+  </section>
+  <!-- =================== M.R.U.: IL GRAFICO =================== -->
+  <section class="slide" data-steps="4">
+    <h2 class="abs" style="left:50px;top:50px;font-size:44px">Il moto rettilineo uniforme: il grafico<span class="bar"></span></h2>
+    <table class="abs tbl on small-tbl" style="left:60px;top:170px">
+      <tr><th>t (s)</th><th>s (m)</th></tr>
+      <tr><td>0</td><td>0</td></tr><tr><td>1</td><td>2</td></tr><tr><td>2</td><td>4</td></tr>
+      <tr><td>3</td><td>6</td></tr><tr><td>4</td><td>8</td></tr><tr><td>5</td><td>10</td></tr>
+    </table>
+    <div class="abs" style="left:60px;top:520px;width:420px">
+      <p class="small f" data-f="4">Il grafico spazio-tempo è una <b class="mint">retta</b>: spazio e tempo sono direttamente proporzionali. La pendenza della retta è la velocità:<br><b class="orange">v = Δs/Δt = 2 m/s</b>, sempre uguale.</p>
+    </div>
+    <svg class="abs" style="left:500px;top:140px" width="740" height="540" viewBox="0 0 740 540" id="gMRU"></svg>
+  </section>
+
+
+  <!-- ############ LEZIONE 3 ############ -->
+  <!-- =================== 2. LA LAVAGNA: tabella e grafico =================== -->
+  <section class="slide" data-steps="18">
+    <svg class="abs" style="left:30px;top:24px" width="1220" height="672" viewBox="0 0 1220 672" id="board"></svg>
+  </section>
+
+  <!-- =================== 3. RIVEDIAMOLO IN MOVIMENTO =================== -->
+  <section class="slide" data-steps="0">
+    <h2 class="abs in-l" style="left:50px;top:40px;font-size:42px">Rivediamolo in movimento<span class="bar"></span></h2>
+    <button id="walkPlay" class="playbtn abs" type="button" style="left:900px;top:46px"><svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg><span>Riproduci</span></button>
+    <div class="abs in-up" style="left:40px;top:150px;width:1200px;height:540px" id="ill-walk"></div>
+  </section>
+  <!-- =================== M.U.A.: CADUTA LIBERA =================== -->
+  <section class="slide" data-steps="4">
+    <h2 class="abs" style="left:50px;top:50px;font-size:40px">Il moto uniformemente accelerato<span class="bar"></span></h2>
+    <div class="abs" style="left:50px;top:170px;width:570px">
+      <div class="f" data-f="1" data-out="4"><p><b class="mint">La velocità cambia sempre allo stesso modo</b></p>
+        <p class="small" style="margin-top:10px">Nel moto uniformemente accelerato la velocità aumenta (o diminuisce) della stessa quantità ogni secondo: l'<b>accelerazione</b> <i>a</i> è costante.</p></div>
+      <p class="small f" data-f="2" data-out="4" style="margin-top:16px">Un esempio è la <b class="orange">caduta libera</b>: lasciamo cadere un oggetto e, ogni secondo, la sua velocità aumenta di 9,8 m/s.<br><b class="mint">a = g = 9,8 m/s²</b></p>
+      <p class="small f" data-f="3" data-out="4" style="margin-top:16px">Prendiamo un cronometro e compiliamo una tabella con il tempo, la velocità e lo spazio percorso.</p>
+    </div>
+    <table class="abs f tbl" data-f="4" style="left:60px;top:190px;min-width:520px">
+      <tr><th>t (s)</th><th>v (m/s)</th><th>s (m)</th></tr>
+      <tr><td>0</td><td>0</td><td>0</td></tr><tr><td>1</td><td>9,8</td><td>4,9</td></tr><tr><td>2</td><td>19,6</td><td>19,6</td></tr>
+      <tr><td>3</td><td>29,4</td><td>44,1</td></tr><tr><td>4</td><td>39,2</td><td>78,4</td></tr><tr><td>…</td><td>…</td><td>…</td></tr>
+    </table>
+    <div class="abs f small" data-f="4" style="left:60px;top:560px;width:540px;font-size:18px;line-height:1.6">
+      v = g · t &nbsp;&nbsp;&nbsp; s = ½ · g · t²
+    </div>
+    <div class="abs in-r" style="left:640px;top:130px;width:620px;height:560px" id="ill-fall"></div>
+  </section>
+
+  <!-- =================== M.U.A.: I GRAFICI =================== -->
+  <section class="slide" data-steps="5">
+    <h2 class="abs" style="left:50px;top:40px;font-size:40px">Il moto uniformemente accelerato: i grafici<span class="bar"></span></h2>
+    <svg class="abs" style="left:30px;top:130px" width="610" height="450" viewBox="0 0 610 450" id="gMUAs"></svg>
+    <svg class="abs" style="left:650px;top:130px" width="610" height="450" viewBox="0 0 610 450" id="gMUAv"></svg>
+    <p class="abs small f center" data-f="3" style="left:40px;top:590px;width:590px">Spazio-tempo: una <b class="mint">parabola</b>. Ogni secondo l'oggetto percorre più strada del secondo precedente (s = ½·g·t²).</p>
+    <p class="abs small f center" data-f="5" style="left:660px;top:590px;width:590px">Velocità-tempo: una <b class="mint">retta</b>. La pendenza è l'accelerazione: <b class="orange">g = 9,8 m/s²</b>.</p>
+  </section>
+  <!-- =================== VELOCITÀ DI CADUTA LIBERA =================== -->
+  <section class="slide" data-steps="3">
+    <h2 class="abs" style="left:50px;top:50px;font-size:44px">La velocità nella caduta libera<span class="bar"></span></h2>
+    <div class="abs" style="left:50px;top:190px;width:700px">
+      <p class="f" data-f="1">Con quale velocità l'oggetto tocca terra? Dipende solo dall'<b class="mint">altezza di caduta</b> h e dall'accelerazione <b class="mint">g = 9,8 m/s²</b>:</p>
+      <div class="f formula-box" data-f="2"><i>v</i> = <span class="sqrt"><span class="sq">√</span><span class="rad">2 · g · h</span></span></div>
+      <p class="f" data-f="2" style="margin-top:4px;font-size:20px">Non dipende dal peso: <b class="orange">tutti gli oggetti cadono allo stesso modo</b> (senza aria).</p>
+      <p class="small f" data-f="3" style="margin-top:26px"><b class="orange">Esempio</b> — dopo 4 s l'oggetto è sceso di h = 78,4 m:<br>
+        v = √(2 · 9,8 · 78,4) = √1536,64 = <b class="mint">39,2 m/s</b> &nbsp;— proprio come nella tabella!</p>
+    </div>
+    <div class="abs in-r" style="left:790px;top:140px;width:450px;height:540px" id="ill-two"></div>
+  </section>
+
+  <!-- =================== RIEPILOGO: LE FORMULE =================== -->
+  <section class="slide" data-steps="3">
+    <h2 class="abs" style="left:50px;top:36px;font-size:40px">Le formule dei tre tipi di moto<span class="bar"></span></h2>
+    <div class="abs" style="left:40px;top:148px;width:1200px;display:flex;gap:28px;align-items:stretch;justify-content:center">
+      <div class="moto-card f" data-f="1" style="--cc:#53c24a">
+        <div class="mc-h">Rettilineo uniforme</div>
+        <div class="mc-sub">velocità costante</div>
+        <div class="mc-eq"><i>v</i> = <span class="frac"><span>s</span><span>t</span></span></div>
+        <div class="mc-eq"><i>s</i> = v · t</div>
+        <svg viewBox="0 0 220 120" class="mc-g">
+          <line x1="26" y1="100" x2="210" y2="100" stroke="#cfe" stroke-width="2"/><line x1="26" y1="100" x2="26" y2="12" stroke="#cfe" stroke-width="2"/>
+          <line x1="26" y1="100" x2="196" y2="22" stroke="#53c24a" stroke-width="5"/>
+          <text x="202" y="116" fill="#9fb9ae" font-size="13">t</text><text x="12" y="20" fill="#9fb9ae" font-size="13">s</text>
+        </svg>
+        <div class="mc-note">grafico s–t: <b>retta</b></div>
+      </div>
+      <div class="moto-card f" data-f="2" style="--cc:#2fb5e8">
+        <div class="mc-h">Vario</div>
+        <div class="mc-sub">velocità che cambia</div>
+        <div class="mc-eq"><i>v</i><sub>m</sub> = <span class="frac"><span>Δs</span><span>Δt</span></span></div>
+        <div class="mc-sub" style="margin:2px 0 0">(solo velocità media)</div>
+        <svg viewBox="0 0 220 120" class="mc-g">
+          <line x1="26" y1="100" x2="210" y2="100" stroke="#cfe" stroke-width="2"/><line x1="26" y1="100" x2="26" y2="12" stroke="#cfe" stroke-width="2"/>
+          <polyline points="26,100 56,58 86,32 120,32 150,86 178,50 200,70" fill="none" stroke="#2fb5e8" stroke-width="5" stroke-linejoin="round"/>
+          <line x1="26" y1="100" x2="200" y2="70" stroke="#e8862a" stroke-width="3" stroke-dasharray="8 6"/>
+          <text x="150" y="100" fill="#e8862a" font-size="12" font-weight="700">v media</text>
+          <text x="202" y="116" fill="#9fb9ae" font-size="13">t</text><text x="12" y="20" fill="#9fb9ae" font-size="13">s</text>
+        </svg>
+        <div class="mc-note">grafico s–t: <b>spezzata</b><br><span style="color:#e8862a">semiretta: v media</span></div>
+      </div>
+      <div class="moto-card f" data-f="3" style="--cc:#e8862a">
+        <div class="mc-h">Uniformemente accelerato</div>
+        <div class="mc-sub">accelerazione costante</div>
+        <div class="mc-eq"><i>v</i> = a · t</div>
+        <div class="mc-eq"><i>s</i> = <span class="frac"><span>1</span><span>2</span></span> · a · t²</div>
+        <svg viewBox="0 0 220 120" class="mc-g">
+          <line x1="26" y1="100" x2="210" y2="100" stroke="#cfe" stroke-width="2"/><line x1="26" y1="100" x2="26" y2="12" stroke="#cfe" stroke-width="2"/>
+          <path d="M26,100 Q150,100 196,20" fill="none" stroke="#e8862a" stroke-width="5"/>
+          <text x="202" y="116" fill="#9fb9ae" font-size="13">t</text><text x="12" y="20" fill="#9fb9ae" font-size="13">s</text>
+        </svg>
+        <div class="mc-note">grafico s–t: <b>parabola</b></div>
+      </div>
+    </div>
+    <p class="abs center f" data-f="3" style="left:40px;top:640px;width:1200px;color:#9fb9ae">Esempio di moto uniformemente accelerato: la <b class="orange">caduta libera</b>, con a = g = 9,8 m/s².</p>
+  </section>
+
+
+  <svg class="brick" viewBox="0 0 46 46" aria-hidden="true">
+    <rect x="9" y="1" width="10" height="7" rx="2" fill="#c8453b"/><rect x="27" y="1" width="10" height="7" rx="2" fill="#c8453b"/>
+    <rect x="2" y="6" width="42" height="38" rx="6" fill="#e2534a"/>
+    <g fill="none" stroke="#fff" stroke-width="1.8" opacity=".9">
+      <ellipse cx="23" cy="25" rx="13" ry="5"/><ellipse cx="23" cy="25" rx="13" ry="5" transform="rotate(60 23 25)"/><ellipse cx="23" cy="25" rx="13" ry="5" transform="rotate(-60 23 25)"/>
+    </g><circle cx="23" cy="25" r="2.5" fill="#fff"/>
+  </svg>
+</div>
+</div>
+
+<div class="controls" id="controls">
+  <button class="stud sec" id="restart" title="Ricomincia" aria-label="Torna all'inizio"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2-5.3M4 4v4h4"/></svg></button>
+  <button class="stud" id="prev" title="Slide precedente" aria-label="Slide precedente"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <div class="bricks" id="bricks" aria-label="Avanzamento slide"></div>
+  <div class="count" id="counter"></div>
+  <button class="stud" id="next" title="Slide successiva" aria-label="Slide successiva"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button class="stud sec" id="fs" title="Schermo intero" aria-label="Schermo intero"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+
+/* ---------- omino LEGO (minifigure) ---------- */
+/* Omino in stile minifigure: testa cilindrica con perno, busto trapezoidale,
+   braccia inclinate con mani a "C", fianchi e gambe separate.
+   opts: run, seated, hair (colore), style ('short'|'long'|'cap'|'ponytail'|'helmet'), print ('jacket'|'tie'|'zip'|'number'|'stripe'), face ('smile'|'grin'|'glasses') */
+function fig(x, y, s, torso, legs, opts={}){
+  const run = opts.run, seated = opts.seated, H = opts.hair, style = opts.style || 'short';
+  const Y = '#f6c42c', Yd = '#d9a514', ink = '#1d1d1d';
+  const dark = 'rgba(0,0,0,.18)', light = 'rgba(255,255,255,.22)';
+  // capelli / copricapo
+  let hair = '';
+  if (H){
+    if (style==='short')    hair = `<path d="M-17,-2 L-17,-17 Q-17,-29 -5,-29 L5,-29 Q17,-29 17,-17 L17,-4 L14,-12 Q0,-17 -14,-12 L-14,-2 Z" fill="${H}"/>`;
+    if (style==='long')     hair = `<path d="M-18,-4 L-18,-17 Q-18,-30 -5,-30 L5,-30 Q18,-30 18,-17 L18,-4 L19,26 L12,24 L13,-10 C6,-16 -6,-16 -13,-10 L-12,24 L-19,26 Z" fill="${H}"/>`;
+    if (style==='ponytail') hair = `<path d="M-17,-2 L-17,-17 Q-17,-29 -5,-29 L5,-29 Q17,-29 17,-17 L17,-4 L14,-12 Q0,-17 -14,-12 L-14,-2 Z" fill="${H}"/><path d="M14,-20 C30,-18 30,6 22,20 C20,8 20,-6 12,-14 Z" fill="${H}"/>`;
+    if (style==='cap')      hair = `<path d="M-17,-8 L-17,-18 Q-17,-31 -5,-31 L5,-31 Q17,-31 17,-18 L17,-8 Z" fill="${H}"/><path d="M-19,-9 L26,-9 C26,-4 -19,-4 -19,-9 Z" fill="${H}"/><rect x="-17" y="-11" width="34" height="3" fill="${dark}"/>`;
+    if (style==='wizard')   hair = `<path d="M-17,-2 L-17,-16 L17,-16 L17,-2 L14,-10 L-14,-10 Z" fill="#e9e9e9"/>
+      <ellipse cx="0" cy="-17" rx="31" ry="7" fill="${H}"/><ellipse cx="0" cy="-18.5" rx="31" ry="5" fill="rgba(255,255,255,.12)"/>
+      <path d="M-17,-19 C-14,-40 -4,-60 6,-80 C9,-84 12,-82 11,-78 C9,-58 14,-36 17,-19 Z" fill="${H}"/>
+      <path d="M-17,-21 L17,-21 L16.5,-26 L-16,-26 Z" fill="rgba(0,0,0,.25)"/>
+      <path d="M2,-48 l2,4 4,.5 -3,3 1,4 -4,-2 -4,2 1,-4 -3,-3 4,-.5 Z" fill="#f2c230"/>
+      <path d="M8,-66 l1.4,2.6 2.8,.3 -2,2 .6,2.8 -2.8,-1.4 -2.8,1.4 .6,-2.8 -2,-2 2.8,-.3 Z" fill="#f2c230"/>`;
+    if (style==='helmet')   hair = `<path d="M-19,-2 C-22,-36 22,-36 19,-2 L19,6 L14,6 L14,-6 L-14,-6 L-14,6 L-19,6 Z" fill="${H}"/><rect x="-3" y="-34" width="6" height="22" rx="2" fill="${light}"/>`;
+  }
+  // stampa sul busto
+  const pr = opts.print || '';
+  let print = '';
+  if (pr==='jacket') print = `<path d="M-4,13 L0,30 L4,13 Z" fill="#fff"/><path d="M-14,13 L-4,13 L-2,58 L-21,58 Z" fill="${dark}"/><path d="M14,13 L4,13 L2,58 L21,58 Z" fill="${dark}"/><circle cx="0" cy="38" r="1.6" fill="${ink}"/><circle cx="0" cy="47" r="1.6" fill="${ink}"/>`;
+  if (pr==='tie')    print = `<path d="M-6,13 L0,20 L6,13 Z" fill="#fff"/><path d="M-2.5,18 L2.5,18 L4,42 L0,47 L-4,42 Z" fill="#e2453c"/>`;
+  if (pr==='zip')    print = `<line x1="0" y1="13" x2="0" y2="58" stroke="${ink}" stroke-width="1.6"/><rect x="-11" y="40" width="7" height="2" fill="${ink}"/><rect x="4" y="40" width="7" height="2" fill="${ink}"/><path d="M-6,13 Q0,19 6,13" stroke="${ink}" stroke-width="1.6" fill="none"/>`;
+  if (pr==='number') print = `<text x="0" y="44" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" font-family="Roboto Mono, monospace">${opts.num||7}</text><path d="M-8,13 Q0,20 8,13" stroke="#fff" stroke-width="2" fill="none"/>`;
+  if (pr==='stars')  print = `<path d="M-14,12 L14,12 L20,58 L-20,58 Z" fill="rgba(0,0,0,.12)"/><rect x="-19" y="50" width="38" height="5" fill="#f2c230"/>
+      <path d="M-11,22 l1.5,3 3,.4 -2.2,2.1 .5,3 -2.8,-1.5 -2.8,1.5 .5,-3 -2.2,-2.1 3,-.4 Z" fill="#f2c230"/>
+      <path d="M10,32 l1.2,2.4 2.6,.3 -1.9,1.8 .5,2.6 -2.4,-1.3 -2.4,1.3 .5,-2.6 -1.9,-1.8 2.6,-.3 Z" fill="#f2c230"/>
+      <path d="M-6,40 a5,5 0 1,0 5,-6 a4,4 0 1,1 -5,6 Z" fill="#f2c230"/>`;
+  if (pr==='stripe') print = `<rect x="-17" y="28" width="34" height="6" fill="#fff" opacity=".85"/><rect x="-18" y="40" width="36" height="6" fill="#fff" opacity=".85"/>`;
+  // faccia
+  const fc = opts.face || 'smile';
+  let face = `<ellipse cx="-6" cy="-6" rx="2" ry="2.6" fill="${ink}"/><ellipse cx="6" cy="-6" rx="2" ry="2.6" fill="${ink}"/>
+    <circle cx="-5.4" cy="-6.8" r=".7" fill="#fff"/><circle cx="6.6" cy="-6.8" r=".7" fill="#fff"/>
+    <path d="M-9,-11 L-3,-12" stroke="${ink}" stroke-width="1.5" stroke-linecap="round"/><path d="M3,-12 L9,-11" stroke="${ink}" stroke-width="1.5" stroke-linecap="round"/>`;
+  if (fc==='grin')    face += `<path d="M-7,0 Q0,7 7,0 Z" fill="${ink}"/><path d="M-5.5,1 L5.5,1 L5,2.2 L-5,2.2 Z" fill="#fff"/>`;
+  else if (fc==='glasses') face += `<circle cx="-6" cy="-6" r="4.5" fill="none" stroke="${ink}" stroke-width="1.3"/><circle cx="6" cy="-6" r="4.5" fill="none" stroke="${ink}" stroke-width="1.3"/><path d="M-1.5,-6 L1.5,-6" stroke="${ink}" stroke-width="1.3"/><path d="M-5,1 Q0,5 5,1" stroke="${ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+  else face += `<path d="M-6,0 Q0,5.5 6,0" stroke="${ink}" stroke-width="1.7" fill="none" stroke-linecap="round"/>`;
+  if (opts.blush) face += `<ellipse cx="-11" cy="-1" rx="2.5" ry="1.4" fill="#f08a6a" opacity=".6"/><ellipse cx="11" cy="-1" rx="2.5" ry="1.4" fill="#f08a6a" opacity=".6"/>`;
+  // braccio: dalla spalla verso il basso con mano a C
+  const arm = (side, ang) => {
+    const sx = side*15;
+    return `<g transform="rotate(${ang} ${sx} 16)">
+      <path d="M${sx-side*1},13 C${sx+side*8},12 ${sx+side*11},18 ${sx+side*12},26 L${sx+side*13},42 L${sx+side*4},43 L${sx+side*3},26 Z" fill="${torso}"/>
+      <path d="M${sx+side*1},40 L${sx+side*10},40 L${sx+side*9.5},45 L${sx+side*1.5},45 Z" fill="${Y}"/>
+      <circle cx="${sx+side*6}" cy="50" r="6" fill="${Y}"/><circle cx="${sx+side*6}" cy="52" r="2.6" fill="${Yd}"/>
+    </g>`;
+  };
+  const leg = (side, cls) => `<g class="${cls}"><path d="M${side>0?1:-19},66 L${side>0?19:-1},66 L${side>0?19:-1},104 L${side>0?1:-19},104 Z" fill="${legs}"/>
+      <rect x="${side>0?1:-19}" y="100" width="18" height="6" rx="1.5" fill="${dark}"/><rect x="${side>0?1:-19}" y="66" width="18" height="4" fill="${light}"/></g>`;
+  return `<g transform="translate(${x},${y}) scale(${s})"><g class="${run?'bob':''}">
+    ${seated ? `<path d="M-19,66 L19,66 L19,80 L-19,80 Z" fill="${legs}"/><rect x="-19" y="76" width="38" height="4" fill="${dark}"/>`
+             : `${leg(-1, run?'legA':'')}${leg(1, run?'legB':'')}`}
+    <rect x="-20" y="57" width="40" height="10" rx="1.5" fill="${legs}"/><rect x="-3" y="58" width="6" height="9" fill="${dark}"/>
+    ${arm(-1, run?28:6)}
+    <path d="M-14,12 L14,12 L20,58 L-20,58 Z" fill="${torso}"/>
+    <path d="M-14,12 L-10,12 L-15,58 L-20,58 Z" fill="${light}"/>
+    ${print}
+    ${arm(1, run?-28:-6)}
+    <rect x="-6" y="6" width="12" height="7" fill="${Yd}"/>
+    ${H ? '' : `<rect x="-7" y="-31" width="14" height="7" rx="2" fill="${Y}"/><rect x="-7" y="-31" width="14" height="2" rx="1" fill="${light}"/>`}
+    <rect x="-15" y="-25" width="30" height="32" rx="7" fill="${Y}"/>
+    <rect x="5" y="-25" width="10" height="32" rx="6" fill="${dark}" opacity=".45"/>
+    ${face}
+    ${opts.beard ? `<path d="M-15,-3 C-13,4 -7,6 0,4 C7,6 13,4 15,-3 C17,8 14,22 9,34 C6,42 3,48 0,52 C-3,48 -6,42 -9,34 C-14,22 -17,8 -15,-3 Z" fill="${opts.beard}"/>
+      <path d="M0,-1 C-5,-3 -11,-1 -15,5 C-18,10 -18,17 -15,24 C-14,16 -10,8 -4,5 C-2,4 -1,4 0,4 C1,4 2,4 4,5 C10,8 14,16 15,24 C18,17 18,10 15,5 C11,-1 5,-3 0,-1 Z" fill="${opts.beard}" stroke="rgba(0,0,0,.18)" stroke-width="1"/>
+      <path d="M-4,14 C-3,24 -2,34 0,46 M4,14 C3,24 2,34 0,46 M-9,10 C-8,20 -6,28 -4,36 M9,10 C8,20 6,28 4,36" stroke="rgba(0,0,0,.1)" stroke-width="1.2" fill="none"/>` : ''}
+    ${opts.wand ? `<g><line x1="${-21}" y1="50" x2="${-36}" y2="8" stroke="#6b4a2b" stroke-width="3.5" stroke-linecap="round"/>
+      <g class="twinkle" style="transform-box:fill-box;transform-origin:center"><path d="M-37,-6 l3.2,6.5 7,1 -5.1,5 1.2,7 -6.3,-3.3 -6.3,3.3 1.2,-7 -5.1,-5 7,-1 Z" fill="#fff6a8"/></g></g>` : ''}
+    ${hair}
+  </g></g>`;
+}
+function tree(x, y, s=1){ return `<g transform="translate(${x},${y}) scale(${s})"><rect x="-5" y="0" width="10" height="34" fill="#6b4a2b"/><circle cx="0" cy="-12" r="26" fill="#2f9e5a"/><circle cx="-14" cy="0" r="18" fill="#35b064"/><circle cx="14" cy="-2" r="19" fill="#2a8f50"/></g>`; }
+
+/* ---------- 2. finestrino del treno ---------- */
+(function(){
+  let land = '';
+  for (let k=0;k<2;k++){
+    const o = k*800;
+    land += `<path d="M${o},300 C${o+120},220 ${o+260},250 ${o+380},210 C${o+500},170 ${o+640},240 ${o+800},300 L${o+800},420 L${o},420 Z" fill="#3c8f4c"/>`;
+    for (let i=0;i<7;i++) land += tree(o+40+i*118, 300 + (i%2)*16, .9 + (i%3)*.15);
+    land += `<rect x="${o}" y="360" width="800" height="60" fill="#2c6e3a"/>`;
+    for (let i=0;i<10;i++) land += `<rect x="${o+i*80}" y="372" width="6" height="40" fill="#8a7b62"/>`;
+  }
+  document.getElementById('ill-train').innerHTML = `
+  <svg viewBox="0 0 820 640" width="820" height="640">
+    <defs><linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ec8f2"/><stop offset="1" stop-color="#d6f0ff"/></linearGradient>
+    <clipPath id="win"><rect x="70" y="40" width="680" height="330" rx="26"/></clipPath></defs>
+    <rect x="0" y="0" width="820" height="640" rx="24" fill="#3a4a5c"/>
+    <rect x="0" y="420" width="820" height="220" fill="#2d3846"/>
+    <g clip-path="url(#win)"><rect x="70" y="40" width="680" height="330" fill="url(#skyg)"/>
+      <circle cx="640" cy="100" r="34" fill="#ffe27a"/>
+      <g transform="translate(70,0)"><g class="scroll">${land}</g></g></g>
+    <rect x="70" y="40" width="680" height="330" rx="26" fill="none" stroke="#c9d3dd" stroke-width="14"/>
+    <rect x="404" y="40" width="12" height="330" fill="#c9d3dd"/>
+    ${fig(230, 398, 1.9, '#2fb5e8', '#24427a', {seated:true, hair:'#7a4a1e', style:'ponytail', print:'zip', blush:true})}
+    ${fig(590, 398, 1.9, '#5a6b7c', '#333', {seated:true, hair:'#cfcfcf', style:'short', print:'tie', face:'glasses'})}
+    <path d="M110,500 L710,500 L760,560 L60,560 Z" fill="#d9cdb6"/><rect x="60" y="560" width="700" height="18" fill="#b5a88f"/>
+    <rect x="360" y="472" width="64" height="36" rx="4" fill="#222" transform="rotate(-8 392 490)"/><rect x="366" y="477" width="52" height="26" fill="#4fd8ff" transform="rotate(-8 392 490)"/>
+  </svg>`;
+})();
+
+/* ---------- 3. banchina della metro ---------- */
+(function(){
+  let cars = '';
+  for (let c=0;c<3;c++){
+    const o = c*480;
+    cars += `<rect x="${o}" y="150" width="470" height="250" rx="30" fill="#dfe5ea"/>
+      <rect x="${o}" y="330" width="470" height="20" fill="#e2453c"/>`;
+    for (let w=0; w<4; w++) cars += `<rect x="${o+30+w*110}" y="190" width="80" height="110" rx="10" fill="#273544"/>`;
+  }
+  document.getElementById('ill-metro').innerHTML = `
+  <svg viewBox="0 0 760 720" width="760" height="720">
+    <rect width="760" height="720" fill="#151b24"/>
+    <rect x="0" y="80" width="760" height="40" fill="#2fb5e8" opacity=".55"/>
+    <g class="train">${cars}</g>
+    <rect x="0" y="420" width="760" height="300" fill="#56606b"/>
+    <rect x="0" y="420" width="760" height="22" fill="#f2c230"/>
+    ${fig(85, 478, 2.0, '#1f2c3d', '#24427a', {hair:'#f0d27a', style:'long', print:'jacket', blush:true})}
+    ${fig(215, 488, 1.95, '#9ad1c9', '#2f6e66', {hair:'#e46a8b', style:'ponytail', print:'zip'})}
+    ${fig(345, 473, 1.95, '#8b5a2b', '#333', {hair:'#222', style:'short', print:'jacket', face:'grin'})}
+    ${fig(475, 478, 1.95, '#f2f2f2', '#24427a', {hair:'#1f5fbf', style:'cap', print:'tie'})}
+    ${fig(615, 478, 1.95, '#2f5fb8', '#2f5fb8', {hair:'#244a99', style:'wizard', print:'stars', beard:'#f4f4f4', wand:true})}
+    <defs><linearGradient id="fadeR" x1="0" x2="1"><stop offset=".88" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000"/></linearGradient></defs>
+    <rect width="760" height="720" fill="url(#fadeR)"/>
+  </svg>`;
+})();
+
+/* ---------- 3. la Terra che ruota ---------- */
+(function(){
+  const conts = (o) => `
+    <path d="M${o+40},120 C${o+70},80 ${o+130},90 ${o+150},130 C${o+170},170 ${o+120},200 ${o+130},250 C${o+140},290 ${o+100},300 ${o+90},260 C${o+80},220 ${o+30},200 ${o+40},120 Z" fill="#53c24a"/>
+    <path d="M${o+220},90 C${o+260},70 ${o+330},80 ${o+350},120 C${o+370},150 ${o+320},160 ${o+300},190 C${o+280},230 ${o+300},280 ${o+260},290 C${o+230},300 ${o+240},230 ${o+220},200 C${o+200},170 ${o+190},110 ${o+220},90 Z" fill="#4bb544"/>
+    <path d="M${o+330},230 C${o+360},220 ${o+390},240 ${o+380},270 C${o+370},290 ${o+340},285 ${o+330},230 Z" fill="#53c24a"/>`;
+  document.getElementById('ill-earth').innerHTML = `
+  <svg viewBox="0 0 380 380" width="380" height="380">
+    <defs><clipPath id="globe"><circle cx="190" cy="190" r="140"/></clipPath>
+      <radialGradient id="shade" cx=".35" cy=".35" r=".75"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs>
+    <g transform="rotate(23.5 190 190)">
+      <line x1="190" y1="10" x2="190" y2="370" stroke="#cfe" stroke-width="3" stroke-dasharray="8 8"/>
+      <g clip-path="url(#globe)"><rect x="50" y="50" width="280" height="280" fill="#2f8fd8"/>
+        <g transform="translate(50,0)"><g class="earth">${conts(0)}${conts(400)}${conts(800)}</g></g>
+        <circle cx="190" cy="190" r="140" fill="url(#shade)"/></g>
+      <circle cx="190" cy="190" r="140" fill="none" stroke="#9fd8ff" stroke-width="3" opacity=".6"/>
+    </g>
+  </svg>`;
+})();
+
+/* ---------- 4. piano cartesiano e traiettoria ---------- */
+(function(){
+  const svg = document.getElementById('plane');
+  const U = 60, O = {x:240, y:300};               // unità e origine (in pixel)
+  const P = (x,y) => [O.x + x*U, O.y - y*U];
+  let g = `<g class="f" data-f="1" data-out="4">`;
+  for (let i=-4;i<=6;i++){ const [x]=P(i,0); g += `<line x1="${x}" y1="40" x2="${x}" y2="560" stroke="#2a4a3e" stroke-width="1.5"/>`; }
+  for (let j=-4;j<=4;j++){ const [,y]=P(0,j); g += `<line x1="0" y1="${y}" x2="600" y2="${y}" stroke="#2a4a3e" stroke-width="1.5"/>`; }
+  g += `<line x1="0" y1="${O.y}" x2="590" y2="${O.y}" stroke="#cfe" stroke-width="3"/><path d="M590,${O.y-8} L604,${O.y} L590,${O.y+8} Z" fill="#cfe"/>
+        <line x1="${O.x}" y1="560" x2="${O.x}" y2="34" stroke="#cfe" stroke-width="3"/><path d="M${O.x-8},34 L${O.x},20 L${O.x+8},34 Z" fill="#cfe"/>
+        <text x="585" y="${O.y+30}" fill="#cfe" font-size="20" font-weight="700">x</text><text x="${O.x+14}" y="34" fill="#cfe" font-size="20" font-weight="700">y</text>
+        <text x="${O.x-22}" y="${O.y+24}" fill="#cfe" font-size="16">O</text>`;
+  for (let i=-3;i<=5;i++) if(i){ const [x]=P(i,0); g += `<text x="${x}" y="${O.y+22}" fill="#9fb9ae" font-size="14" text-anchor="middle">${i}</text>`; }
+  for (let j=-3;j<=3;j++) if(j){ const [,y]=P(0,j); g += `<text x="${O.x-10}" y="${y+5}" fill="#9fb9ae" font-size="14" text-anchor="end">${j}</text>`; }
+  g += `</g>`;
+  const A = P(1,1), B = P(4,-2);
+  const traj = `M${A[0]},${A[1]} L${P(2.4,1)[0]},${A[1]} C${P(3.6,1)[0]},${A[1]} ${B[0]},${P(0,0.2)[1]} ${B[0]},${P(0,-0.5)[1]} L${B[0]},${B[1]}`;
+  g += `<path id="trajPath" d="${traj}" fill="none" stroke="none"/>`;
+  g += `<g class="f" data-f="2" data-out="4" id="trajDots"></g>`;
+  g += `<g class="f" data-f="4"><path d="${traj}" fill="none" stroke="#fff" stroke-width="4"/>
+          <text font-size="20" fill="#fff" font-weight="600"><textPath href="#trajPath" startOffset="40%" dy="-14">traiettoria</textPath></text></g>`;
+  g += `<g class="f" data-f="3"><line x1="${A[0]}" y1="${A[1]}" x2="${B[0]-10}" y2="${B[1]-10}" stroke="#e2453c" stroke-width="5"/>
+          <path d="M${B[0]},${B[1]} l-22,-6 l16,-16 Z" fill="#e2453c"/></g>`;
+  g += `<g class="f" data-f="4"><text x="${(A[0]+B[0])/2-60}" y="${(A[1]+B[1])/2+30}" fill="#e2453c" font-size="20" font-weight="700" transform="rotate(45 ${(A[0]+B[0])/2-30} ${(A[1]+B[1])/2+30})">spostamento</text></g>`;
+  g += `<g class="f" data-f="1"><circle cx="${A[0]}" cy="${A[1]}" r="7" fill="#e8862a"/><text x="${A[0]-30}" y="${A[1]-14}" fill="#e8862a" font-size="34" font-weight="700">A</text>
+          <circle cx="${B[0]}" cy="${B[1]}" r="7" fill="#e8862a"/><text x="${B[0]+12}" y="${B[1]+36}" fill="#e8862a" font-size="34" font-weight="700">B</text></g>`;
+  svg.innerHTML = g;
+  // puntini che si disegnano lungo la traiettoria
+  const path = svg.querySelector('#trajPath'), L = path.getTotalLength(), dots = svg.querySelector('#trajDots');
+  const N = 34;
+  for (let i=0;i<=N;i++){
+    const pt = path.getPointAtLength(L*i/N);
+    const c = document.createElementNS(NS,'circle');
+    c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y); c.setAttribute('r',5); c.setAttribute('fill','#e2453c');
+    c.setAttribute('class','dot'); c.style.transitionDelay = (i*0.07)+'s';
+    dots.appendChild(c);
+  }
+})();
+
+/* ---------- 5. orologi luminosi ---------- */
+(function(){
+  let ticks = (r, n, len, w) => { let s=''; for(let i=0;i<n;i++){ const a=i/n*2*Math.PI; s += `<line x1="${360+Math.cos(a)*r}" y1="${360+Math.sin(a)*r}" x2="${360+Math.cos(a)*(r-len)}" y2="${360+Math.sin(a)*(r-len)}" stroke-width="${w}"/>`;} return s; };
+  let nums = ''; for (let i=1;i<=12;i++){ const a=(i/12)*2*Math.PI - Math.PI/2; nums += `<text x="${360+Math.cos(a)*100}" y="${360+Math.sin(a)*100+8}" text-anchor="middle" font-size="22">${i}</text>`; }
+  let big = ''; for (let i=0;i<24;i++){ const a=(i/24)*2*Math.PI; big += `<text x="${360+Math.cos(a)*262}" y="${360+Math.sin(a)*262+8}" text-anchor="middle" font-size="20" opacity=".7">${(i*7)%60}</text>`; }
+  document.getElementById('ill-clock').innerHTML = `
+  <svg viewBox="0 0 720 720" width="720" height="720">
+    <defs><filter id="neon" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <linearGradient id="fadeL" x1="0" x2="1"><stop offset=".72" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000"/></linearGradient></defs>
+    <rect width="720" height="720" fill="#020812"/>
+    <g fill="none" stroke="#4fd8ff" filter="url(#neon)" class="pglow">
+      <g class="spin s" transform="rotate(-20 360 360)"><ellipse cx="360" cy="360" rx="330" ry="150" stroke-width="3"/><ellipse cx="360" cy="360" rx="310" ry="135" stroke-width="1.5" stroke-dasharray="4 10"/></g>
+      <g class="spin r" transform="rotate(25 360 360)"><ellipse cx="360" cy="360" rx="300" ry="190" stroke-width="2.5"/></g>
+      <g class="spin"><circle cx="360" cy="360" r="290" stroke-width="2"/>${ticks(285,120,10,1.5)}<g fill="#4fd8ff" stroke="none">${big}</g></g>
+      <circle cx="360" cy="360" r="140" stroke-width="5"/>
+      ${ticks(136,60,8,2)}${ticks(136,12,18,4)}
+      <g fill="#bff3ff" stroke="none">${nums}</g>
+      <g class="spin s"><line x1="360" y1="360" x2="360" y2="290" stroke="#bff3ff" stroke-width="6" stroke-linecap="round"/></g>
+      <g class="spin hand"><line x1="360" y1="360" x2="360" y2="245" stroke="#e2453c" stroke-width="3" stroke-linecap="round"/></g>
+      <circle cx="360" cy="360" r="8" fill="#bff3ff"/>
+    </g>
+    <rect width="720" height="720" fill="url(#fadeL)"/>
+  </svg>`;
+  // linee del tempo
+  const tl = (x, label) => `<line x1="${x}" y1="20" x2="${x}" y2="420" stroke="#fff" stroke-width="5"/><path d="M${x-14},418 L${x},448 L${x+14},418 Z" fill="#fff"/>
+    <text x="${x+8}" y="26" fill="#fff" font-size="18">12:00:00</text><text x="${x+8}" y="386" fill="#fff" font-size="18">12:01:00</text>`;
+  const y20 = 20 + 360*20/60, y35 = 20 + 360*35/60;
+  document.getElementById('timelines').innerHTML = `
+    ${tl(70)}${tl(300)}
+    <g class="f" data-f="6"><line x1="50" y1="${y20}" x2="90" y2="${y20}" stroke="#e2453c" stroke-width="5"/><text x="100" y="${y20+7}" fill="#fff" font-size="18">t = 12:00:20</text></g>
+    <g class="f" data-f="7"><line x1="280" y1="${y20}" x2="320" y2="${y20}" stroke="#e2453c" stroke-width="5"/><text x="330" y="${y20+7}" fill="#fff" font-size="18">t<tspan font-size="13" dy="5">A</tspan><tspan dy="-5"> = 12:00:20</tspan></text>
+      <line x1="300" y1="${y20}" x2="300" y2="${y35}" stroke="#e2453c" stroke-width="9"/>
+      <line x1="280" y1="${y35}" x2="320" y2="${y35}" stroke="#e2453c" stroke-width="5"/><text x="330" y="${y35+7}" fill="#fff" font-size="18">t<tspan font-size="13" dy="5">B</tspan><tspan dy="-5"> = 12:00:35</tspan></text>
+      <text x="250" y="${(y20+y35)/2+7}" fill="#e2453c" font-size="20" font-weight="700">Δt</text></g>
+    <g class="f" data-f="8"><text x="250" y="500" text-anchor="middle" fill="#00e49a" font-size="22" font-weight="700">Δt = t<tspan font-size="15" dy="5">B</tspan><tspan dy="-5"> − t</tspan><tspan font-size="15" dy="5">A</tspan><tspan dy="-5"> = 15 s</tspan></text></g>`;
+})();
+
+/* ---------- 6. pista di atletica ---------- */
+(function(){
+  const vp = {x:900, y:-260};
+  let lanes = '';
+  const base = [-200, 20, 220, 420, 620];
+  base.forEach(bx => { lanes += `<line x1="${bx}" y1="720" x2="${vp.x}" y2="${vp.y}" stroke="#fff" stroke-width="5"/>`; });
+  for (let k=1;k<8;k++){ const t = 1 - Math.pow(0.78,k); const y = 720 + (vp.y-720)*t;
+    lanes += `<line x1="${-200 + (vp.x+200)*t}" y1="${y}" x2="${620 + (vp.x-620)*t}" y2="${y}" stroke="#fff" stroke-width="${3-k*0.3}" opacity=".5"/>`; }
+  document.getElementById('ill-track').innerHTML = `
+  <svg viewBox="0 0 560 720" width="560" height="720">
+    <defs><clipPath id="torn"><path d="M0,0 L470,0 C440,60 500,90 450,150 C410,200 480,240 440,300 C400,360 470,400 430,460 C400,520 470,560 420,620 C400,660 440,700 420,720 L0,720 Z"/></clipPath></defs>
+    <g clip-path="url(#torn)"><rect width="560" height="720" fill="#0b0d10"/>${lanes}
+      <text x="70" y="680" fill="#fff" font-size="150" font-weight="700" transform="skewX(-12)">1</text>
+      <text x="300" y="680" fill="#fff" font-size="150" font-weight="700" transform="skewX(-12)">2</text></g>
+    <path d="M470,0 C440,60 500,90 450,150 C410,200 480,240 440,300 C400,360 470,400 430,460 C400,520 470,560 420,620 C400,660 440,700 420,720" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>
+  </svg>`;
+  const ax = (y) => `<line x1="20" y1="${y}" x2="600" y2="${y}" stroke="#fff" stroke-width="5"/><path d="M596,${y-14} L630,${y} L596,${y+14} Z" fill="#fff"/>
+     <text x="20" y="${y-14}" fill="#fff" font-size="18">0 m</text><text x="560" y="${y-14}" fill="#fff" font-size="18" text-anchor="end">100 m</text>`;
+  const X = m => 20 + 580*m/100;
+  document.getElementById('axes').innerHTML = `${ax(90)}${ax(300)}
+    <g class="f" data-f="1"><line x1="${X(15)}" y1="70" x2="${X(15)}" y2="110" stroke="#e2453c" stroke-width="6"/><text x="${X(15)}" y="140" fill="#fff" font-size="18" text-anchor="middle">s = 15 m</text></g>
+    <g class="f" data-f="2"><line x1="${X(15)}" y1="300" x2="${X(45)}" y2="300" stroke="#e2453c" stroke-width="10"/>
+      <line x1="${X(15)}" y1="280" x2="${X(15)}" y2="320" stroke="#e2453c" stroke-width="6"/><line x1="${X(45)}" y1="280" x2="${X(45)}" y2="320" stroke="#e2453c" stroke-width="6"/>
+      <text x="${X(30)}" y="275" fill="#e2453c" font-size="20" font-weight="700" text-anchor="middle">Δs</text>
+      <text x="${X(15)}" y="350" fill="#fff" font-size="18" text-anchor="middle">s<tspan font-size="13" dy="5">A</tspan><tspan dy="-5"> = 15 m</tspan></text>
+      <text x="${X(45)}" y="350" fill="#fff" font-size="18" text-anchor="middle">s<tspan font-size="13" dy="5">B</tspan><tspan dy="-5"> = 45 m</tspan></text></g>
+    <g class="f" data-f="3"><text x="${X(30)}" y="440" fill="#00e49a" font-size="24" font-weight="700" text-anchor="middle">Δs = s<tspan font-size="16" dy="5">B</tspan><tspan dy="-5"> − s</tspan><tspan font-size="16" dy="5">A</tspan><tspan dy="-5"> = 30 m</tspan></text></g>`;
+})();
+
+/* ---------- 7. corridori ---------- */
+(function(){
+  // pista in prospettiva: le corsie convergono verso l'orizzonte e le fasce scorrono verso chi guarda
+  const vp = {x:400, y:300}, t = (420-vp.y)/(640-vp.y);
+  let lanes = '', bands = '';
+  [-350,-60,230,520,810,1100].forEach(bx => {
+    const x1 = vp.x + (bx-vp.x)*t;
+    lanes += `<line x1="${x1}" y1="420" x2="${bx}" y2="640" stroke="#fff" stroke-width="5" opacity=".85"/>`;
+  });
+  for (let y=370; y<700; y+=50) bands += `<rect x="0" y="${y}" width="640" height="20" fill="#000" opacity=".1"/>`;
+  document.getElementById('ill-run').innerHTML = `
+  <svg viewBox="0 0 640 640" width="640" height="640">
+    <defs><clipPath id="trackclip"><rect y="420" width="640" height="220"/></clipPath><clipPath id="runclip"><path d="M60,0 L640,0 L640,640 L30,640 C70,580 10,540 50,480 C90,420 20,380 60,320 C100,260 30,220 70,160 C110,100 40,60 60,0 Z"/></clipPath></defs>
+    <g clip-path="url(#runclip)">
+      <rect width="640" height="640" fill="#7ec8f2"/>
+      <rect y="300" width="640" height="120" fill="#3c8f4c"/>
+      <g clip-path="url(#trackclip)">
+        <rect y="420" width="640" height="220" fill="#c8553f"/>
+        <g class="trackmove">${bands}</g>
+        ${lanes}
+      </g>
+      ${fig(410, 320, 2.1, '#e2453c', '#222', {run:true, hair:'#4a3420', style:'short', print:'number', num:3, face:'grin'})}
+      ${fig(250, 345, 2.2, '#2fb5e8', '#24427a', {run:true, hair:'#7a4a1e', style:'ponytail', print:'number', num:1, blush:true})}
+      ${fig(550, 370, 2.0, '#53c24a', '#222', {run:true, hair:'#e8862a', style:'short', print:'number', num:2, face:'grin'})}
+    </g>
+  </svg>`;
+})();
+
+/* ############ illustrazioni LEZIONE 2 ############ */
+
+/* ---------- automobile in stile mattoncini (vista di lato) ---------- */
+function car(color='#e2453c', driver=true){
+  let studs=''; for(let i=0;i<4;i++) studs += `<rect x="${118+i*16}" y="-8" width="11" height="6" rx="2" fill="${color}"/>`;
+  return `<g>
+    ${driver ? fig(78, -40, .55, '#2fb5e8', '#24427a', {hair:'#4a3420', style:'short', print:'zip'}) : ''}
+    <path d="M40,-48 L104,-48 L118,-6 L28,-6 Z" fill="rgba(160,215,255,.55)" stroke="#d9e6f2" stroke-width="4"/>
+    <rect x="0" y="-8" width="190" height="44" rx="6" fill="${color}"/>
+    ${studs}
+    <rect x="0" y="-8" width="190" height="8" rx="4" fill="rgba(255,255,255,.18)"/>
+    <rect x="182" y="2" width="10" height="10" rx="2" fill="#ffe27a"/><rect x="-2" y="4" width="8" height="8" rx="2" fill="#e8862a"/>
+    <rect x="70" y="8" width="44" height="2.5" fill="rgba(0,0,0,.3)"/>
+    ${[40,150].map(cx=>`<circle cx="${cx}" cy="36" r="19" fill="#1d1d1d"/><circle cx="${cx}" cy="36" r="9" fill="#bfc6cc"/><circle cx="${cx}" cy="36" r="3" fill="#1d1d1d"/>`).join('')}
+  </g>`;
+}
+
+/* ---------- binari in velocità ---------- */
+function rails(id){
+  const vp={x:220,y:-160};
+  const at = (bx, y) => vp.x + (bx-vp.x)*((y-vp.y)/(720-vp.y));
+  let sl=''; for(let y=-60;y<780;y+=60){ sl += `<polygon points="${at(30,y)},${y} ${at(410,y)},${y} ${at(410,y+14)},${y+14} ${at(30,y+14)},${y+14}" fill="#5b4a3c"/>`; }
+  let streaks=''; for(let i=0;i<26;i++){ const a = -Math.PI/2 + (i/25-.5)*2.6; const r1=200+(i*37)%160, r2=900;
+    streaks += `<line x1="${vp.x+Math.cos(a)*r1}" y1="${vp.y+Math.sin(a)*-r1}" x2="${vp.x+Math.cos(a)*r2}" y2="${vp.y-Math.sin(a)*r2}" stroke="#cfd8df" stroke-width="${1+i%3}" opacity="${.12+(i%4)*.05}"/>`; }
+  document.getElementById(id).innerHTML = `
+  <svg viewBox="0 0 440 720" width="440" height="720">
+    <defs><linearGradient id="rg${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9d3db"/><stop offset=".5" stop-color="#7d8a95"/><stop offset="1" stop-color="#3d464e"/></linearGradient>
+      <clipPath id="tc${id}"><polygon points="${at(-60,0)},0 ${at(500,0)},0 500,720 -60,720"/></clipPath>
+      <linearGradient id="fd${id}" x1="0" x2="1"><stop offset=".75" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000"/></linearGradient></defs>
+    <rect width="440" height="720" fill="url(#rg${id})"/>
+    ${streaks}
+    <g clip-path="url(#tc${id})"><g class="sleepers">${sl}</g></g>
+    <line x1="${at(90,0)}" y1="0" x2="90" y2="720" stroke="#e8edf1" stroke-width="12"/>
+    <line x1="${at(350,0)}" y1="0" x2="350" y2="720" stroke="#e8edf1" stroke-width="12"/>
+    <line x1="${at(90,0)}" y1="0" x2="90" y2="720" stroke="#8d99a3" stroke-width="4"/>
+    <line x1="${at(350,0)}" y1="0" x2="350" y2="720" stroke="#8d99a3" stroke-width="4"/>
+    <rect width="440" height="720" fill="url(#fd${id})"/>
+  </svg>`;
+}
+rails('ill-rails'); rails('ill-rails2');
+
+/* ---------- strada, autovelox e tachimetro ---------- */
+(function(){
+  let dash=''; for(let i=0;i<9;i++) dash += `<rect x="${i*80}" y="356" width="44" height="6" fill="#fff" opacity=".8"/>`;
+  let ticks=''; for(let i=0;i<=10;i++){ const a = Math.PI + i/10*Math.PI; ticks += `<line x1="${110+Math.cos(a)*86}" y1="${110+Math.sin(a)*86}" x2="${110+Math.cos(a)*(i%5?76:68)}" y2="${110+Math.sin(a)*(i%5?76:68)}" stroke="#fff" stroke-width="${i%5?2:4}"/>`; }
+  let nums=''; [0,50,100].forEach((n,k)=>{ const a=Math.PI+k/2*Math.PI; nums += `<text x="${110+Math.cos(a)*54}" y="${110+Math.sin(a)*54+6}" fill="#fff" font-size="16" text-anchor="middle">${n}</text>`; });
+  document.getElementById('ill-road').innerHTML = `
+  <svg viewBox="0 0 620 470" width="620" height="470">
+    <defs><linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2a4a"/><stop offset="1" stop-color="#e88a5a"/></linearGradient></defs>
+    <rect width="620" height="470" rx="18" fill="url(#dusk)"/>
+    <path d="M0,250 C120,210 250,230 360,205 C470,180 560,215 620,200 L620,300 L0,300 Z" fill="#2c5a3a"/>
+    <rect y="300" width="620" height="120" fill="#3a3f45"/>${dash}
+    <rect y="420" width="620" height="50" fill="#2c5a3a"/>
+    <!-- autovelox -->
+    <g transform="translate(470,170)">
+      <line x1="30" y1="60" x2="0" y2="150" stroke="#cfd6dc" stroke-width="5"/><line x1="30" y1="60" x2="60" y2="150" stroke="#cfd6dc" stroke-width="5"/><line x1="30" y1="60" x2="32" y2="150" stroke="#cfd6dc" stroke-width="5"/>
+      <rect x="0" y="0" width="64" height="62" rx="8" fill="#e9e9e9" stroke="#999" stroke-width="2"/>
+      <circle cx="18" cy="31" r="14" fill="#222"/><circle cx="18" cy="31" r="6" fill="#4fd8ff"/>
+      <rect x="40" y="12" width="16" height="12" rx="2" fill="#555"/>
+      <circle class="flash" cx="18" cy="31" r="46" fill="#fffbe0" opacity="0"/>
+    </g>
+    <g transform="translate(0,318)"><g class="drive">${car('#e2453c')}</g></g>
+    <!-- tachimetro -->
+    <g transform="translate(16,16)">
+      <path d="M10,110 A100,100 0 0,1 210,110 Z" fill="rgba(0,0,0,.55)" stroke="#00e49a" stroke-width="3"/>
+      ${ticks}${nums}
+      <g transform="translate(110,110)"><g class="needle"><line x1="0" y1="0" x2="0" y2="-76" stroke="#e2453c" stroke-width="5" stroke-linecap="round"/></g></g>
+      <circle cx="110" cy="110" r="8" fill="#fff"/><text x="110" y="100" fill="#cfe" font-size="12" text-anchor="middle">km/h</text>
+    </g>
+  </svg>`;
+})();
+
+/* ---------- piano cartesiano dei vettori ---------- */
+(function(){
+  const svg = document.getElementById('vplane');
+  const U = 50, O = {x:300, y:330}, P = (x,y)=>[O.x+x*U, O.y-y*U];
+  const A = P(1,1), B = P(5,4);
+  const arrow = (to, col='#e2453c', cls='', w=4) => { const [x2,y2]=to; const ang=Math.atan2(y2-A[1], x2-A[0]); const L=16;
+    return `<g class="${cls}"><line x1="${A[0]}" y1="${A[1]}" x2="${x2-Math.cos(ang)*10}" y2="${y2-Math.sin(ang)*10}" stroke="${col}" stroke-width="${w}"/>
+      <path d="M${x2},${y2} L${x2-Math.cos(ang-0.38)*L},${y2-Math.sin(ang-0.38)*L} L${x2-Math.cos(ang+0.38)*L},${y2-Math.sin(ang+0.38)*L} Z" fill="${col}"/></g>`; };
+  let g = `<g>`;
+  for (let i=-6;i<=7;i++){ const [x]=P(i,0); g += `<line x1="${x}" y1="20" x2="${x}" y2="540" stroke="#22433a" stroke-width="1.5"/>`; }
+  for (let j=-4;j<=6;j++){ const [,y]=P(0,j); if(y>10&&y<550) g += `<line x1="0" y1="${y}" x2="660" y2="${y}" stroke="#22433a" stroke-width="1.5"/>`; }
+  g += `<line x1="0" y1="${O.y}" x2="645" y2="${O.y}" stroke="#cfe" stroke-width="3"/><path d="M645,${O.y-8} L660,${O.y} L645,${O.y+8} Z" fill="#cfe"/>
+    <line x1="${O.x}" y1="545" x2="${O.x}" y2="22" stroke="#cfe" stroke-width="3"/><path d="M${O.x-8},22 L${O.x},6 L${O.x+8},22 Z" fill="#cfe"/>
+    <text x="640" y="${O.y+28}" fill="#cfe" font-size="20" font-weight="700">x</text><text x="${O.x+12}" y="24" fill="#cfe" font-size="20" font-weight="700">y</text>`;
+  for (let i=-5;i<=6;i++) if(i){ const [x]=P(i,0); g += `<text x="${x}" y="${O.y+20}" fill="#9fb9ae" font-size="13" text-anchor="middle">${i}</text>`; }
+  for (let j=-3;j<=5;j++) if(j){ const [,y]=P(0,j); g += `<text x="${O.x-8}" y="${y+5}" fill="#9fb9ae" font-size="13" text-anchor="end">${j}</text>`; }
+  g += `</g>`;
+  // punti A e B
+  g += `<g class="f" data-f="1"><circle cx="${A[0]}" cy="${A[1]}" r="6" fill="#e8862a"/><text x="${A[0]-30}" y="${A[1]-10}" fill="#e8862a" font-size="32" font-weight="700">A</text>
+          <circle cx="${B[0]}" cy="${B[1]}" r="6" fill="#e8862a"/><text x="${B[0]+10}" y="${B[1]+8}" fill="#e8862a" font-size="32" font-weight="700">B</text></g>`;
+  // punto che si sposta da A a B
+  g += `<g class="f" data-f="2" data-out="3"><circle class="vmove" cx="${A[0]}" cy="${A[1]}" r="11" fill="#00e49a"/></g>`;
+  // il vettore AB
+  g += `<g class="f" data-f="3">${arrow(B,'#e2453c','',5)}</g>`;
+  // modulo
+  g += `<g class="f" data-f="4" data-out="7"><line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${A[1]}" stroke="#fff" stroke-width="4" stroke-dasharray="14 10"/><text x="${(A[0]+B[0])/2}" y="${A[1]+32}" fill="#fff" font-size="26" font-weight="700" text-anchor="middle">4u</text></g>`;
+  g += `<g class="f" data-f="5" data-out="7"><line x1="${B[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#fff" stroke-width="4" stroke-dasharray="14 10"/><text x="${B[0]+12}" y="${(A[1]+B[1])/2+8}" fill="#fff" font-size="26" font-weight="700">3u</text></g>`;
+  g += `<g class="f" data-f="6" data-out="7"><rect x="150" y="${O.y+34}" width="470" height="50" rx="10" fill="rgba(0,0,0,.65)"/><text x="385" y="${O.y+68}" fill="#00e49a" font-size="26" font-weight="700" text-anchor="middle">AB = √(3² + 4²) = √(9+16) = √25 = 5u</text></g>`;
+  // stessa lunghezza, direzioni diverse
+  // ---- cartina centrata su Avellino con la raggiera di vettori (stesso modulo, direzioni diverse) ----
+  (function(){
+    const LAT0 = 40.914, LON0 = 14.790, KY = 1110, KX = 1110*Math.cos(LAT0*Math.PI/180);   // 10 px = 1 km
+    const M = (lat,lon)=>[A[0] + (lon-LON0)*KX, A[1] - (lat-LAT0)*KY];
+    const coast = [[41.03,13.94],[40.82,14.12],[40.84,14.25],[40.79,14.37],[40.70,14.48],[40.63,14.37],[40.57,14.33],[40.63,14.48],[40.634,14.603],[40.68,14.77],[40.58,14.93],[40.42,15.0]];
+    const sea = 'M' + coast.map(c=>M(c[0],c[1]).map(v=>v.toFixed(0)).join(',')).join(' L') + ' L700,700 L-200,700 Z';
+    const towns = [['Benevento',41.130,14.782],['Salerno',40.682,14.769],['Nola',40.926,14.527],['Ariano Irpino',41.153,15.089],
+      ['Grottaminarda',41.07,15.06],['Montella',40.84,15.02],['Solofra',40.83,14.85],
+      ['Castellammare',40.70,14.48],['Montemiletto',41.01,14.91],['Serino',40.85,14.87],['Avella',40.96,14.60],['Montesarchio',41.06,14.64]];
+    let m = `<g class="f" data-f="7" data-out="8">
+      <defs><clipPath id="mapclip"><rect x="0" y="0" width="660" height="560" rx="14"/></clipPath></defs>
+      <g clip-path="url(#mapclip)">
+        <rect width="660" height="560" fill="#e9e2c8"/>
+        <path d="M-50,120 C80,60 200,140 300,80 C420,10 520,90 700,40 L700,-50 L-50,-50 Z" fill="#d7d9a8" opacity=".7"/>
+        <path d="M-50,420 C100,380 180,460 260,400 C340,340 450,420 700,360 L700,700 L-50,700 Z" fill="#cfdca6" opacity=".6"/>
+        <path d="${sea}" fill="#8fc8e8"/>
+        <path d="M0,330 C120,300 200,320 ${A[0]},${A[1]} C420,250 520,180 660,150" fill="none" stroke="#e0a43a" stroke-width="5" opacity=".7"/>
+        <path d="M${A[0]},${A[1]} C350,180 345,100 ${M(41.130,14.782).join(',')}" fill="none" stroke="#e0a43a" stroke-width="4" opacity=".6"/>
+        <path d="M${A[0]},${A[1]} C340,380 340,460 ${M(40.682,14.769).join(',')}" fill="none" stroke="#e0a43a" stroke-width="4" opacity=".6"/>
+        ${towns.map(([n,la,lo])=>{const [x,y]=M(la,lo); const end = x > 520; return `<circle cx="${x}" cy="${y}" r="5" fill="#5a4a3a"/><text x="${end ? x-8 : x+8}" y="${y < 30 ? y+20 : y-6}" fill="#3b2f25" font-size="15" font-weight="700" text-anchor="${end?'end':'start'}">${n}</text>`;}).join('')}
+        <circle cx="${A[0]}" cy="${A[1]}" r="250" fill="none" stroke="#e2453c" stroke-width="3" stroke-dasharray="8 8" class="ring"/>
+        <text x="${A[0]+178}" y="${A[1]+188}" fill="#e2453c" font-size="16" font-weight="700" transform="rotate(-45 ${A[0]+178} ${A[1]+188})">25 km</text>
+      </g>
+    </g>`;
+    // raggiera: 24 vettori lunghi 25 km che si disegnano uno dopo l'altro
+    m += `<g class="f" data-f="7" data-out="8">`;
+    for (let i=0;i<24;i++){
+      const ang = i/24*2*Math.PI - Math.PI/2, R = 250, x2 = A[0]+Math.cos(ang)*R, y2 = A[1]+Math.sin(ang)*R;
+      const L = 14, bx = x2-Math.cos(ang)*12, by = y2-Math.sin(ang)*12;
+      const d = .25 + i*.09;
+      m += `<path class="draw" pathLength="1" d="M${A[0]},${A[1]} L${bx.toFixed(1)},${by.toFixed(1)}" stroke="#e2453c" stroke-width="3.5" fill="none" style="transition-delay:${d}s;transition-duration:.6s"/>
+            <path class="tip" d="M${x2.toFixed(1)},${y2.toFixed(1)} L${(x2-Math.cos(ang-0.4)*L).toFixed(1)},${(y2-Math.sin(ang-0.4)*L).toFixed(1)} L${(x2-Math.cos(ang+0.4)*L).toFixed(1)},${(y2-Math.sin(ang+0.4)*L).toFixed(1)} Z" fill="#e2453c" style="transition-delay:${d+.55}s"/>`;
+    }
+    m += `<circle cx="${A[0]}" cy="${A[1]}" r="9" fill="#e8862a" stroke="#fff" stroke-width="3"/>
+          <rect x="${A[0]-58}" y="${A[1]+14}" width="116" height="26" rx="6" fill="rgba(0,0,0,.75)"/>
+          <text x="${A[0]}" y="${A[1]+33}" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">Avellino</text></g>`;
+    g += m;
+  })();
+  // versi opposti sulla stessa direzione
+  g += `<g class="f" data-f="8" data-out="9">${arrow(P(6,1),'#e8862a')}${arrow(P(-4,1),'#e8862a')}</g>`;
+  // direzione: retta d'azione e angolo
+  const d1 = P(-1.67,-1), d2 = P(6.33,5);
+  g += `<g class="f" data-f="9"><line x1="${d1[0]}" y1="${d1[1]}" x2="${d2[0]}" y2="${d2[1]}" stroke="#4fd8ff" stroke-width="3" stroke-dasharray="3 7"/>
+          <line x1="0" y1="${A[1]}" x2="660" y2="${A[1]}" stroke="#fff" stroke-width="3"/></g>`;
+  const r=70, a1=-Math.atan2(3,4);
+  g += `<g class="f" data-f="10"><path d="M${A[0]+r},${A[1]} A${r},${r} 0 0,0 ${A[0]+r*Math.cos(a1)},${A[1]+r*Math.sin(a1)}" fill="none" stroke="#f2c230" stroke-width="4"/>
+          <text x="${A[0]+r+12}" y="${A[1]-14}" fill="#f2c230" font-size="26" font-weight="700">37°</text></g>`;
+  svg.innerHTML = g;
+  const st = document.createElement('style');
+  st.textContent = `.on .vmove{transform:translate(${B[0]-A[0]}px,${B[1]-A[1]}px)}`;
+  document.head.appendChild(st);
+})();
+
+/* ---------- laboratorio (grandezze scalari) ---------- */
+(function(){
+  const tube = (x, col, h) => `<g transform="translate(${x},0)"><rect x="-11" y="250" width="22" height="120" rx="11" fill="rgba(220,240,255,.25)" stroke="#dfeaf2" stroke-width="3"/>
+     <rect x="-8" y="${370-h}" width="16" height="${h-3}" rx="8" fill="${col}"/></g>`;
+  let bubbles=''; for(let i=0;i<6;i++) bubbles += `<circle class="bubble" cx="${470+(i%3)*18-18}" cy="350" r="${4+i%3*2}" fill="#bff3ff" style="animation-delay:${i*.35}s"/>`;
+  document.getElementById('ill-lab').innerHTML = `
+  <svg viewBox="0 0 640 640" width="640" height="640">
+    <rect width="640" height="640" rx="20" fill="#dfe8ee"/>
+    <rect x="0" y="0" width="640" height="420" rx="20" fill="#cdd9e2"/>
+    <rect x="30" y="40" width="200" height="130" rx="10" fill="#b8c7d2"/><rect x="40" y="50" width="180" height="110" rx="6" fill="#9fd8ff" opacity=".6"/>
+    ${fig(150, 290, 1.9, '#f4f4f4', '#2f3a4a', {hair:'#7a4a1e', style:'short', print:'jacket', face:'glasses'})}
+    <rect x="0" y="420" width="640" height="220" fill="#8a6e52"/><rect x="0" y="420" width="640" height="18" fill="#a5876a"/>
+    <!-- portaprovette -->
+    <g transform="translate(0,48)">
+      <rect x="250" y="330" width="170" height="14" rx="3" fill="#e9e9e9"/><rect x="255" y="370" width="160" height="10" rx="3" fill="#cfcfcf"/>
+      ${tube(275,'#e2453c',80)}${tube(315,'#53c24a',60)}${tube(355,'#2fb5e8',95)}${tube(395,'#f2c230',50)}
+    </g>
+    <!-- becher che bolle -->
+    <path d="M440,300 L500,300 L508,418 L432,418 Z" fill="rgba(220,240,255,.3)" stroke="#dfeaf2" stroke-width="3"/>
+    <path d="M436,350 L504,350 L508,418 L432,418 Z" fill="#7fd3ff" opacity=".8"/>${bubbles}
+    <!-- bilancia -->
+    <rect x="70" y="470" width="190" height="70" rx="10" fill="#e9e9e9"/><rect x="95" y="490" width="140" height="36" rx="4" fill="#163a2c"/>
+    <text x="165" y="517" fill="#00e49a" font-size="24" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">250 g</text>
+    <path d="M100,470 C110,440 220,440 230,470 Z" fill="#fff"/><path d="M118,462 C130,446 200,446 212,462 Z" fill="#f7f1e3"/>
+    <!-- termometro -->
+    <rect x="470" y="430" width="70" height="180" rx="12" fill="#f4f4f4"/>
+    <rect x="499" y="450" width="12" height="120" rx="6" fill="#e0e0e0"/><rect x="499" y="510" width="12" height="60" rx="6" fill="#e2453c"/><circle cx="505" cy="580" r="13" fill="#e2453c"/>
+    <text x="505" y="628" fill="#333" font-size="20" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">21 °C</text>
+  </svg>`;
+})();
+
+/* ---------- moto rettilineo uniforme: strada con le linee ogni metro ---------- */
+(function(){
+  const X0 = 40, PX = 50;                       // 50 px = 1 metro
+  let marks=''; for(let m=0;m<=10;m++){ const x = X0+m*PX;
+    marks += `<line x1="${x}" y1="300" x2="${x}" y2="390" stroke="#fff" stroke-width="${m%5?3:5}"/><text x="${x}" y="420" fill="#fff" font-size="16" text-anchor="middle">${m}</text>`; }
+  document.getElementById('ill-mru').innerHTML = `
+  <svg viewBox="0 0 620 520" width="620" height="520">
+    <rect width="620" height="520" rx="18" fill="#7ec8f2"/>
+    <path d="M0,230 C140,190 300,215 420,190 C520,170 580,200 620,195 L620,300 L0,300 Z" fill="#3c8f4c"/>
+    <rect y="390" width="620" height="130" fill="#3c8f4c"/><rect y="300" width="620" height="90" fill="#3a3f45"/>${marks}
+    <text x="${X0+10*PX+14}" y="420" fill="#fff" font-size="16">m</text>
+    <g id="mruCar" transform="translate(${X0-185},300)"><g transform="scale(.8)">${car('#f2c230')}</g></g>
+    <!-- cronometro -->
+    <g transform="translate(400,24)">
+      <rect width="200" height="110" rx="14" fill="rgba(0,0,0,.7)" stroke="#00e49a" stroke-width="3"/>
+      <circle cx="100" cy="-6" r="8" fill="#00e49a"/>
+      <text id="mruT" x="100" y="48" fill="#fff" font-size="26" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">t = 0,0 s</text>
+      <text id="mruS" x="100" y="88" fill="#00e49a" font-size="26" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">s = 0,0 m</text>
+    </g>
+  </svg>`;
+  // l'auto avanza di 2 m al secondo; cronometro e distanza sono sincronizzati
+  const carEl = document.getElementById('mruCar'), tEl = document.getElementById('mruT'), sEl = document.getElementById('mruS');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let t0 = performance.now();
+  (function loop(now){
+    const T = 5.5, t = reduce ? 3 : ((now - t0)/1000) % T, tt = Math.min(t, 5);
+    const s = 2*tt;
+    carEl.setAttribute('transform', `translate(${X0 - 152 + s*PX},300)`);
+    tEl.textContent = `t = ${tt.toFixed(1).replace('.',',')} s`;
+    sEl.textContent = `s = ${s.toFixed(1).replace('.',',')} m`;
+    requestAnimationFrame(loop);
+  })(t0);
+})();
+
+/* ############ illustrazioni LEZIONE 3 ############ */
+
+/* =========================================================
+   LAVAGNA: tabella, grafico spazio-tempo, moto vario
+   ========================================================= */
+const T = [0,1,2,3,4,5,6];
+const S = [0,3,5,5,2,4,3];
+const DV = ['3 m/s','2','0','−3','2','−1'];
+(function(){
+  const svg = document.getElementById('board');
+  const HW = 'font-family="Patrick Hand, Roboto Mono, cursive"';
+  const W = '#f4f1e8', C = '#4fd8ff', M = '#00e49a';
+  let g = '';
+  // fondo a quadretti
+  g += `<rect width="1220" height="672" rx="18" fill="#0d1a17" stroke="#1f3b31" stroke-width="3"/>`;
+  for (let x=40;x<1220;x+=40) g += `<line x1="${x}" y1="6" x2="${x}" y2="666" stroke="#16302a" stroke-width="1"/>`;
+  for (let y=40;y<672;y+=40) g += `<line x1="6" y1="${y}" x2="1214" y2="${y}" stroke="#16302a" stroke-width="1"/>`;
+
+  // ---- tabella ----
+  const ry = i => 180 + i*68;
+  g += `<g class="f" data-f="1" fill="none" stroke="${W}" stroke-width="4" stroke-linecap="round">
+          <path class="draw" pathLength="1" d="M70,124 L345,128"/><path class="draw" pathLength="1" d="M196,60 L192,625" style="transition-delay:.4s"/></g>`;
+  g += `<g class="f" data-f="1" fill="${W}" font-size="58" ${HW}><text x="105" y="108">t</text><text x="232" y="108">s</text></g>`;
+  g += `<g class="f" data-f="6" fill="${W}" font-size="28" ${HW}><text x="132" y="106">[s]</text><text x="262" y="106">[m]</text></g>`;
+  g += `<g class="f stag" data-f="2" fill="${W}" font-size="56" ${HW}>${T.map((t,i)=>`<text x="112" y="${ry(i)+18}" style="transition-delay:${i*.25}s">${t}</text>`).join('')}</g>`;
+  const sv = (from,to,f) => `<g class="f stag" data-f="${f}" fill="${W}" font-size="56" ${HW}>${S.slice(from,to).map((s,k)=>`<text x="236" y="${ry(from+k)+18}" style="transition-delay:${k*.3}s">${s}</text>`).join('')}</g>`;
+  g += sv(0,2,3) + sv(2,5,4) + sv(5,7,5);
+  // parentesi con le differenze
+  g += `<g class="f stag" data-f="14" fill="none" stroke="${C}" stroke-width="3">${[0,1,2,3,4,5].map(i=>`<path d="M290,${ry(i)} L304,${ry(i)} L304,${ry(i+1)} L290,${ry(i+1)}" style="transition-delay:${i*.35}s"/>`).join('')}</g>`;
+  g += `<g class="f stag" data-f="14" fill="${C}" font-size="34" ${HW}>${DV.map((d,i)=>`<text x="314" y="${(ry(i)+ry(i+1))/2+11}" style="transition-delay:${i*.35+.15}s">${d}</text>`).join('')}</g>`;
+
+  // ---- grafico ----
+  const O = {x:520, y:600}, ux = 70, uy = 68, P = (t,s)=>[O.x+t*ux, O.y-s*uy];
+  g += `<g class="f" data-f="7" fill="none" stroke="${W}" stroke-width="4" stroke-linecap="round">
+          <path class="draw" pathLength="1" d="M${O.x},${O.y+18} L${O.x},150"/><path class="draw" pathLength="1" d="M${O.x-18},${O.y} L1010,${O.y}" style="transition-delay:.5s"/></g>`;
+  g += `<g class="f" data-f="8" fill="${W}" font-size="50" ${HW}><text x="540" y="168">s</text><text x="1000" y="648">t</text></g>`;
+  g += `<g class="f stag" data-f="9" ${HW}>${T.map((t,i)=>{const [x]=P(t,0); return `<g style="transition-delay:${i*.12}s"><line x1="${x}" y1="${O.y-7}" x2="${x}" y2="${O.y+7}" stroke="${W}" stroke-width="3"/><text x="${x}" y="${O.y+44}" fill="${W}" font-size="34" text-anchor="middle">${t}</text></g>`;}).join('')}</g>`;
+  g += `<g class="f stag" data-f="10" ${HW}>${[1,2,3,4,5,6].map((s,i)=>{const [,y]=P(0,s); return `<g style="transition-delay:${i*.12}s"><line x1="${O.x-7}" y1="${y}" x2="${O.x+7}" y2="${y}" stroke="${W}" stroke-width="3"/><text x="${O.x-18}" y="${y+11}" fill="${W}" font-size="32" text-anchor="end">${s}</text></g>`;}).join('')}</g>`;
+  g += `<g class="f stag" data-f="11">${T.map((t,i)=>{const [x,y]=P(t,S[i]); return `<circle cx="${x}" cy="${y}" r="7" fill="${C}" style="transition-delay:${i*.2}s"/>`;}).join('')}</g>`;
+  g += `<g class="f" data-f="12"><path class="draw" pathLength="1" d="M${T.map((t,i)=>P(t,S[i]).join(',')).join(' L')}" fill="none" stroke="${C}" stroke-width="5" stroke-linejoin="round" style="transition-duration:2.4s"/></g>`;
+  g += `<g class="f" data-f="13"><text x="1190" y="96" fill="${C}" font-size="56" ${HW} letter-spacing="3" text-anchor="end">MOTO VARIO</text></g>`;
+  // pendenze dei tratti
+  g += `<g class="f stag" data-f="15" fill="${C}" font-size="34" ${HW}>${DV.map((d,i)=>{const [x1,y1]=P(T[i],S[i]),[x2,y2]=P(T[i+1],S[i+1]); const mx=(x1+x2)/2, my=(y1+y2)/2;
+     return `<text x="${mx-16}" y="${my-14}" style="transition-delay:${i*.3}s">${d.replace(' m/s','')}</text>`;}).join('')}</g>`;
+  // velocità media
+  g += `<g class="f" data-f="16" fill="${C}" ${HW} font-size="48">
+          <text x="860" y="200"><tspan font-style="italic">v</tspan> =</text>
+          <text x="960" y="170" text-anchor="middle">Δs</text><line x1="925" y1="185" x2="995" y2="185" stroke="${C}" stroke-width="4"/><text x="960" y="232" text-anchor="middle">Δt</text>
+          <text x="1010" y="200">=</text>
+          <text x="1100" y="170" text-anchor="middle">3 m</text><line x1="1050" y1="185" x2="1150" y2="185" stroke="${C}" stroke-width="4"/><text x="1100" y="232" text-anchor="middle">6 s</text></g>`;
+  g += `<g class="f" data-f="17" fill="${M}" ${HW} font-size="52"><text x="910" y="302">0,5 m/s</text>
+          <path class="draw" pathLength="1" d="M905,316 C960,310 1030,320 1060,312" fill="none" stroke="${M}" stroke-width="4"/></g>`;
+  // semiretta della velocità media: dal primo all'ultimo punto, pendenza = 0,5 m/s
+  (function(){
+    const A0 = P(0,0), E = P(6.7, 6.7*0.5), B = P(6,3);
+    const ang = Math.atan2(E[1]-A0[1], E[0]-A0[0]), L = 20;
+    const lp = P(3.3,1.65);
+    g += `<g class="f" data-f="18">
+      <line x1="${A0[0]}" y1="${A0[1]}" x2="${E[0].toFixed(1)}" y2="${E[1].toFixed(1)}" stroke="#e8862a" stroke-width="4" stroke-dasharray="13 9"/>
+      <path d="M${E[0].toFixed(1)},${E[1].toFixed(1)} L${(E[0]-Math.cos(ang-0.4)*L).toFixed(1)},${(E[1]-Math.sin(ang-0.4)*L).toFixed(1)} L${(E[0]-Math.cos(ang+0.4)*L).toFixed(1)},${(E[1]-Math.sin(ang+0.4)*L).toFixed(1)} Z" fill="#e8862a"/>
+      <circle cx="${B[0]}" cy="${B[1]}" r="8" fill="#e8862a" stroke="#0d1a17" stroke-width="2"/>
+      <text x="${lp[0]}" y="${lp[1]+34}" fill="#e8862a" font-size="30" ${HW} text-anchor="middle" transform="rotate(${(ang*180/Math.PI).toFixed(1)} ${lp[0]} ${lp[1]+34})">velocità media</text>
+    </g>`;
+  })();
+  svg.innerHTML = g;
+})();
+
+/* =========================================================
+   RIVEDIAMOLO IN MOVIMENTO: minifigure che segue la tabella
+   ========================================================= */
+(function(){
+  const box = document.getElementById('ill-walk');
+  const X0 = 90, PX = 140;                       // 140 px = 1 metro
+  let ticks=''; for(let m=0;m<=6;m++){ const x=X0+m*PX; ticks += `<line x1="${x}" y1="236" x2="${x}" y2="262" stroke="#fff" stroke-width="4"/><text x="${x}" y="292" fill="#fff" font-size="22" text-anchor="middle" font-family="Roboto Mono, monospace">${m} m</text>`; }
+  // piccolo grafico s-t
+  const GO = {x:120, y:525}, gx = 52, gy = 28, GP=(t,s)=>[GO.x+t*gx, GO.y-s*gy];
+  let gr = `<line x1="${GO.x}" y1="${GO.y}" x2="${GO.x+6.6*gx}" y2="${GO.y}" stroke="#cfe" stroke-width="2"/><line x1="${GO.x}" y1="${GO.y}" x2="${GO.x}" y2="${GO.y-6.8*gy}" stroke="#cfe" stroke-width="2"/>
+            <text x="${GO.x+6.6*gx+8}" y="${GO.y+6}" fill="#cfe" font-size="18">t</text><text x="${GO.x-6}" y="${GO.y-6.8*gy-8}" fill="#cfe" font-size="18">s</text>`;
+  for (let t=1;t<=6;t++){ const [x]=GP(t,0); gr += `<text x="${x}" y="${GO.y+22}" fill="#9fb9ae" font-size="14" text-anchor="middle">${t}</text>`; }
+  for (let s=2;s<=6;s+=2){ const [,y]=GP(0,s); gr += `<text x="${GO.x-8}" y="${y+5}" fill="#9fb9ae" font-size="14" text-anchor="end">${s}</text>`; }
+  gr += `<path d="M${T.map((t,i)=>GP(t,S[i]).join(',')).join(' L')}" fill="none" stroke="#4fd8ff" stroke-width="3"/>`;
+  box.innerHTML = `
+  <svg viewBox="0 0 1200 540" width="1200" height="540">
+    <rect x="0" y="0" width="1200" height="300" rx="16" fill="#7ec8f2"/>
+    <path d="M0,170 C200,130 420,160 640,135 C820,115 1000,150 1200,140 L1200,300 L0,300 Z" fill="#3c8f4c"/>
+    <rect x="0" y="230" width="1200" height="70" fill="#c8553f"/>
+    <line x1="${X0}" y1="249" x2="${X0+6*PX}" y2="249" stroke="#fff" stroke-width="4"/>${ticks}
+    <g id="walker" class="still"><g id="walkerPos">${fig(0, 92, 1.25, '#2fb5e8', '#24427a', {run:true, hair:'#7a4a1e', style:'ponytail', print:'zip', blush:true})}</g></g>
+    <g transform="translate(990,24)">
+      <rect width="190" height="120" rx="14" fill="rgba(0,0,0,.72)" stroke="#00e49a" stroke-width="3"/>
+      <text id="wT" x="95" y="46" fill="#fff" font-size="24" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">t = 0,0 s</text>
+      <text id="wS" x="95" y="80" fill="#00e49a" font-size="24" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">s = 0,0 m</text>
+      <text id="wV" x="95" y="110" fill="#4fd8ff" font-size="20" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">v = 2 m/s</text>
+    </g>
+    <g>${gr}
+      <rect id="dragZone" x="100" y="320" width="368" height="228" fill="transparent" pointer-events="all" style="cursor:grab"/>
+      <circle id="gHalo" r="16" fill="#e8862a" opacity=".26" pointer-events="all" style="cursor:grab"><animate attributeName="r" values="14;22;14" dur="1.7s" repeatCount="indefinite"/><animate attributeName="opacity" values=".32;.08;.32" dur="1.7s" repeatCount="indefinite"/></circle>
+      <circle id="gDot" r="11" fill="#e8862a" stroke="#fff" stroke-width="3" pointer-events="all" style="cursor:grab"/>
+      <g id="gHint"><text x="528" y="402" fill="#e8862a" font-size="30" font-weight="700" text-anchor="middle">↔</text><text x="528" y="434" fill="#cfe" font-size="16" text-anchor="middle">trascina</text><text x="528" y="456" fill="#cfe" font-size="16" text-anchor="middle">la pallina</text></g>
+    </g>
+    <g transform="translate(600,330)" font-family="Roboto Mono, monospace">
+      <rect width="560" height="190" rx="14" fill="rgba(0,0,0,.55)" stroke="#1f3b31" stroke-width="2"/>
+      ${T.map((t,i)=>`<text x="${40+i*80}" y="58" fill="#fff" font-size="22" text-anchor="middle" id="tc${i}">${t} s</text><text x="${40+i*80}" y="104" fill="#00e49a" font-size="22" text-anchor="middle" id="sc${i}">${S[i]} m</text>`).join('')}
+      ${DV.map((d,i)=>`<text x="${80+i*80}" y="150" fill="#4fd8ff" font-size="18" text-anchor="middle">${d.replace(' m/s','')}</text>`).join('')}
+      <text x="280" y="180" fill="#9fb9ae" font-size="14" text-anchor="middle">velocità in ogni secondo (m/s)</text>
+    </g>
+  </svg>`;
+  const pos = document.getElementById('walkerPos'), walker = document.getElementById('walker');
+  const tE = document.getElementById('wT'), sE = document.getElementById('wS'), vE = document.getElementById('wV');
+  const dot = document.getElementById('gDot'), halo = document.getElementById('gHalo');
+  const svg = box.querySelector('svg'), zone = document.getElementById('dragZone');
+  const cells = []; for (let k=0;k<7;k++){ cells.push([document.getElementById('tc'+k), document.getElementById('sc'+k)]); }
+
+  // aggiorna tutto (omino, cronometro, pallina, evidenziatore) dato il tempo t
+  let lastT = 0;
+  function update(t){
+    t = Math.max(0, Math.min(6, t));
+    lastT = t;
+    const i = Math.min(5, Math.floor(t)), f = t - i;
+    const s = S[i] + (S[i+1]-S[i]) * (t>=6 ? 1 : f);
+    const v = t>=6 ? 0 : S[i+1]-S[i];
+    pos.setAttribute('transform', 'translate(' + (X0 + s*PX) + ',0)');
+    walker.classList.toggle('still', v===0);
+    tE.textContent = 't = ' + t.toFixed(1).replace('.',',') + ' s';
+    sE.textContent = 's = ' + s.toFixed(1).replace('.',',') + ' m';
+    vE.textContent = 'v = ' + String(v).replace('-','−') + ' m/s';
+    const dx = 120 + t*52, dy = 525 - s*28;
+    dot.setAttribute('cx', dx); dot.setAttribute('cy', dy);
+    halo.setAttribute('cx', dx); halo.setAttribute('cy', dy);
+    const k = Math.round(t);
+    cells.forEach(function(c,ci){ const on = ci===k;
+      if (c[0]) c[0].setAttribute('fill', on ? '#e8862a' : '#fff');
+      if (c[1]) c[1].setAttribute('fill', on ? '#e8862a' : '#00e49a'); });
+  }
+  // tempo corrispondente alla posizione orizzontale del puntatore
+  function tFromEvent(evt){
+    const r = svg.getBoundingClientRect();
+    const cx = (evt.touches && evt.touches[0]) ? evt.touches[0].clientX : evt.clientX;
+    return ((cx - r.left) * (1200 / r.width) - 120) / 52;
+  }
+  let dragging = false;
+  function start(evt){ stopPlay(); dragging = true; box.classList.add('touched'); dot.style.cursor = 'grabbing'; update(tFromEvent(evt)); if (evt.cancelable) evt.preventDefault(); }
+  function move(evt){ if (dragging){ update(tFromEvent(evt)); if (evt.cancelable) evt.preventDefault(); } }
+  function end(){ dragging = false; dot.style.cursor = 'grab'; }
+  if (window.PointerEvent){
+    [zone,dot,halo].forEach(function(el){ el.addEventListener('pointerdown', start); });
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', end);
+  } else {
+    [zone,dot,halo].forEach(function(el){ el.addEventListener('mousedown', start); el.addEventListener('touchstart', start); });
+    window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+    window.addEventListener('touchmove', move, {passive:false}); window.addEventListener('touchend', end);
+  }
+
+  // ---- tasto PLAY: fa scorrere automaticamente grafico e animazioni ----
+  const playBtn = document.getElementById('walkPlay');
+  const slideEl = box.closest('.slide');
+  const ICON = {
+    play:'<svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg>',
+    pause:'<svg viewBox="0 0 24 24"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></svg>'
+  };
+  const DUR = 7; // secondi reali per percorrere l'intero grafico (t = 0 → 6)
+  let playing = false, rafId = 0, playStart = 0, playFrom = 0;
+  function setLabel(txt){ playBtn.innerHTML = ICON[playing?'pause':'play'] + '<span>' + txt + '</span>'; }
+  function frame(now){
+    if (!playing) return;
+    if (slideEl && !slideEl.classList.contains('active')){ stopPlay(); return; }
+    const t = playFrom + ((now - playStart)/1000) * (6/DUR);
+    if (t >= 6){ update(6); stopPlay(); return; }
+    update(t);
+    rafId = requestAnimationFrame(frame);
+  }
+  function startPlay(){
+    let from = lastT; if (from >= 5.999) from = 0;
+    playFrom = from; playStart = performance.now(); playing = true;
+    box.classList.add('touched'); setLabel('Pausa');
+    rafId = requestAnimationFrame(frame);
+  }
+  function stopPlay(){
+    playing = false; if (rafId) cancelAnimationFrame(rafId); rafId = 0; setLabel('Riproduci');
+  }
+  playBtn.onclick = function(evt){ if (evt) evt.stopPropagation(); playing ? stopPlay() : startPlay(); };
+  // i click sul pulsante e sul grafico non devono far avanzare la slide
+  box.addEventListener('click', function(e){ e.stopPropagation(); });
+
+  update(0);   // si parte con la pallina all'inizio (t = 0)
+})();
+
+/* ############ GRAFICI CARTESIANI (M.R.U. e M.U.A.) ############ */
+function cartesian(o){
+  // o: {W,H, ox,oy, ux,uy, xmax, ymax, ystep, xlab, ylab, fAxes}
+  const P = (x,y)=>[o.ox + x*o.ux, o.oy - y*o.uy];
+  let g = `<g class="f" data-f="${o.fAxes}">`;
+  for (let x=1;x<=o.xmax;x++){ const [px]=P(x,0); g += `<line x1="${px}" y1="${o.oy}" x2="${px}" y2="${o.oy - o.ymax*o.uy}" stroke="#1d3a33" stroke-width="1.2"/>`; }
+  for (let y=o.ystep;y<=o.ymax+1e-9;y+=o.ystep){ const [,py]=P(0,y); g += `<line x1="${o.ox}" y1="${py}" x2="${o.ox + o.xmax*o.ux}" y2="${py}" stroke="#1d3a33" stroke-width="1.2"/>`; }
+  g += `<line x1="${o.ox}" y1="${o.oy}" x2="${o.ox + o.xmax*o.ux + 30}" y2="${o.oy}" stroke="#cfe" stroke-width="3"/><path d="M${o.ox + o.xmax*o.ux + 30},${o.oy-7} l14,7 l-14,7 Z" fill="#cfe"/>
+        <line x1="${o.ox}" y1="${o.oy}" x2="${o.ox}" y2="${o.oy - o.ymax*o.uy - 30}" stroke="#cfe" stroke-width="3"/><path d="M${o.ox-7},${o.oy - o.ymax*o.uy - 30} l7,-14 l7,14 Z" fill="#cfe"/>
+        <text x="${o.ox + o.xmax*o.ux + 20}" y="${o.oy+32}" fill="#cfe" font-size="18" font-weight="700">${o.xlab}</text>
+        <text x="${o.ox+12}" y="${o.oy - o.ymax*o.uy - 30}" fill="#cfe" font-size="18" font-weight="700">${o.ylab}</text>
+        <text x="${o.ox-8}" y="${o.oy+22}" fill="#9fb9ae" font-size="15" text-anchor="end">0</text>`;
+  for (let x=1;x<=o.xmax;x++){ const [px]=P(x,0); g += `<text x="${px}" y="${o.oy+24}" fill="#9fb9ae" font-size="15" text-anchor="middle">${x}</text>`; }
+  for (let y=o.ystep;y<=o.ymax+1e-9;y+=o.ystep){ const [,py]=P(0,y); g += `<text x="${o.ox-10}" y="${py+5}" fill="#9fb9ae" font-size="15" text-anchor="end">${String(+y.toFixed(1)).replace('.',',')}</text>`; }
+  return {P, g: g + `</g>`};
+}
+
+/* ---------- grafico M.R.U. ---------- */
+(function(){
+  const C = cartesian({ox:80, oy:470, ux:95, uy:34, xmax:6, ymax:12, ystep:2, xlab:'t (s)', ylab:'s (m)', fAxes:1});
+  const pts = [0,1,2,3,4,5].map(t=>C.P(t,2*t));
+  let g = C.g;
+  g += `<g class="f stag" data-f="2">${pts.map((p,i)=>`<g style="transition-delay:${i*.3}s"><line x1="${p[0]}" y1="${C.P(0,0)[1]}" x2="${p[0]}" y2="${p[1]}" stroke="#4fd8ff" stroke-width="1.5" stroke-dasharray="4 5" opacity=".6"/><line x1="${C.P(0,0)[0]}" y1="${p[1]}" x2="${p[0]}" y2="${p[1]}" stroke="#4fd8ff" stroke-width="1.5" stroke-dasharray="4 5" opacity=".6"/><circle cx="${p[0]}" cy="${p[1]}" r="8" fill="#e8862a"/></g>`).join('')}</g>`;
+  const end = C.P(6,12);
+  g += `<g class="f" data-f="3"><path class="draw" pathLength="1" d="M${pts[0].join(',')} L${end.join(',')}" stroke="#00e49a" stroke-width="5" fill="none"/></g>`;
+  // triangolo della pendenza
+  const a = C.P(2,4), b = C.P(3,4), c = C.P(3,6);
+  g += `<g class="f" data-f="4"><path d="M${a} L${b} L${c}" fill="none" stroke="#f2c230" stroke-width="3"/>
+          <text x="${(a[0]+b[0])/2}" y="${a[1]+26}" fill="#f2c230" font-size="18" text-anchor="middle">Δt = 1 s</text>
+          <text x="${b[0]+10}" y="${(b[1]+c[1])/2+6}" fill="#f2c230" font-size="18">Δs = 2 m</text></g>`;
+  document.getElementById('gMRU').innerHTML = g;
+})();
+
+/* ---------- caduta libera (M.U.A.) ---------- */
+(function(){
+  const G = 9.8, TF = 4, TOP = 140, BOT = 515, K = (BOT-TOP)/78.4;      // px per metro
+  const X = 330;
+  let ruler = '';
+  for (let m=0;m<=80;m+=10){ const y = TOP + m*K; ruler += `<line x1="520" y1="${y}" x2="${m%20?532:540}" y2="${y}" stroke="#fff" stroke-width="2"/><text x="548" y="${y+6}" fill="#fff" font-size="15" font-family="Roboto Mono, monospace">${m} m</text>`; }
+  let ghosts = '';
+  for (let t=1;t<=TF;t++){ const s = .5*G*t*t, y = TOP + s*K;
+    ghosts += `<g opacity=".85"><rect x="${X-22}" y="${y-14}" width="44" height="28" rx="4" fill="none" stroke="#f2c230" stroke-width="2" stroke-dasharray="4 4"/>
+      <line x1="${X+30}" y1="${y}" x2="515" y2="${y}" stroke="#f2c230" stroke-width="1.5" stroke-dasharray="3 5"/>
+      <text x="${X+36}" y="${y-6}" fill="#9a4a00" font-size="15" font-weight="700" font-family="Roboto Mono, monospace">${t} s · ${String(+s.toFixed(1)).replace('.',',')} m</text></g>`; }
+  const brick = `<g><rect x="-11" y="-20" width="9" height="6" rx="2" fill="#e2453c"/><rect x="2" y="-20" width="9" height="6" rx="2" fill="#e2453c"/>
+      <rect x="-22" y="-15" width="44" height="29" rx="4" fill="#e2453c"/><rect x="-22" y="-15" width="44" height="6" rx="3" fill="rgba(255,255,255,.2)"/></g>`;
+  document.getElementById('ill-fall').innerHTML = `
+  <svg viewBox="0 0 620 560" width="620" height="560">
+    <rect width="620" height="560" rx="18" fill="#7ec8f2"/>
+    <rect x="0" y="${BOT+16}" width="620" height="${560-BOT-16}" fill="#3c8f4c"/>
+    <!-- torre di mattoncini -->
+    <g>${Array.from({length:11},(_,i)=>`<rect x="40" y="${TOP+10+i*36}" width="150" height="34" rx="3" fill="${i%2?'#9aa5b1':'#b3bdc7'}"/>`).join('')}
+      <rect x="30" y="${TOP-4}" width="290" height="16" rx="3" fill="#6b7682"/></g>
+    ${fig(150, TOP-100, .9, '#f2c230', '#24427a', {hair:'#222', style:'cap', print:'zip', face:'grin'})}
+    ${ghosts}
+    <line x1="520" y1="${TOP}" x2="520" y2="${BOT}" stroke="#fff" stroke-width="3"/>${ruler}
+    <g id="fallBrick" transform="translate(${X},${TOP})">${brick}</g>
+    <g transform="translate(20,${BOT-140})">
+      <rect width="250" height="128" rx="14" fill="rgba(0,0,0,.75)" stroke="#00e49a" stroke-width="3"/>
+      <text id="fT" x="125" y="40" fill="#fff" font-size="22" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">t = 0,0 s</text>
+      <text id="fV" x="125" y="76" fill="#4fd8ff" font-size="22" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">v = 0,0 m/s</text>
+      <text id="fS" x="125" y="112" fill="#00e49a" font-size="22" font-weight="700" text-anchor="middle" font-family="Roboto Mono, monospace">s = 0,0 m</text>
+    </g>
+  </svg>`;
+  const el = document.getElementById('fallBrick'), tE = document.getElementById('fT'), vE = document.getElementById('fV'), sE = document.getElementById('fS');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const t0 = performance.now();
+  const fmt = (x,u) => `${x.toFixed(1).replace('.',',')} ${u}`;
+  (function loop(now){
+    let t = reduce ? TF : ((now - t0)/1000) % (TF + 1.8); t = Math.min(t, TF);
+    const s = .5*G*t*t, v = G*t;
+    el.setAttribute('transform', `translate(${X},${TOP + s*K}) rotate(${t*40})`);
+    tE.textContent = 't = ' + fmt(t,'s'); vE.textContent = 'v = ' + fmt(v,'m/s'); sE.textContent = 's = ' + fmt(s,'m');
+    requestAnimationFrame(loop);
+  })(t0);
+})();
+
+/* ---------- grafici M.U.A.: s-t (parabola) e v-t (retta) ---------- */
+(function(){
+  const G = 9.8;
+  // spazio-tempo
+  const A = cartesian({ox:70, oy:390, ux:115, uy:4, xmax:4, ymax:80, ystep:20, xlab:'t (s)', ylab:'s (m)', fAxes:1});
+  let ga = A.g;
+  const sp = [0,1,2,3,4].map(t=>A.P(t,.5*G*t*t));
+  ga += `<g class="f stag" data-f="1">${sp.map((p,i)=>`<g style="transition-delay:${.4+i*.3}s"><circle cx="${p[0]}" cy="${p[1]}" r="7" fill="#e8862a"/><text x="${p[0]-10}" y="${p[1]-12}" fill="#e8862a" font-size="15" text-anchor="end">${String(+(.5*G*i*i).toFixed(1)).replace('.',',')}</text></g>`).join('')}</g>`;
+  let d = ''; for (let k=0;k<=80;k++){ const t=k/20; const [x,y]=A.P(t,.5*G*t*t); d += (k?' L':'M')+x.toFixed(1)+','+y.toFixed(1); }
+  ga += `<g class="f" data-f="2"><path class="draw" pathLength="1" d="${d}" fill="none" stroke="#00e49a" stroke-width="5"/></g>`;
+  document.getElementById('gMUAs').innerHTML = ga;
+  // velocità-tempo
+  const B = cartesian({ox:70, oy:390, ux:115, uy:7.5, xmax:4, ymax:40, ystep:10, xlab:'t (s)', ylab:'v (m/s)', fAxes:4});
+  let gb = B.g;
+  const vp = [0,1,2,3,4].map(t=>B.P(t,G*t));
+  gb += `<g class="f stag" data-f="4">${vp.map((p,i)=>`<g style="transition-delay:${.4+i*.3}s"><circle cx="${p[0]}" cy="${p[1]}" r="7" fill="#e8862a"/><text x="${p[0]-10}" y="${p[1]-12}" fill="#e8862a" font-size="15" text-anchor="end">${String(+(G*i).toFixed(1)).replace('.',',')}</text></g>`).join('')}</g>`;
+  const a = B.P(1,G), b = B.P(2,G), c = B.P(2,2*G);
+  gb += `<g class="f" data-f="5"><path class="draw" pathLength="1" d="M${vp[0].join(',')} L${vp[4].join(',')}" fill="none" stroke="#00e49a" stroke-width="5"/>
+          <path d="M${a} L${b} L${c}" fill="none" stroke="#f2c230" stroke-width="3"/>
+          <text x="${(a[0]+b[0])/2}" y="${a[1]+24}" fill="#f2c230" font-size="16" text-anchor="middle">1 s</text>
+          <text x="${b[0]+8}" y="${(b[1]+c[1])/2+6}" fill="#f2c230" font-size="16">+9,8 m/s</text></g>`;
+  document.getElementById('gMUAv').innerHTML = gb;
+})();
+
+/* ---------- due mattoncini di massa diversa cadono insieme ---------- */
+(function(){
+  const TOP = 100, BOT = 440;
+  const big = `<g><rect x="-48" y="-36" width="18" height="10" rx="3" fill="#2f5fb8"/><rect x="-9" y="-36" width="18" height="10" rx="3" fill="#2f5fb8"/><rect x="30" y="-36" width="18" height="10" rx="3" fill="#2f5fb8"/>
+     <rect x="-60" y="-28" width="120" height="56" rx="6" fill="#2f5fb8"/><rect x="-60" y="-28" width="120" height="10" rx="5" fill="rgba(255,255,255,.2)"/></g>`;
+  const small = `<g><rect x="-9" y="-20" width="18" height="8" rx="3" fill="#f2c230"/><rect x="-20" y="-14" width="40" height="28" rx="4" fill="#f2c230"/></g>`;
+  document.getElementById('ill-two').innerHTML = `
+  <svg viewBox="0 0 450 540" width="450" height="540">
+    <rect width="450" height="540" rx="18" fill="#0d1a17" stroke="#1f3b31" stroke-width="3"/>
+    <text x="225" y="44" fill="#cfe" font-size="18" text-anchor="middle" font-family="Roboto Mono, monospace">senza aria: cadono insieme!</text>
+    <line x1="30" y1="${BOT+40}" x2="420" y2="${BOT+40}" stroke="#cfe" stroke-width="3"/>
+    <g id="twoBig" transform="translate(130,${TOP})">${big}</g>
+    <g id="twoSmall" transform="translate(320,${TOP})">${small}</g>
+    <text x="130" y="${BOT+70}" fill="#cfe" font-size="16" text-anchor="middle" font-family="Roboto Mono, monospace">massa grande</text>
+    <text x="320" y="${BOT+70}" fill="#cfe" font-size="16" text-anchor="middle" font-family="Roboto Mono, monospace">massa piccola</text>
+  </svg>`;
+  const bE = document.getElementById('twoBig'), sE = document.getElementById('twoSmall');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const t0 = performance.now(), TF = 1.6;
+  (function loop(now){
+    let t = reduce ? TF : ((now - t0)/1000) % (TF + 1.4); t = Math.min(t, TF);
+    const y = TOP + (BOT - TOP) * (t/TF)*(t/TF);
+    bE.setAttribute('transform', `translate(130,${y})`); sE.setAttribute('transform', `translate(320,${y + 14})`);
+    requestAnimationFrame(loop);
+  })(t0);
+})();
+
+/* =========================================================
+   NAVIGAZIONE: slide e comparse a clic
+   ========================================================= */
+const slides = [...document.querySelectorAll('.slide')];
+let cur = 0, step = 0;
+const counter = document.getElementById('counter');
+
+// barra di avanzamento fatta di mattoncini: uno per slide, colorato per lezione
+const bricksEl = document.getElementById('bricks');
+const lessonColor = i => i<=6 ? '#5a9be8' : (i<=12 ? '#f2c230' : '#53c24a');
+const pbs = slides.map(function(s,i){
+  const b = document.createElement('button');
+  b.className = 'pb'; b.type = 'button'; b.title = 'Slide ' + (i+1);
+  b.style.setProperty('--c', lessonColor(i));
+  b.onclick = function(){ cur = i; step = 0; render(); };
+  bricksEl.appendChild(b);
+  return b;
+});
+
+function render(){
+  slides.forEach((s,i)=> s.classList.toggle('active', i===cur));
+  const s = slides[cur];
+  s.querySelectorAll('[data-f]').forEach(el=>{
+    const f = +el.dataset.f, out = el.dataset.out ? +el.dataset.out : Infinity;
+    el.classList.toggle('on', step >= f && step < out);
+  });
+  counter.textContent = `${cur+1} / ${slides.length}`;
+  pbs.forEach(function(b,i){ b.classList.toggle('done', i <= cur); b.classList.toggle('now', i === cur); });
+  document.getElementById('prev').disabled = cur===0 && step===0;
+  document.getElementById('next').disabled = cur===slides.length-1 && step >= +slides[cur].dataset.steps;
+}
+function next(){
+  if (step < +slides[cur].dataset.steps) step++;
+  else if (cur < slides.length-1){ cur++; step = 0; }
+  render();
+}
+function prev(){
+  if (step > 0) step--;
+  else if (cur > 0){ cur--; step = +slides[cur].dataset.steps; }
+  render();
+}
+document.getElementById('next').onclick = next;
+document.getElementById('prev').onclick = prev;
+document.getElementById('restart').onclick = ()=>{ cur=0; step=0; render(); };
+document.getElementById('fs').onclick = ()=>{
+  if (document.fullscreenElement) { if (document.exitFullscreen) document.exitFullscreen(); }
+  else { var rfs = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen || document.documentElement.webkitRequestFullScreen; if (rfs) { try { var r = rfs.call(document.documentElement); if (r && r.catch) r.catch(function(){}); } catch(e){} } }
+};
+document.getElementById('stage').addEventListener('click', next);
+addEventListener('keydown', e=>{
+  if (['ArrowRight','PageDown',' ','Enter','ArrowDown'].includes(e.key)){ e.preventDefault(); next(); }
+  else if (['ArrowLeft','PageUp','Backspace','ArrowUp'].includes(e.key)){ e.preventDefault(); prev(); }
+  else if (e.key==='Home'){ cur=0; step=0; render(); }
+});
+// scorrimento con le dita
+let tx = null;
+addEventListener('touchstart', e=>{ tx = e.touches[0].clientX; }, {passive:true});
+addEventListener('touchend', e=>{ if(tx===null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50){ dx<0 ? next() : prev(); } tx=null; });
+
+/* adatta il palco alla finestra */
+function fit(){
+  const s = Math.min(innerWidth/1280, (innerHeight-70)/720);
+  document.getElementById('stage').style.transform = `scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+/* nasconde i comandi quando il mouse è fermo */
+let hideT; const ctr = document.getElementById('controls');
+addEventListener('mousemove', ()=>{ ctr.classList.remove('hide'); clearTimeout(hideT); hideT = setTimeout(()=>ctr.classList.add('hide'), 2500); });
+
+/* cielo stellato */
+const cv = document.getElementById('sky'), cx = cv.getContext('2d');
+const stars = Array.from({length:260}, ()=>({x:Math.random()*1280, y:Math.random()*720, r:Math.random()<.9?1:2, p:Math.random()*6.28, sp:.4+Math.random()*1.4}));
+(function tick(t){
+  cx.clearRect(0,0,1280,720);
+  for (const s of stars){ cx.fillStyle = `rgba(255,255,255,${.3+.7*Math.abs(Math.sin(s.p + t/1000*s.sp*.6))})`; cx.fillRect(s.x, s.y, s.r, s.r); }
+  requestAnimationFrame(tick);
+})(0);
+
+render();
+</script>
+</body>
+</html>
