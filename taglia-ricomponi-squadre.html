@@ -693,7 +693,7 @@ async function lvParallelogramma(id){
   newArt(3.5, 1.5);
   const tri = piece([[0, 0], [2, 0], [2, 3]], 0x1f4fd8);
   piece([[2, 0], [5, 0], [7, 3], [2, 3]], 0x1f4fd8);
-  label('base 5', 2.5, -0.8, '#ef3e36'); label('altezza 3', 8.6, 1.5, '#1fa463'); dashed(2, 0, 2, 3, 0x1fa463);
+  label('base 5', 2.5, -0.8, '#ef3e36'); label('altezza 3', -1.4, 1.5, '#1fa463'); dashed(2, 0, 2, 3, 0x1fa463);
   say('Livello 1: il parallelogramma. Lo vogliamo trasformare in un rettangolo, tagliando e spostando un pezzo. Dove tagliamo?');
   await askChoice(shuffle(['Lungo l\u2019altezza, dal vertice alla base', 'Lungo la diagonale', 'A metà, in orizzontale']), 'Lungo l\u2019altezza, dal vertice alla base');
   if (!alive(id)) return; activityDone();
@@ -943,7 +943,6 @@ function start3D(){
   scene.background = null; document.body.classList.add('mode3d');   // sotto c'è il foglio a quadretti
   floor3D.material.color.set(dark ? 0x25305a : 0xe3eafb); floor3D.scale.setScalar(state.R * 1.6); floor3D.visible = false;
   board.position.set(0, 0, 0); board.rotation.set(0, 0, 0); board.visible = true;
-  const R = state.R; camera.position.set(0, R * 3.3, R * 2.4); camera.lookAt(0, 0, 0);
   onResize(); showGameUI(); $('btnMove').hidden = true;
   prepareGame();
 }
@@ -1230,6 +1229,16 @@ function onResize(){
   if (renderer.xr.isPresenting) return;
   camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  if (state.mode === '3d') frame3D();
+}
+/* sullo schermo il foglio si guarda dritto dall'alto: così gli angoli retti restano retti
+   e i rettangoli non si deformano in trapezi per effetto della prospettiva */
+function frame3D(){
+  const R = state.R, t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const h = Math.max(1.5 * R / t, 1.45 * R / (t * camera.aspect));   // tutta la figura deve entrare, in verticale e in orizzontale
+  const dz = 0.35 * R;   // la figura sta un po' più in alto, lontana dal fumetto e dalle risposte in basso
+  camera.up.set(0, 0, -1);
+  camera.position.set(0, h, dz); camera.lookAt(0, 0, dz);
 }
 window.addEventListener('resize', onResize);
 const lastViewerQ = new THREE.Quaternion(); let haveViewerQ = false;
