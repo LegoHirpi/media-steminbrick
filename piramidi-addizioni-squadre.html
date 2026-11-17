@@ -202,9 +202,10 @@
   .fr{display:inline-flex;flex-direction:column;align-items:center;line-height:1.02;font-size:.78em}
   .fr > span:first-child{border-bottom:.1em solid currentColor;padding:0 .14em .07em}
   .fr > span:last-child{padding:.07em .14em 0}
-  .rt{display:inline-flex;align-items:stretch}
-  .rs{font-size:1.05em;line-height:1;align-self:center;margin-right:-.04em}
-  .rad{border-top:.09em solid currentColor;padding:.08em .08em 0 .06em;display:inline-flex;align-items:center}
+  .rt{display:inline-flex;align-items:stretch;margin-left:.04em}
+  .rs{flex:0 0 auto;width:.6em;height:auto;align-self:stretch;overflow:visible}
+  .rs path{fill:none;stroke:currentColor;stroke-width:.105em;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+  .rad{border-top:.095em solid currentColor;padding:.14em .1em .04em .08em;display:inline-flex;align-items:center}
 </style>
 </head>
 <body>
@@ -602,10 +603,12 @@ const rneg = a => R(-a.n, a.d);
 const rkey = a => a.n + '/' + a.d;
 const req = (a, b) => a.n === b.n && a.d === b.d;
 const isInt = a => a.d === 1;
+/* segno di radice disegnato: si allunga fino a coprire tutto il radicando, frazione compresa */
+const ROOT_SVG = '<svg class="rs" viewBox="0 0 12 24" preserveAspectRatio="none" aria-hidden="true"><path d="M0.6 14.2 L3.4 12.4 L6.4 23 L11.4 0.7 L12 0.7"/></svg>';
 function numHTML(a, root){
   const s = a.n < 0 ? '−' : '', n = Math.abs(a.n), d = a.d;
   const core = (nn, dd) => dd === 1 ? '<span>' + nn + '</span>' : '<span class="fr"><span>' + nn + '</span><span>' + dd + '</span></span>';
-  if (root) return '<span class="num">' + s + '<span class="rt"><span class="rs">√</span><span class="rad">' + core(n * n, d * d) + '</span></span></span>';
+  if (root) return '<span class="num">' + s + '<span class="rt">' + ROOT_SVG + '<span class="rad">' + core(n * n, d * d) + '</span></span></span>';
   return '<span class="num">' + s + core(n, d) + '</span>';
 }
 function numText(a, root){
