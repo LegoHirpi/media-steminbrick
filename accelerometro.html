@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accelerometro – STEM in brick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --mint:#00e49a; --orange:#e8862a; --txt:#dfe8e6; --muted:#8ba0a0; --card:#111926; --line:rgba(0,228,154,.18); --sky:#35c2f0; }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:transparent;color:var(--txt);font-family:'Roboto Mono',ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1100px;margin:0 auto;padding:22px 14px 40px}
+  header.top{text-align:center;margin-bottom:16px}
+  .logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:10px}
+  .logo .mk{width:40px;height:26px}
+  .logo b{font-size:18px;letter-spacing:1px;color:#fff;font-weight:700}
+  .logo b span{color:var(--mint)}
+  header.top h1{margin:4px 0 6px;font-size:clamp(21px,3.6vw,30px);font-weight:700;color:#fff}
+  header.top h1 .dot{color:var(--orange)}
+  header.top p{margin:0 auto;max-width:680px;color:var(--muted);font-size:13px;line-height:1.55}
+  .panel{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px}
+  .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;text-align:center;margin:12px 0 4px}
+  .bar{display:flex;flex-wrap:wrap;gap:12px 8px;justify-content:center;margin-top:6px}
+  .brick{position:relative;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;margin-top:5px;padding:9px 13px;border-radius:6px;
+    border:1.4px solid var(--c,#00e49a);background:var(--c,#00e49a);color:#08110c;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+  .brick::before,.brick::after{content:"";position:absolute;top:-5px;width:22%;height:5px;border-radius:2px 2px 1px 1px;background:var(--c,#00e49a)}
+  .brick::before{left:16%} .brick::after{right:16%}
+  .brick.off{background:transparent;color:var(--c,#00e49a)}
+  .brick:disabled{opacity:.35;cursor:default}
+  .brick:focus-visible{outline:2px solid #fff;outline-offset:3px}
+  .status{text-align:center;font-size:13px;margin:10px auto 0;max-width:720px;line-height:1.5;min-height:1.5em;color:var(--muted)}
+  .status b{color:#fff}
+  .status.rec b{color:#ff6b5b}
+  .live{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+  .cell{background:#0d1420;border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center}
+  .cell .k{font-size:11px;letter-spacing:1px;font-weight:700}
+  .cell .v{font-size:clamp(15px,3.4vw,22px);font-weight:700;margin-top:3px;color:#fff;font-variant-numeric:tabular-nums}
+  .cell .u{font-size:10px;color:var(--muted)}
+  canvas{display:block;width:100%;height:210px;background:#0b111b;border:1px solid var(--line);border-radius:10px}
+  .gtitle{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin:12px 2px 4px;font-size:12px;color:var(--muted)}
+  .gtitle b{color:#fff}
+  .gtitle .leg span{margin-left:10px;font-weight:700}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px}
+  .stats .v{color:var(--mint);font-size:17px}
+  .seg{display:inline-flex;border:1.4px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{font-family:inherit;font-size:12px;font-weight:700;background:transparent;color:var(--muted);border:0;padding:7px 10px;cursor:pointer}
+  .seg button.on{background:var(--mint);color:#08110c}
+  .row{display:flex;flex-wrap:wrap;gap:10px 16px;justify-content:center;align-items:center;margin-top:10px;font-size:12px;color:var(--muted)}
+  .exp{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:12px;margin-top:22px}
+  .exp div{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;font-size:12.5px;line-height:1.55}
+  .exp h3{margin:0 0 6px;color:#fff;font-size:14px}
+  .exp h3 b{color:var(--orange)}
+  .exp ol{margin:6px 0 0;padding-left:18px}
+  footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
+  footer .made{color:#fff}
+  footer .made b{color:var(--mint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <svg class="mk" viewBox="0 0 40 26" aria-hidden="true">
+        <rect x="7" y="1.6" width="11" height="6" rx="2" fill="#00e49a"/>
+        <rect x="22" y="1.6" width="11" height="6" rx="2" fill="#00e49a"/>
+        <rect x="3" y="7.5" width="34" height="16" rx="3" fill="#00e49a"/>
+        <rect x="3" y="7.5" width="34" height="16" rx="3" fill="#0a1f19" opacity=".22"/>
+      </svg>
+      <b>STEM in <span>brick</span></b>
+    </div>
+    <h1>L'accelerometro<span class="dot">.</span></h1>
+    <p>Dentro ogni smartphone c'è un piccolo sensore che misura l'accelerazione lungo tre assi. Apri questa pagina dal telefono o dal tablet, premi <b>Avvia il sensore</b> e muovilo: vedrai i grafici dell'accelerazione e della velocità in tempo reale. Poi registra un esperimento.</p>
+  </header>
+
+  <div class="panel">
+    <div class="bar">
+      <button type="button" class="brick" id="btnStart">▶ Avvia il sensore</button>
+      <button type="button" class="brick off" style="--c:#ff6b5b" id="btnRec" disabled>● Registra</button>
+      <button type="button" class="brick off" style="--c:#8ba0a0" id="btnZero" disabled>⟲ Azzera la velocità</button>
+      <button type="button" class="brick off" style="--c:#35c2f0" id="btnDemo">🧪 Simulazione: pendolo</button>
+    </div>
+    <p class="status" id="status">Il sensore è spento.</p>
+    <div class="row">
+      <span>Misura:</span>
+      <div class="seg" id="segG"><button type="button" data-g="0" class="on">senza gravità</button><button type="button" data-g="1">con gravità</button></div>
+      <span>Velocità lungo:</span>
+      <div class="seg" id="segAx"><button type="button" data-a="x">x</button><button type="button" data-a="y" class="on">y</button><button type="button" data-a="z">z</button></div>
+    </div>
+    <div class="live">
+      <div class="cell"><div class="k" style="color:#e8862a">a<sub>x</sub></div><div class="v" id="vx">–</div><div class="u">m/s²</div></div>
+      <div class="cell"><div class="k" style="color:#00e49a">a<sub>y</sub></div><div class="v" id="vy">–</div><div class="u">m/s²</div></div>
+      <div class="cell"><div class="k" style="color:#35c2f0">a<sub>z</sub></div><div class="v" id="vz">–</div><div class="u">m/s²</div></div>
+      <div class="cell"><div class="k" style="color:#fff">|a|</div><div class="v" id="vm">–</div><div class="u">m/s²</div></div>
+    </div>
+    <div class="gtitle"><span><b>Accelerazione</b> – ultimi 10 secondi</span><span class="leg"><span style="color:#e8862a">x</span><span style="color:#00e49a">y</span><span style="color:#35c2f0">z</span><span style="color:#fff">|a|</span></span></div>
+    <canvas id="cA"></canvas>
+    <div class="gtitle"><span><b>Velocità</b> lungo l'asse <b id="axName">y</b> (calcolata sommando a·Δt)</span><span id="vNow"></span></div>
+    <canvas id="cV"></canvas>
+  </div>
+
+  <div class="panel" id="recPanel" hidden>
+    <div class="gtitle"><span><b>Il tuo esperimento</b> – <span id="recInfo"></span></span><span class="leg"><span style="color:#e8862a">x</span><span style="color:#00e49a">y</span><span style="color:#35c2f0">z</span><span style="color:#fff">|a|</span></span></div>
+    <canvas id="cR"></canvas>
+    <div class="stats" id="recStats"></div>
+    <div class="bar" style="margin-top:12px"><button type="button" class="brick off" id="btnCsv">⬇ Scarica i dati (CSV)</button></div>
+  </div>
+
+  <div class="exp">
+    <div><h3>Gli <b>assi</b></h3>Con il telefono appoggiato sul tavolo e lo schermo in su: <b>x</b> va verso destra, <b>y</b> verso la parte alta del telefono, <b>z</b> esce dallo schermo verso di te. Fermo sul tavolo, «con gravità» il sensore segna circa 9,8 m/s² lungo z: è la reazione del tavolo che lo tiene su.</div>
+    <div><h3>Esperimento: il <b>pendolo</b></h3><ol><li>Infila il telefono in una busta legata a uno spago lungo almeno 1 m.</li><li>Scegli «con gravità», premi Registra e lascialo oscillare per 20 secondi.</li><li>Lungo lo spago l'accelerazione è massima <b>due volte</b> per ogni oscillazione (a ogni passaggio in basso): il periodo del pendolo è il <b>doppio</b> del periodo del segnale. Confrontalo con T = 2π√(L/g).</li></ol></div>
+    <div><h3>Esperimento: il <b>carrello</b></h3><ol><li>Fissa il telefono su un carrello di mattoncini, con l'asse y nella direzione del moto.</li><li>Scegli «senza gravità», azzera la velocità e registra una spinta.</li><li>Nel grafico della velocità trovi la velocità massima del carrello.</li></ol></div>
+    <div><h3>Esperimento: la <b>caduta</b></h3>Lascia cadere il telefono su un cuscino da 30 cm (con attenzione!) con la misura «con gravità»: durante la caduta |a| scende quasi a 0. In caduta libera il sensore «non sente» il peso, come gli astronauti in orbita.</div>
+  </div>
+
+  <footer>
+    <p class="made">Realizzato da <b>Andrea Gramazio</b> per STEM in Brick</p>
+    <p>I dati restano sul tuo dispositivo. La velocità calcolata accumula piccoli errori: azzerala prima di ogni prova.</p>
+  </footer>
+</div>
+
+<script>
+var COL = { x:'#e8862a', y:'#00e49a', z:'#35c2f0', m:'#ffffff' };
+var WIN = 10, buf = [], rec = null, last = null, running = false, demo = null, withG = false, axis = 'y', vel = 0, vbuf = [];
+function el(id){ return document.getElementById(id); }
+function fmt(x, n){ return (x < 0 ? '−' : '') + Math.abs(x).toFixed(n === undefined ? 2 : n).replace('.', ','); }
+function now(){ return performance.now() / 1000; }
+
+function sample(t, a){
+  // a = {x,y,z} in m/s²
+  a.m = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+  if (last && !withG){ var dt = Math.min(0.1, t - last.t); var aa = a[axis]; vel += (aa + last.a[axis]) / 2 * dt; }
+  last = { t:t, a:a };
+  buf.push({ t:t, a:a, v:vel });
+  while (buf.length && buf[0].t < t - WIN) buf.shift();
+  if (rec){ rec.push({ t:t, a:a, v:vel }); if (rec.length > 60 * 120) stopRec(); }
+}
+function onMotion(e){
+  var g = withG ? e.accelerationIncludingGravity : (e.acceleration && e.acceleration.x != null ? e.acceleration : null);
+  if (!g || g.x == null){
+    if (!withG && e.accelerationIncludingGravity && e.accelerationIncludingGravity.x != null){ setG(true); el('status').innerHTML = 'Questo dispositivo misura solo l\'accelerazione <b>con gravità</b>.'; }
+    return;
+  }
+  sample(now(), { x:+g.x || 0, y:+g.y || 0, z:+g.z || 0 });
+  gotData = true;
+}
+var gotData = false;
+function start(){
+  if (demo){ stopDemo(); }
+  var go = function(){
+    window.addEventListener('devicemotion', onMotion);
+    running = true; gotData = false; el('btnStart').textContent = '■ Ferma il sensore'; el('btnRec').disabled = false; el('btnZero').disabled = false;
+    el('status').innerHTML = 'Sensore <b>acceso</b>: muovi il dispositivo.';
+    setTimeout(function(){ if (running && !gotData) el('status').innerHTML = 'Nessun dato dal sensore: questo dispositivo forse non ha un accelerometro (succede con i computer). Apri la pagina da uno smartphone o prova la <b>Simulazione</b>.'; }, 2500);
+  };
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
+    DeviceMotionEvent.requestPermission().then(function(r){ if (r === 'granted') go(); else el('status').innerHTML = 'Sensore non disponibile o permesso negato. Su iPhone e iPad ricarica la pagina, premi di nuovo <b>Avvia</b> e scegli «Consenti»; su un computer prova la <b>Simulazione</b>.'; })
+      .catch(function(){ el('status').innerHTML = 'Il browser non ha concesso il sensore. Prova ad aprire la pagina direttamente (non dentro un\'altra app).'; });
+  } else if (typeof DeviceMotionEvent === 'undefined'){
+    el('status').innerHTML = 'Questo browser non supporta l\'accelerometro. Prova la <b>Simulazione</b>.';
+  } else go();
+}
+function stop(){
+  window.removeEventListener('devicemotion', onMotion); stopDemo(); if (rec) stopRec();
+  running = false; el('btnStart').textContent = '▶ Avvia il sensore'; el('btnRec').disabled = true; el('btnZero').disabled = true;
+  el('status').textContent = 'Il sensore è spento.';
+}
+// simulazione: pendolo lungo 1 m, ampiezza 25°, telefono appeso con l'asse y lungo lo spago
+function startDemo(){
+  if (running) stop();
+  setG(true);
+  var L = 1, g0 = 9.81, w = Math.sqrt(g0 / L), th0 = 25 * Math.PI / 180, t0 = now();
+  demo = setInterval(function(){
+    var t = now() - t0, damp = Math.exp(-t / 60), th = th0 * damp * Math.cos(w * t), om = -th0 * damp * w * Math.sin(w * t);
+    var ay = g0 * Math.cos(th) + L * om * om, ax = 0, n = function(){ return (Math.random() - .5) * 0.25; };
+    sample(now(), { x:ax + n(), y:ay + n(), z:n() });
+  }, 1000 / 60);
+  running = true; el('btnStart').textContent = '■ Ferma il sensore'; el('btnRec').disabled = false; el('btnZero').disabled = false;
+  el('status').innerHTML = '<b>Simulazione</b>: un pendolo lungo 1 m che oscilla. Premi Registra per una ventina di secondi e leggi il periodo.';
+}
+function stopDemo(){ if (demo){ clearInterval(demo); demo = null; } }
+function setG(v){ withG = v; [].forEach.call(el('segG').children, function(b){ b.classList.toggle('on', (b.dataset.g === '1') === v); }); vel = 0; }
+function setAxis(a){ axis = a; el('axName').textContent = a; [].forEach.call(el('segAx').children, function(b){ b.classList.toggle('on', b.dataset.a === a); }); vel = 0; buf.forEach(function(s){ s.v = NaN; }); }
+
+function startRec(){ rec = []; vel = 0; el('btnRec').textContent = '■ Ferma la registrazione'; el('btnRec').classList.remove('off'); el('status').className = 'status rec'; el('status').innerHTML = '<b>● Registrazione in corso…</b>'; }
+function stopRec(){
+  var r = rec; rec = null; el('btnRec').textContent = '● Registra'; el('btnRec').classList.add('off'); el('status').className = 'status';
+  el('status').innerHTML = running ? 'Registrazione salvata qui sotto.' : el('status').innerHTML;
+  if (!r || r.length < 10){ el('status').textContent = 'Registrazione troppo breve.'; return; }
+  var t0 = r[0].t; r.forEach(function(s){ s.tt = s.t - t0; });
+  window.lastRec = r; el('recPanel').hidden = false; showRec(r);
+}
+function period(r, k){
+  var mean = r.reduce(function(s, p){ return s + p.a[k]; }, 0) / r.length, ups = [], prev = r[0].a[k] - mean, hold = 0;
+  // passaggi per il valor medio, verso l'alto, con un minimo di distanza per non contare il rumore
+  var amp = Math.max.apply(null, r.map(function(p){ return Math.abs(p.a[k] - mean); }));
+  if (amp < 0.3) return null;
+  var low = false;
+  r.forEach(function(p){ var d = p.a[k] - mean; if (d < -amp * 0.3) low = true; if (low && d > amp * 0.3){ ups.push(p.tt); low = false; } });
+  if (ups.length < 3) return null;
+  return (ups[ups.length - 1] - ups[0]) / (ups.length - 1);
+}
+function showRec(r){
+  var dur = r[r.length - 1].tt, keys = ['x','y','z','m'];
+  el('recInfo').textContent = fmt(dur, 1) + ' s, ' + r.length + ' misure, ' + (withG ? 'con' : 'senza') + ' gravità';
+  draw(el('cR'), r.map(function(s){ return { t:s.tt, a:s.a }; }), 0, dur, false);
+  var s = '';
+  keys.forEach(function(k){
+    var vals = r.map(function(p){ return p.a[k]; }), mx = Math.max.apply(null, vals), mn = Math.min.apply(null, vals);
+    s += '<div class="cell"><div class="k" style="color:' + COL[k] + '">' + (k === 'm' ? '|a|' : 'a' + k) + ' min / max</div><div class="v">' + fmt(mn, 1) + ' / ' + fmt(mx, 1) + '</div><div class="u">m/s²</div></div>';
+  });
+  var vmax = Math.max.apply(null, r.map(function(p){ return Math.abs(p.v); }));
+  if (!withG) s += '<div class="cell"><div class="k">velocità max (' + axis + ')</div><div class="v">' + fmt(vmax) + '</div><div class="u">m/s</div></div>';
+  // il periodo dell'oscillazione: l'asse che oscilla di più
+  var best = null;
+  ['x','y','z'].forEach(function(k){ var T = period(r, k); if (T && (!best || T > 0.25)) { var vals = r.map(function(p){ return p.a[k]; }); var amp = Math.max.apply(null, vals) - Math.min.apply(null, vals); if (!best || amp > best.amp) best = { k:k, T:T, amp:amp }; } });
+  if (best){
+    s += '<div class="cell"><div class="k">periodo del segnale (' + best.k + ')</div><div class="v">' + fmt(best.T) + ' s</div><div class="u">' + fmt(1 / best.T) + ' oscillazioni al secondo</div></div>';
+  }
+  el('recStats').innerHTML = s;
+}
+function csv(){
+  var r = window.lastRec; if (!r) return;
+  var out = 'tempo_s;ax;ay;az;modulo;velocita_' + axis + '\n' + r.map(function(s){ return [s.tt.toFixed(3), s.a.x.toFixed(3), s.a.y.toFixed(3), s.a.z.toFixed(3), s.a.m.toFixed(3), s.v.toFixed(3)].join(';').replace(/\./g, ','); }).join('\n');
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([out], { type:'text/csv' })); a.download = 'accelerometro.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+
+// grafici
+function prep(c){
+  var r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  if (c.width !== Math.round(r.width * d)){ c.width = Math.round(r.width * d); c.height = Math.round(r.height * d); }
+  var x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return { x:x, w:r.width, h:r.height };
+}
+function frame(g, t0, t1, lo, hi, unit){
+  var x = g.x, L = 40, R = 8, T = 8, B = 20;
+  x.clearRect(0, 0, g.w, g.h);
+  var sx = function(t){ return L + (t - t0) / (t1 - t0) * (g.w - L - R); }, sy = function(v){ return T + (hi - v) / (hi - lo) * (g.h - T - B); };
+  x.font = '10px Roboto Mono, monospace'; x.fillStyle = '#8ba0a0'; x.strokeStyle = 'rgba(139,160,160,.15)'; x.lineWidth = 1;
+  var step = niceStep((hi - lo) / 5);
+  for (var v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step){ var y = sy(v); x.beginPath(); x.moveTo(L, y); x.lineTo(g.w - R, y); x.strokeStyle = Math.abs(v) < 1e-9 ? 'rgba(139,160,160,.45)' : 'rgba(139,160,160,.15)'; x.stroke(); x.textAlign = 'right'; x.fillText(fmt(v, step < 1 ? 1 : 0), L - 5, y + 3); }
+  var ts = niceStep((t1 - t0) / 6); x.textAlign = 'center';
+  for (var t = Math.ceil(t0 / ts) * ts; t <= t1; t += ts){ x.fillText(fmt(t - (unit === 'rel' ? t1 : 0), 0) + ' s', sx(t), g.h - 5); }
+  return { sx:sx, sy:sy };
+}
+function niceStep(r){ var p = Math.pow(10, Math.floor(Math.log10(r || 1))), n = r / p; return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * p; }
+function range(data, f, minSpan){
+  var lo = Infinity, hi = -Infinity; data.forEach(function(s){ f(s).forEach(function(v){ if (isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }); });
+  if (!isFinite(lo)){ lo = -minSpan; hi = minSpan; }
+  var c = (lo + hi) / 2, span = Math.max(minSpan, (hi - lo) * 1.15); return [c - span / 2, c + span / 2];
+}
+function line(x, data, sx, sy, f, col, w){
+  x.beginPath(); x.strokeStyle = col; x.lineWidth = w || 1.6; var on = false;
+  data.forEach(function(s){ var v = f(s); if (!isFinite(v)){ on = false; return; } var X = sx(s.t), Y = sy(v); if (on) x.lineTo(X, Y); else { x.moveTo(X, Y); on = true; } });
+  x.stroke();
+}
+function draw(c, data, t0, t1, rel){
+  var g = prep(c), rg = range(data, function(s){ return [s.a.x, s.a.y, s.a.z, s.a.m]; }, 4);
+  var f = frame(g, t0, t1, rg[0], rg[1], rel ? 'rel' : 'abs');
+  ['x','y','z'].forEach(function(k){ line(g.x, data, f.sx, f.sy, function(s){ return s.a[k]; }, COL[k]); });
+  line(g.x, data, f.sx, f.sy, function(s){ return s.a.m; }, 'rgba(255,255,255,.75)', 1.2);
+}
+function loop(){
+  var t1 = buf.length ? buf[buf.length - 1].t : now(), t0 = t1 - WIN;
+  draw(el('cA'), buf, t0, t1, true);
+  var g = prep(el('cV')), rg = range(buf, function(s){ return [s.v]; }, 1), f = frame(g, t0, t1, rg[0], rg[1], 'rel');
+  line(g.x, buf, f.sx, f.sy, function(s){ return s.v; }, COL[axis], 2);
+  if (last){ el('vx').textContent = fmt(last.a.x, 1); el('vy').textContent = fmt(last.a.y, 1); el('vz').textContent = fmt(last.a.z, 1); el('vm').textContent = fmt(last.a.m, 1); el('vNow').innerHTML = withG ? 'scegli «senza gravità» per calcolarla' : 'v = <b>' + fmt(vel) + ' m/s</b>'; }
+  requestAnimationFrame(loop);
+}
+
+el('btnStart').addEventListener('click', function(){ running ? stop() : start(); });
+el('btnDemo').addEventListener('click', startDemo);
+el('btnRec').addEventListener('click', function(){ rec ? stopRec() : startRec(); });
+el('btnZero').addEventListener('click', function(){ vel = 0; buf.forEach(function(s){ s.v = NaN; }); });
+el('btnCsv').addEventListener('click', csv);
+el('segG').addEventListener('click', function(e){ var b = e.target.closest('[data-g]'); if (b && !demo) setG(b.dataset.g === '1'); });
+el('segAx').addEventListener('click', function(e){ var b = e.target.closest('[data-a]'); if (b) setAxis(b.dataset.a); });
+window.addEventListener('resize', function(){ if (window.lastRec) showRec(window.lastRec); });
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
