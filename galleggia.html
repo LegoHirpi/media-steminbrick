@@ -156,7 +156,7 @@ function loop(ts){
   var nodes = el('tank').querySelectorAll('.ob');
   inTank.forEach(function(t, i){
     if (!t.hover){ for (var n = 0; n < 4; n++) step(t, dt / 4); }
-    if (nodes[i]) nodes[i].style.transform = 'translate(' + slotX(t.slot) + 'px,' + t.y + 'px)';
+    if (nodes[i]) nodes[i].setAttribute('transform', 'translate(' + slotX(t.slot).toFixed(3) + ' ' + t.y.toFixed(3) + ')');
   });
   requestAnimationFrame(loop);
 }
@@ -166,7 +166,7 @@ function draw(){
   s += '<line class="surf" x1="' + (TX0 + 0.06) + '" y1="' + LEVEL + '" x2="' + (TX1 - 0.06) + '" y2="' + LEVEL + '"/>';
   inTank.forEach(function(t, i){
     var o = t.o, x = slotX(t.slot), y = t.y, c = o.c;
-    s += '<g class="ob' + (sel === t ? ' sel' : '') + '" data-i="' + i + '" style="transform:translate(' + x + 'px,' + y + 'px)">';
+    s += '<g class="ob' + (sel === t ? ' sel' : '') + '" data-i="' + i + '" transform="translate(' + x + ' ' + y + ')">';
     if (o.uovo) s += '<ellipse class="body" cx="' + SIDE / 2 + '" cy="' + SIDE / 2 + '" rx="' + SIDE * 0.42 + '" ry="' + SIDE * 0.5 + '" fill="' + c + '" stroke="#0a0f16" stroke-width=".07"/>';
     else s += '<rect x="' + SIDE * 0.14 + '" y="-0.22" width="' + SIDE * 0.26 + '" height="0.26" rx="0.06" fill="' + c + '"/><rect x="' + SIDE * 0.6 + '" y="-0.22" width="' + SIDE * 0.26 + '" height="0.26" rx="0.06" fill="' + c + '"/>'
       + '<rect class="body" width="' + SIDE + '" height="' + SIDE + '" rx="0.15" fill="' + c + '"/>';
