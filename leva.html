@@ -70,6 +70,8 @@
 
   .quiz{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:16px;text-align:center;margin-top:14px}
   .quiz .obj{font-size:20px;color:#fff;font-weight:700;margin:6px 0 12px}
+  .quiz .qsvg{display:block;max-width:300px;margin:10px auto 0}
+  .quiz .qsvg svg{width:100%;height:auto}
   .quiz .score{color:var(--muted);font-size:12px}
   footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
   footer .made{color:#fff}
@@ -114,7 +116,7 @@
   <div class="genres" id="genres"></div>
 
   <div class="quiz">
-    <p class="sub" style="margin-bottom:4px">Mettiti alla prova: di che genere è questa leva?</p>
+    <p class="sub" style="margin-bottom:4px">Mettiti alla prova: leggi il nome dell'oggetto, pensa a dove stanno fulcro, resistenza e potenza e tocca il genere giusto.</p>
     <div class="obj" id="qObj"></div>
     <div class="bar" id="qBtns"></div>
     <p class="msg" id="qMsg"></p>
@@ -273,12 +275,14 @@ function nextQ(){
   el('qBtns').innerHTML = GENERI.map(function(g){ return '<button type="button" class="brick" style="--c:' + g.c + '" data-g="' + g.n + '">' + g.nome + '</button>'; }).join('');
 }
 el('qBtns').addEventListener('click', function(ev){
-  var b = ev.target.closest('button'); if (!b || qi < 0) return;
-  var q = QUIZ[qi], right = +b.dataset.g === q.g; tot++; if (right) ok++;
-  el('qMsg').innerHTML = (right ? '✅ Giusto! ' : '❌ No: è di ' + q.g + '° genere. ') + q.p;
-  el('qScore').textContent = 'Risposte giuste: ' + ok + ' su ' + tot;
+  var b = ev.target.closest('button'); if (!b) return;
+  if (b.id === 'qNext'){ nextQ(); return; }
+  if (qi < 0 || !b.dataset.g) return;
+  var q = QUIZ[qi], right = +b.dataset.g === q.g, g = GENERI[q.g - 1]; tot++; if (right) ok++;
+  el('qMsg').innerHTML = (right ? '✅ Giusto! ' : '❌ No: è una leva di <b>' + q.g + '° genere</b>. ') + q.p
+    + '<span class="qsvg" style="--c:' + g.c + '">' + genreSVG(g.ordine) + '</span>';
+  el('qScore').textContent = 'Risposte giuste: ' + ok + ' su ' + tot + ' (domande: ' + QUIZ.length + ')';
   qi = -1; el('qBtns').innerHTML = '<button type="button" class="brick ghost" style="--c:#8ba0a0" id="qNext">Prossima →</button>';
-  el('qNext').addEventListener('click', nextQ);
 });
 nextQ();
 draw();

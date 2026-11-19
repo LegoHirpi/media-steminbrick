@@ -27,7 +27,7 @@
   #tank .glass{fill:rgba(255,255,255,.04);stroke:#8ba0a0;stroke-width:.12}
   #tank .liq{transition:fill .6s}
   #tank .surf{stroke:rgba(255,255,255,.55);stroke-width:.06}
-  #tank .ob{transition:transform 1.2s cubic-bezier(.35,1.3,.6,1);cursor:pointer}
+  #tank .ob{cursor:pointer}
   #tank .ob rect{stroke:#0a0f16;stroke-width:.07}
   #tank .ob text{font:700 .48px 'Roboto Mono',monospace;fill:#08110c;text-anchor:middle;pointer-events:none}
   #tank .ob.sel rect.body{stroke:#fff;stroke-width:.14}
@@ -90,7 +90,7 @@
     </div>
     <div class="predict" id="predict">
       <p class="verdict" id="pq"></p>
-      <div class="bar"><button type="button" class="brick" style="--c:#35c2f0" data-p="g">🛟 Galleggia</button><button type="button" class="brick" style="--c:#ff6b5b" data-p="a">⚓ Affonda</button></div>
+      <div class="bar"><button type="button" class="brick" style="--c:#35c2f0" data-p="g">🛟 Galleggia</button><button type="button" class="brick" style="--c:#b48cff" data-p="s">↕️ Resta a mezz'acqua</button><button type="button" class="brick" style="--c:#ff6b5b" data-p="a">⚓ Affonda</button></div>
     </div>
     <p class="score" id="score"></p>
     <div class="info" id="info"></div>
@@ -99,23 +99,24 @@
 
   <div class="theory">
     <div><h3>La <b>densità</b></h3>È la massa contenuta in ogni cm³ di un materiale: <b>densità = massa : volume</b>. Un mattoncino di ferro da 100 cm³ ha massa 790 g, quindi densità 7,9 g/cm³; uno di sughero solo 24 g, cioè 0,24 g/cm³.</div>
-    <div><h3>La spinta di <b>Archimede</b></h3>Un corpo immerso riceve una spinta verso l'alto uguale al peso del liquido che sposta. Se la densità del corpo è minore di quella del liquido, la spinta vince e il corpo torna su: <b>galleggia</b>.</div>
+    <div><h3>La spinta di <b>Archimede</b></h3>Un corpo immerso riceve una spinta verso l'alto uguale al peso del liquido che sposta. Se la densità del corpo è minore di quella del liquido, la spinta vince e il corpo torna su: <b>galleggia</b>. Se è uguale, resta <b>a mezz'acqua</b>. Se è maggiore affonda, e scende tanto più piano quanto più la spinta si avvicina al suo peso.</div>
     <div><h3>Quanto sta <b>sotto</b>?</h3>Un corpo che galleggia affonda finché sposta tanto liquido quanto pesa lui. La parte immersa è <b>densità del corpo : densità del liquido</b>: il ghiaccio in acqua sta sotto per circa 9/10, per questo gli iceberg sono così pericolosi.</div>
   </div>
 
   <footer>
     <p class="made">Realizzato da <b>Andrea Gramazio</b> per STEM in Brick</p>
-    <p>Densità approssimate a temperatura ambiente; l'acqua «molto salata» è una soluzione quasi satura di sale da cucina.</p>
+    <p>Densità approssimate a temperatura ambiente; l'acqua «molto salata» è una soluzione quasi satura di sale da cucina. Il mattoncino zavorrato è un mattoncino cavo con dentro quanto basta di pesetti per avere proprio la densità dell'acqua.</p>
   </footer>
 </div>
 
 <script>
 var LIQUIDI = [
   { id:'acqua', nome:'Acqua dolce', d:1.00, c:'rgba(53,150,240,.45)' },
+  { id:'pocosalata', nome:'Acqua un po\' salata', d:1.03, c:'rgba(60,175,225,.45)' },
   { id:'salata', nome:'Acqua molto salata', d:1.20, c:'rgba(70,200,210,.45)' },
-  { id:'olio', nome:'Olio', d:0.92, c:'rgba(232,190,60,.5)' },
+  { id:'olio', nome:'Olio', d:0.92, k:2, c:'rgba(232,190,60,.5)' },
   { id:'alcol', nome:'Alcol', d:0.79, c:'rgba(220,230,255,.28)' },
-  { id:'miele', nome:'Miele', d:1.42, c:'rgba(214,140,30,.6)' },
+  { id:'miele', nome:'Miele', d:1.42, k:12, c:'rgba(214,140,30,.6)' },
   { id:'mercurio', nome:'Mercurio', d:13.6, c:'rgba(190,200,210,.75)' }
 ];
 var OGGETTI = [
@@ -124,6 +125,7 @@ var OGGETTI = [
   { id:'cera', nome:'Cera di candela', d:0.90, c:'#f4ecd2' },
   { id:'ghiaccio', nome:'Ghiaccio', d:0.92, c:'#cfeeff' },
   { id:'plastica', nome:'Plastica (polietilene)', d:0.95, c:'#ff6fae' },
+  { id:'zavorrato', nome:'Mattoncino zavorrato', tag:'Zavorrato', d:1.00, c:'#6fd3ff' },
   { id:'uovo', nome:'Uovo', d:1.03, c:'#fff4e0', uovo:true },
   { id:'gomma', nome:'Gomma', d:1.20, c:'#5a5f6b' },
   { id:'vetro', nome:'Vetro', d:2.50, c:'#9fe3d0' },
@@ -136,26 +138,40 @@ function fit(){ var n = window.innerWidth < 640; W = n ? 16 : 30; TX1 = W - 1.2;
 var liquid = LIQUIDI[0], inTank = [], sel = null, pending = null, ok = 0, tot = 0;
 function el(id){ return document.getElementById(id); }
 function fmt(x, n){ return x.toFixed(n === undefined ? 2 : n).replace('.', ','); }
-function floats(o){ return o.d < liquid.d; }
+function state(o){ return Math.abs(o.d - liquid.d) < 0.005 ? 's' : (o.d < liquid.d ? 'g' : 'a'); }
+function floats(o){ return state(o) === 'g'; }
 function frac(o){ return Math.min(1, o.d / liquid.d); }
 function slotX(i){ return TX0 + 1.4 + i * ((TX1 - TX0 - 2.8 - SIDE) / (SLOTS - 1)); }
-function objY(o, hovering){
-  if (hovering) return 0.6;                                  // sopra la vasca, in attesa della previsione
-  if (floats(o)) return LEVEL + frac(o) * SIDE - SIDE;       // la parte immersa è densità corpo : densità liquido
-  return FLOOR - SIDE;
+var HOVER_Y = 0.6, G = 8, K = 0.8;
+// un passo di simulazione: peso verso il basso, spinta di Archimede verso l'alto (proporzionale alla parte immersa), attrito del liquido
+function step(t, dt){
+  var o = t.o, imm = Math.max(0, Math.min(1, (t.y + SIDE - LEVEL) / SIDE)), k = K * (liquid.k || 1);
+  var a = G * (1 - imm * liquid.d / o.d) - imm * (k * t.vy * Math.abs(t.vy) + 0.8 * (liquid.k || 1) * t.vy) / o.d;
+  t.vy += a * dt; t.y += t.vy * dt;
+  if (t.y + SIDE > FLOOR){ t.y = FLOOR - SIDE; if (t.vy > 0) t.vy = -t.vy * 0.15; if (Math.abs(t.vy) < 0.2) t.vy = 0; }
+}
+var lastT = 0;
+function loop(ts){
+  var dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
+  var nodes = el('tank').querySelectorAll('.ob');
+  inTank.forEach(function(t, i){
+    if (!t.hover){ for (var n = 0; n < 4; n++) step(t, dt / 4); }
+    if (nodes[i]) nodes[i].style.transform = 'translate(' + slotX(t.slot) + 'px,' + t.y + 'px)';
+  });
+  requestAnimationFrame(loop);
 }
 function draw(){
   var s = '<rect class="glass" x="' + TX0 + '" y="1.8" width="' + (TX1 - TX0) + '" height="' + (FLOOR - 1.8 + 0.05) + '" rx="0.3"/>';
   s += '<rect class="liq" x="' + (TX0 + 0.06) + '" y="' + LEVEL + '" width="' + (TX1 - TX0 - 0.12) + '" height="' + (FLOOR - LEVEL) + '" style="fill:' + liquid.c + '"/>';
   s += '<line class="surf" x1="' + (TX0 + 0.06) + '" y1="' + LEVEL + '" x2="' + (TX1 - 0.06) + '" y2="' + LEVEL + '"/>';
   inTank.forEach(function(t, i){
-    var o = t.o, x = slotX(t.slot), y = objY(o, t.hover), c = o.c;
+    var o = t.o, x = slotX(t.slot), y = t.y, c = o.c;
     s += '<g class="ob' + (sel === t ? ' sel' : '') + '" data-i="' + i + '" style="transform:translate(' + x + 'px,' + y + 'px)">';
     if (o.uovo) s += '<ellipse class="body" cx="' + SIDE / 2 + '" cy="' + SIDE / 2 + '" rx="' + SIDE * 0.42 + '" ry="' + SIDE * 0.5 + '" fill="' + c + '" stroke="#0a0f16" stroke-width=".07"/>';
     else s += '<rect x="' + SIDE * 0.14 + '" y="-0.22" width="' + SIDE * 0.26 + '" height="0.26" rx="0.06" fill="' + c + '"/><rect x="' + SIDE * 0.6 + '" y="-0.22" width="' + SIDE * 0.26 + '" height="0.26" rx="0.06" fill="' + c + '"/>'
       + '<rect class="body" width="' + SIDE + '" height="' + SIDE + '" rx="0.15" fill="' + c + '"/>';
     s += '<text x="' + SIDE / 2 + '" y="' + (SIDE / 2 + 0.17) + '">' + fmt(o.d) + '</text>';
-    s += '<text class="tag" x="' + SIDE / 2 + '" y="' + (o.uovo ? -0.2 : -0.45) + '" text-anchor="middle">' + o.nome.split(' ')[0] + '</text></g>';
+    s += '<text class="tag" x="' + SIDE / 2 + '" y="' + (o.uovo ? -0.2 : -0.45) + '" text-anchor="middle">' + (o.tag || o.nome.split(' ')[0]) + '</text></g>';
   });
   el('tank').innerHTML = s;
   // pulsanti dei liquidi e degli oggetti
@@ -172,18 +188,19 @@ function showInfo(){
     '<div class="cell"><div class="k">Massa</div><div class="v">' + fmt(m, m < 10 ? 1 : 0) + ' g</div></div>' +
     '<div class="cell"><div class="k">Volume</div><div class="v">' + V + ' cm³</div></div>' +
     '<div class="cell"><div class="k">Densità</div><div class="v">' + fmt(o.d) + ' g/cm³</div></div>' +
-    '<div class="cell"><div class="k">Parte immersa</div><div class="v">' + (floats(o) ? Math.round(f * 100) + '%' : 'tutto') + '</div></div>';
-  var cmp = o.d < liquid.d ? 'minore' : (o.d > liquid.d ? 'maggiore' : 'uguale');
-  el('verdict').innerHTML = '<b>' + o.nome + '</b>: ' + fmt(m, m < 10 ? 1 : 0) + ' g : ' + V + ' cm³ = <b>' + fmt(o.d) + ' g/cm³</b>, ' + cmp + ' della densità del liquido (' + fmt(liquid.d) + '). ' +
-    (floats(o) ? 'Quindi <b>galleggia</b>, con il ' + Math.round(f * 100) + '% sotto il pelo del liquido: sposta ' + fmt(m / liquid.d, 0) + ' cm³ di ' + liquid.nome.toLowerCase() + ', che pesano proprio ' + fmt(m, 0) + ' g.'
-               : 'Quindi <b>affonda</b>: la spinta di Archimede (il peso di 100 cm³ di ' + liquid.nome.toLowerCase() + ', cioè ' + fmt(liquid.d * V, 0) + ' g) è minore del suo peso.');
+    '<div class="cell"><div class="k">Parte immersa</div><div class="v">' + (floats(o) ? Math.round(f * 100) + '%' : 'tutta') + '</div></div>';
+  var cmp = { g:'minore della', s:'uguale alla', a:'maggiore della' }[state(o)];
+  el('verdict').innerHTML = '<b>' + o.nome + '</b>: ' + fmt(m, m < 10 ? 1 : 0) + ' g : ' + V + ' cm³ = <b>' + fmt(o.d) + ' g/cm³</b>, ' + cmp + ' densità del liquido (' + fmt(liquid.d) + '). ' +
+    (state(o) === 's' ? 'Quindi la spinta di Archimede è <b>uguale</b> al suo peso: <b>resta a mezz\'acqua</b>, né sale né scende, proprio come un pesce o un sottomarino.' :
+     floats(o) ? 'Quindi <b>galleggia</b>, con il ' + Math.round(f * 100) + '% sotto il pelo del liquido: sposta ' + fmt(m / liquid.d, 0) + ' cm³ di ' + liquid.nome.toLowerCase() + ', che pesano proprio ' + fmt(m, 0) + ' g.'
+               : 'Quindi <b>affonda</b>: la spinta di Archimede (il peso di 100 cm³ di ' + liquid.nome.toLowerCase() + ', cioè ' + fmt(liquid.d * V, 0) + ' g) è minore del suo peso. Nel liquido pesa come se fosse ' + fmt(m - liquid.d * V, 0) + ' g: più questo «peso apparente» è piccolo, più scende piano.');
 }
 function addObject(o){
   if (pending){ return; }
   var used = inTank.map(function(t){ return t.slot; }), slot = 0;
   while (used.indexOf(slot) >= 0 && slot < SLOTS) slot++;
   if (slot >= SLOTS){ if (sel === inTank[0]) sel = null; inTank.shift(); used = inTank.map(function(t){ return t.slot; }); slot = 0; while (used.indexOf(slot) >= 0) slot++; }
-  var t = { o:o, slot:slot, hover:el('optPredict').checked };
+  var t = { o:o, slot:slot, hover:el('optPredict').checked, y:HOVER_Y, vy:0 };
   inTank.push(t); sel = t; draw();
   if (t.hover){ pending = t; el('pq').innerHTML = 'Il mattoncino di <b>' + o.nome.toLowerCase() + '</b> (' + fmt(o.d) + ' g/cm³) in ' + liquid.nome.toLowerCase() + ' (' + fmt(liquid.d) + ' g/cm³): che cosa farà?'; el('predict').classList.add('on'); }
 }
@@ -204,14 +221,14 @@ el('tank').addEventListener('click', function(ev){
 });
 el('predict').addEventListener('click', function(ev){
   var b = ev.target.closest('[data-p]'); if (!b || !pending) return;
-  var t = pending, right = (b.dataset.p === 'g') === floats(t.o); tot++; if (right) ok++;
+  var t = pending, right = b.dataset.p === state(t.o); tot++; if (right) ok++;
   pending = null; t.hover = false; el('predict').classList.remove('on'); draw();
   el('score').textContent = (right ? '✅ Previsione giusta! ' : '❌ Previsione sbagliata. ') + 'Previsioni giuste: ' + ok + ' su ' + tot;
 });
 el('btnEmpty').addEventListener('click', function(){ inTank = []; sel = null; pending = null; el('predict').classList.remove('on'); draw(); });
 window.addEventListener('resize', function(){ var w = W; fit(); if (w !== W){ inTank = inTank.filter(function(t){ return t.slot < SLOTS; }); if (sel && inTank.indexOf(sel) < 0) sel = null; draw(); } });
-el('optPredict').addEventListener('change', function(){ el('score').textContent = el('optPredict').checked ? 'Modalità previsione: prima di vedere il risultato, scegli Galleggia o Affonda.' : ''; });
-fit(); draw();
+el('optPredict').addEventListener('change', function(){ el('score').textContent = el('optPredict').checked ? 'Modalità previsione: prima di vedere il risultato, scegli Galleggia, Resta a mezz\'acqua o Affonda.' : ''; });
+fit(); draw(); requestAnimationFrame(loop);
 </script>
 </body>
 </html>
