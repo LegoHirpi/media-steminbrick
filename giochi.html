@@ -56,6 +56,8 @@
   .chip.off::before,.chip.off::after{opacity:.5}
   .chip:hover{transform:translateY(-1px)}
   .chip:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+  .filters-title{text-align:center;color:var(--muted);font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;margin:16px 0 2px}
+  .disc{display:inline-block;font-weight:700;color:#08110c;background:var(--dc,#00e49a);border-radius:4px;padding:1px 6px;margin-right:6px}
   .filters-hint{text-align:center;color:var(--muted);font-size:11.5px;margin:0 0 24px}
   .grade{display:inline-block;font-weight:700;color:#08110c;background:var(--gc,#00e49a);border-radius:4px;padding:1px 6px;margin-right:6px}
   .empty{grid-column:1 / -1;text-align:center;color:var(--muted);padding:46px 10px;font-size:14px}
@@ -141,8 +143,11 @@
     <p>Matematica e scienze in realtà aumentata, sullo schermo e con la LIM: le squadre giocano in contemporanea con i tablet, l'insegnante segue la classifica in tempo reale e solo chi fa più punti vede la schermata di vittoria.</p>
   </header>
 
+  <p class="filters-title">Disciplina</p>
+  <div id="filtersDisc" class="filters"></div>
+  <p class="filters-title">Grado</p>
   <div id="filters" class="filters"></div>
-  <p class="filters-hint">Filtra per grado &middot; uno stesso gioco può comparire in più gradi</p>
+  <p class="filters-hint">Tocca per scegliere &middot; uno stesso gioco può comparire in più discipline e in più gradi</p>
 
   <div id="app"></div>
 
@@ -169,90 +174,109 @@
 /* ---- colori dei gradi: i filtri si creano da soli in base ai gradi presenti nei giochi ---- */
 var GRADE_COLORS = { 1:"#f4c430", 2:"#5fcf5a", 3:"#35c2f0", 4:"#ff6fae", 5:"#e8862a", 6:"#c792ff", 7:"#00e49a", 8:"#ff7a59" };
 function gradeColor(g){ return GRADE_COLORS[g] || "#8ba0a0"; }
+/* discipline: nome mostrato e colore */
+var DISCIPLINE = { matematica:{ nome:"Matematica", c:"#6f9bff" }, fisica:{ nome:"Fisica", c:"#e8862a" }, biologia:{ nome:"Biologia", c:"#5fcf5a" } };
 
 /* ---- giochi: ogni voce ha uno o più gradi ---- */
 var GAMES = [
   { t:"Caccia ai poligoni",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/caccia-poligoni-squadre.html",
     gradi:[3], org:"Geometria · Realtà aumentata · 4 livelli", c:["#00e49a","#ff6fae"],
     d:"Un triangolo, un quadrato, un pentagono e un esagono compaiono sul pavimento. Per ogni poligono le squadre contano i vertici toccandoli, scoprono i lati, ne indovinano il nome, trovano i vertici consecutivi, tracciano le diagonali e calcolano il perimetro.",
     tags:["Vertici e lati","Diagonali","Perimetro"] },
   { t:"Il tesoro delle coordinate",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/tesoro-coordinate-squadre.html",
     gradi:[3], org:"Piano cartesiano · Realtà aumentata · 8 gemme", c:["#00e49a","#c792ff"],
     d:"Una caccia al tesoro sul piano cartesiano: le squadre leggono le coordinate delle gemme che compaiono sulla griglia e raggiungono camminando i punti indicati. Se si scambiano x e y, il gioco lo fa notare e aiuta con le linee guida.",
     tags:["Coordinate","Assi x e y","Orientamento"] },
   { t:"Percorsi cartesiani",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/percorsi-cartesiani-squadre.html",
     gradi:[5], org:"Piano cartesiano · Realtà aumentata · 4 livelli", c:["#00e49a","#e8862a"],
     d:"Una griglia cartesiana da percorrere a piedi. Le squadre uniscono i punti tracciando segmenti, scoprono una figura misteriosa, ritrovano il vertice mancante di un rettangolo e misurano lati e perimetro contando i quadretti.",
     tags:["Coordinate","Segmenti e poligoni","Perimetro"] },
   { t:"Simmetrie sul pavimento",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/simmetrie-squadre.html",
     gradi:[5], org:"Geometria · Realtà aumentata · 4 livelli", c:["#00e49a","#5fcf5a"],
     d:"Un asse di simmetria verde attraversa la griglia: le squadre raggiungono camminando i punti simmetrici e costruiscono la figura riflessa, come allo specchio. Poi completano una figura di cui c'è solo metà e rispondono a tre domande sulla simmetria.",
     tags:["Simmetria assiale","Coordinate","Assi di simmetria"] },
   { t:"Battaglia navale cartesiana",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/battaglia-navale-squadre.html",
     gradi:[5], org:"Piano cartesiano · Sullo schermo · 5 navi", c:["#00e49a","#35c2f0"],
     d:"Cinque navi nascoste sui punti di una griglia da 0 a 7. Le squadre scelgono x e y, fanno fuoco e cercano di affondare tutta la flotta sprecando meno colpi possibile: vince chi ragiona meglio con le coordinate.",
     tags:["Coordinate","Strategia","Assi x e y"] },
   { t:"Solidi e sviluppi",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/solidi-sviluppi-squadre.html",
     gradi:[6], org:"Geometria solida · Realtà aumentata · 4 livelli", c:["#00e49a","#f4c430"],
     d:"Cubo, parallelepipedo, prisma e piramide compaiono sul banco o sul pavimento. Le squadre li riconoscono, contano facce, vertici e spigoli, li vedono aprirsi nel loro sviluppo piano, ne calcolano il volume riempiendoli di cubetti e scoprono la relazione di Eulero.",
     tags:["Solidi","Sviluppi","Volume"] },
   { t:"Dentro la cellula",
+    disc:["biologia"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/dentro-la-cellula-squadre.html",
     gradi:[6], org:"Biologia · Realtà aumentata · 3 livelli", c:["#00e49a","#ff7a59"],
     d:"Una cellula gigante da esplorare girandoci intorno. Le squadre risolvono indovinelli e toccano l'organulo giusto: nucleo, mitocondri, apparato di Golgi, e poi cloroplasti, vacuolo e parete nella cellula vegetale. Ogni errore spiega che cosa si è toccato.",
     tags:["Cellula animale","Cellula vegetale","Organuli"] },
   { t:"Prevedi il moto",
+    disc:["fisica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/prevedi-il-moto-squadre.html",
     gradi:[8], org:"Cinematica · Realtà aumentata · 5 prove", c:["#00e49a","#ff8a00"],
     d:"Una pista lunga 4 metri e una pallina in moto rettilineo uniforme. Le squadre calcolano dove arriverà, vanno ad aspettarla in quel punto e poi la guardano partire con il cronometro: velocità, tempo, partenza spostata e conversione dei cm/s.",
     tags:["Moto uniforme","Velocità","Spazio e tempo"] },
   { t:"Misura con la fotocamera",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/misura-fotocamera-squadre.html",
     gradi:[5,6,7], org:"Misure · Realtà aumentata · 6 misure a scelta", c:["#00e49a","#1fa463"],
     d:"Le squadre inquadrano qualsiasi lunghezza o superficie della classe, ne segnano estremi o vertici con il tablet e scrivono la loro stima. Poi la fotocamera dà la misura esatta, con i lati, l'area, l'errore percentuale e i punti.",
     tags:["Lunghezze","Aree","Stima"] },
   { t:"Il geopiano gigante",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/geopiano-squadre.html",
     gradi:[6,7], org:"Figure equivalenti · Realtà aumentata · 4 turni", c:["#00e49a","#8338ec"],
     d:"Il Mago Algebrick mostra una figura: le squadre ne calcolano l'area e poi costruiscono camminando sulla griglia una figura diversa ma equivalente, segnandone i vertici. Il gioco controlla l'area e spiega che cosa non va.",
     tags:["Figure equivalenti","Aree","Geopiano"] },
   { t:"Tangram delle equivalenze",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/tangram-equivalenze-squadre.html",
     gradi:[6,7], org:"Equivalenza · Sullo schermo · 7 livelli", c:["#00e49a","#16b5c4"],
     d:"I sette pezzi del tangram si trascinano, si ruotano di 45° e si capovolgono con il dito. In ogni livello si costruisce una figura equivalente a una parte del tangram (un ottavo, un quarto, la metà, l'intero) e si cercano due soluzioni con pezzi diversi. Il gioco riconosce da solo figura e area.",
     tags:["Tangram","Equivalenza","Poligoni","Frazioni"] },
   { t:"Taglia e ricomponi",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/taglia-ricomponi-squadre.html",
     gradi:[7], org:"Equicomposizione · Sullo schermo · 4 livelli", c:["#00e49a","#ffd23f"],
     d:"Parallelogramma, triangolo, trapezio e rombo si tagliano con le forbici, si trascinano e si ruotano con il dito per formare rettangoli e parallelogrammi. Il gioco riconosce da solo la figura ottenuta. Così si scopre da dove nascono le formule delle aree.",
     tags:["Equicomposizione","Formule delle aree","Poligoni"] },
   { t:"Pitagora a mattoncini",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/pitagora-mattoncini-squadre.html",
     gradi:[7,8], org:"Teorema di Pitagora · Sullo schermo · 4 livelli", c:["#00e49a","#ef3e36"],
     d:"Sui cateti di un triangolo rettangolo ci sono quadrati di mattoncini LEGO: dopo la previsione, i mattoncini volano a riempire il quadrato sull'ipotenusa. Nell'ultimo livello, con un triangolo non rettangolo, ne avanzano: il teorema vale solo per i rettangoli.",
     tags:["Pitagora","Equicomposizione","Quadrati"] },
   { t:"Piramidi di moltiplicazioni",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/piramidi-moltiplicazioni-squadre.html",
     gradi:[5,6,7,8], org:"Calcolo · Sullo schermo · 4 livelli", c:["#00e49a","#ff8a00"],
     d:"Ogni mattoncino è il prodotto dei due su cui appoggia: si calcolano prodotti e, con le divisioni, i fattori mancanti. Si parte con la risposta multipla, poi si trascinano i numeri giusti e infine si scrivono i risultati, anche frazioni. Si sceglie l'insieme: naturali, frazioni positive, interi relativi o razionali.",
     tags:["Moltiplicazioni","Divisioni","Frazioni","Numeri relativi"] },
   { t:"Piramidi di addizioni",
+    disc:["matematica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/piramidi-addizioni-squadre.html",
     gradi:[5,6,7,8], org:"Calcolo · Sullo schermo · 4 livelli", c:["#00e49a","#5fcf5a"],
     d:"Ogni mattoncino è la somma dei due su cui appoggia: si calcolano somme e, con le sottrazioni, gli addendi mancanti. Si parte con la risposta multipla, poi si trascinano i numeri giusti e infine si scrivono i risultati, anche frazioni. Si sceglie l'insieme: naturali, frazioni positive, interi relativi o razionali.",
     tags:["Addizioni","Sottrazioni","Frazioni","Numeri relativi"] },
   { t:"Il quiz a pulsante",
+    disc:["matematica","fisica","biologia"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/quiz-pulsante-squadre.html",
     gradi:[5,6,7,8], org:"Matematica e scienze · Con la LIM · Domande modificabili", c:["#00e49a","#ef3e36"],
     d:"Le domande vanno sulla lavagna, i tablet diventano pulsanti: la risposta giusta vale punti, la velocità vale un bonus. L'insegnante guida la partita dalla LIM, e le domande si possono riscrivere per qualsiasi argomento.",
     tags:["Quiz","Velocità","Personalizzabile"] },
   { t:"Stima e misura",
+    disc:["matematica","fisica"],
     u:"https://steminbrick.com/wp-content/uploads/giochi/stima-e-misura-squadre.html",
     gradi:[5,6,7,8], org:"Misure · Con la LIM · Oggetti della classe", c:["#00e49a","#9db4ff"],
     d:"Le squadre stimano lunghezze, masse e capacità di oggetti veri della classe, poi si misura insieme. Più la stima è vicina al valore vero, più punti si prendono: sulla lavagna compare la tabella con lo scarto percentuale di ogni squadra.",
@@ -280,88 +304,100 @@ function cardHTML(g, idx){
   var grad = 'linear-gradient(90deg,'+g.c.join(',')+')';
   var tags = '';
   for (var i=0;i<g.tags.length;i++){ tags += '<li>'+esc(g.tags[i])+'</li>'; }
-  return '<article class="card" data-gradi="'+g.gradi.join('|')+'" style="--grad:'+grad+';--accent:'+g.c[1]+'">'
+  return '<article class="card" data-gradi="'+g.gradi.join('|')+'" data-disc="'+g.disc.join('|')+'" style="--grad:'+grad+';--accent:'+g.c[1]+'">'
     + brickSVG(g.c, 'gg'+idx)
     + '<h3><a href="'+esc(g.u)+'" target="_blank" rel="noopener">'+esc(g.t)+'<span class="arr">&#8599;</span></a></h3>'
-    + '<div class="org">'+gradesHTML(g.gradi)+esc(g.org)+'</div>'
+    + '<div class="org">'+discHTML(g.disc)+gradesHTML(g.gradi)+esc(g.org)+'</div>'
     + '<p class="desc">'+esc(g.d)+'</p>'
     + '<ul class="tags">'+tags+'</ul>'
     + '<a class="play" href="'+esc(g.u)+'" target="_blank" rel="noopener">Gioca</a>'
     + '</article>';
 }
 
+function discHTML(ds){
+  var h = '';
+  for (var i=0;i<ds.length;i++){ var d = DISCIPLINE[ds[i]]; h += '<span class="disc" style="--dc:'+d.c+'">'+esc(d.nome)+'</span>'; }
+  return h;
+}
 function gradesHTML(gs){
   var h = '';
   for (var i=0;i<gs.length;i++){ h += '<span class="grade" style="--gc:'+gradeColor(gs[i])+'">Grado '+gs[i]+'</span>'; }
   return h;
 }
 
-/* ---- gradi presenti e stato dei filtri ---- */
-var GRADES = [];
+/* ---- filtri: disciplina e grado. Un gioco si vede se ha almeno una disciplina scelta E almeno un grado scelto ---- */
+function makeGroup(id, values, label, color, attr){
+  var g = { id:id, values:values, label:label, color:color, attr:attr, active:{} };
+  for (var i=0;i<values.length;i++) g.active[values[i]] = true;
+  return g;
+}
+var GRADES = [], DISCS = [];
 for (var gi=0; gi<GAMES.length; gi++){
-  for (var gj=0; gj<GAMES[gi].gradi.length; gj++){
-    var gv = GAMES[gi].gradi[gj];
-    if (GRADES.indexOf(gv) === -1) GRADES.push(gv);
-  }
+  for (var gj=0; gj<GAMES[gi].gradi.length; gj++){ var gv = GAMES[gi].gradi[gj]; if (GRADES.indexOf(gv) === -1) GRADES.push(gv); }
+  for (var dj=0; dj<GAMES[gi].disc.length; dj++){ var dv = GAMES[gi].disc[dj]; if (DISCS.indexOf(dv) === -1) DISCS.push(dv); }
 }
 GRADES.sort(function(a,b){ return a-b; });
-var active = {};
-for (var ai=0; ai<GRADES.length; ai++){ active[GRADES[ai]] = true; }
-
-function allActive(){
-  for (var i=0;i<GRADES.length;i++){ if (!active[GRADES[i]]) return false; }
+DISCS.sort(function(a,b){ return Object.keys(DISCIPLINE).indexOf(a) - Object.keys(DISCIPLINE).indexOf(b); });
+var GROUPS = [
+  makeGroup('filtersDisc', DISCS, function(v){ return DISCIPLINE[v].nome; }, function(v){ return DISCIPLINE[v].c; }, 'data-disc'),
+  makeGroup('filters', GRADES, function(v){ return 'Grado '+v; }, gradeColor, 'data-gradi')
+];
+function allActive(g){
+  for (var i=0;i<g.values.length;i++){ if (!g.active[g.values[i]]) return false; }
   return true;
 }
-
+function matches(card, g){
+  var vs = card.getAttribute(g.attr).split('|');
+  for (var j=0;j<vs.length;j++){ if (g.active[vs[j]]) return true; }
+  return false;
+}
 function applyFilter(){
-  var cards = document.querySelectorAll('.card'), vis = 0, i, j;
+  var cards = document.querySelectorAll('.card'), vis = 0, i, k;
   for (i=0;i<cards.length;i++){
-    var gs = cards[i].getAttribute('data-gradi').split('|'), show = false;
-    for (j=0;j<gs.length;j++){ if (active[gs[j]]){ show = true; break; } }
+    var show = true;
+    for (k=0;k<GROUPS.length;k++){ if (!matches(cards[i], GROUPS[k])){ show = false; break; } }
     cards[i].style.display = show ? '' : 'none';
     if (show) vis++;
   }
-  var chips = document.querySelectorAll('#filters .chip');
-  for (i=0;i<chips.length;i++){
-    var ch = chips[i];
-    var on = ch.getAttribute('data-all') !== null ? allActive() : !!active[ch.getAttribute('data-grado')];
-    if (on) ch.classList.remove('off'); else ch.classList.add('off');
+  for (k=0;k<GROUPS.length;k++){
+    var g = GROUPS[k], chips = document.querySelectorAll('#'+g.id+' .chip');
+    for (i=0;i<chips.length;i++){
+      var ch = chips[i];
+      var on = ch.getAttribute('data-all') !== null ? allActive(g) : !!g.active[ch.getAttribute('data-v')];
+      if (on) ch.classList.remove('off'); else ch.classList.add('off');
+    }
   }
   document.getElementById('empty').style.display = vis === 0 ? '' : 'none';
   document.getElementById('tot').textContent = vis;
 }
-
-function onChip(e){
-  var b = e.currentTarget;
-  if (b.getAttribute('data-all') !== null){
-    var makeAll = !allActive();            // tutto attivo -> azzera; altrimenti attiva tutto
-    for (var i=0;i<GRADES.length;i++){ active[GRADES[i]] = makeAll; }
-  } else {
-    var g = b.getAttribute('data-grado');
-    active[g] = !active[g];
-  }
-  applyFilter();
-}
-
-function buildFilters(){
-  var f = document.getElementById('filters');
+function buildFilters(g){
+  var f = document.getElementById(g.id);
   var h = '<button type="button" class="chip all" data-all="1">Tutti</button>';
-  for (var i=0;i<GRADES.length;i++){
-    h += '<button type="button" class="chip" style="--cc:'+gradeColor(GRADES[i])+'" data-grado="'+GRADES[i]+'">Grado '+GRADES[i]+'</button>';
+  for (var i=0;i<g.values.length;i++){
+    h += '<button type="button" class="chip" style="--cc:'+g.color(g.values[i])+'" data-v="'+g.values[i]+'">'+esc(g.label(g.values[i]))+'</button>';
   }
   f.innerHTML = h;
   var chips = f.querySelectorAll('.chip');
-  for (var k=0;k<chips.length;k++){ chips[k].addEventListener('click', onChip); }
+  for (var k=0;k<chips.length;k++){
+    chips[k].addEventListener('click', function(e){
+      var b = e.currentTarget;
+      if (b.getAttribute('data-all') !== null){
+        var makeAll = !allActive(g);            // tutto attivo -> azzera; altrimenti attiva tutto
+        for (var i=0;i<g.values.length;i++){ g.active[g.values[i]] = makeAll; }
+      } else { var v = b.getAttribute('data-v'); g.active[v] = !g.active[v]; }
+      applyFilter();
+    });
+  }
 }
 
 (function init(){
   var html = '<div class="grid">';
   for (var i=0;i<GAMES.length;i++){ html += cardHTML(GAMES[i], i); }
-  html += '<p id="empty" class="empty" style="display:none">Nessun gioco da mostrare: seleziona almeno un grado qui sopra.</p>';
+  html += '<p id="empty" class="empty" style="display:none">Nessun gioco da mostrare: scegli almeno una disciplina e un grado qui sopra.</p>';
   html += '</div>';
   document.getElementById('app').innerHTML = html;
   document.getElementById('totAll').textContent = GAMES.length;
-  buildFilters();
+  for (var gk=0; gk<GROUPS.length; gk++) buildFilters(GROUPS[gk]);
   applyFilter();
 })();
 </script>
