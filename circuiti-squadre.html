@@ -150,6 +150,7 @@
   #board .hit{fill:transparent;cursor:pointer}
   #board .hit:hover{fill:rgba(31,79,216,.12)}
   #tools[hidden]{display:none}
+  body.freemode #points{display:none}
   .tool.act{background:#ffd23f}
   @media (max-width:560px){ #puzzle{padding-top:100px} .tool{font-size:1rem;padding:8px 10px} }
   .tools{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:14px}
@@ -277,6 +278,7 @@
       </div>
       <button class="btn" id="btnJoin">Entra nella partita</button>
       <button class="btn secondary" id="btnSolo">Allenamento da soli</button>
+      <button class="btn secondary" id="btnFree">🔧 Laboratorio libero</button>
       <button class="linkbtn" id="btnTeacher">Sono l'insegnante: crea una partita</button>
       <p class="status" id="support"></p>
       <p class="credit">Realizzato da Andrea Gramazio per STEM in Brick</p>
@@ -657,6 +659,9 @@ const LEVELS = [
     aiuto:'I metalli conducono la corrente; plastica, gomma, legno e sughero no.', prova:null }
 ];
 const TOT = LEVELS.length;
+const FREE = { nome:'Circuiti', free:true, tools:['filo', 'lamp', 'switch', 'gomma', 'svita'], fixed:{},
+  intro:'Laboratorio libero: costruite tutti i circuiti che volete, con quante lampadine e interruttori volete. Qui non ci sono punti: sperimentate!',
+  aiuto:'Ricordate: la corrente esce dal polo più della pila e deve tornare al polo meno. Provate serie e parallelo, e guardate quanto brillano le lampadine.' };
 const TOOL_INFO = { filo:'〰️ Filo', lamp:'💡 Lampadina', switch:'🔘 Interruttore', gomma:'🧽 Gomma', svita:'🔄 Svita' };
 
 /* ---- stato del livello in corso ---- */
@@ -674,7 +679,7 @@ function drawComp(key, c, sol){
     const L = sol && sol.lamps[key], on = L && L.lit, b = on ? Math.min(1, L.P) : 0, loose = c.screwed === false;
     s += wire(-2, -0.75) + wire(0.75, 2);
     if (on) s += '<circle class="glow" r="' + (1.1 + 0.6 * b) + '" style="opacity:' + (0.3 + 0.4 * b) + '"/>';
-    s += '<g transform="rotate(' + (-rot) + ')' + (loose ? ' translate(0 -0.7)' : '') + '"><circle class="bulb' + (on ? ' on' : '') + '" r="0.85" style="' + (on ? 'fill:rgba(255,210,63,' + (0.45 + 0.55 * b) + ')' : '') + '"/>'
+    s += '<g transform="rotate(' + (-rot) + ')' + (loose ? ' translate(0 -0.7)' : '') + '"><circle class="bulb' + (on ? ' on' : '') + '" r="0.85" style="' + (on ? 'fill:rgba(255,210,63,' + (0.45 + 0.55 * b) + ')' : (L && L.P > 0.008 ? 'fill:rgba(255,210,63,' + (0.15 + 4 * L.P) + ')' : '')) + '"/>'
       + '<path class="fil" d="M-0.4 0.15 L-0.2 -0.25 L0 0.15 L0.2 -0.25 L0.4 0.15"/>' + (loose ? '<text class="loose" y="-1.2">svitata</text>' : '') + '</g>';
   }
   else if (c.k === 'switch'){
@@ -708,6 +713,7 @@ function drawBoard(){
 }
 function buildTools(def){
   $('tools').innerHTML = def.tools.map(t => '<button type="button" class="tool" data-t="' + t + '">' + TOOL_INFO[t] + '</button>').join('')
+    + (def.free ? '<button type="button" class="tool" id="btnClear">🗑️ Svuota</button>' : '')
     + '<button type="button" class="tool" id="btnHint">💡 Aiuto</button>';
   $('tools').hidden = !def.tools.length;
   lev.tool = def.tools[0] || null; markTool();
@@ -715,7 +721,8 @@ function buildTools(def){
 function markTool(){ document.querySelectorAll('#tools .tool[data-t]').forEach(b => { b.classList.toggle('act', b.dataset.t === lev.tool); b.setAttribute('aria-pressed', b.dataset.t === lev.tool); }); }
 $('tools').addEventListener('click', ev => {
   const b = ev.target.closest('.tool'); if (!b || !lev || lev.solved) return;
-  if (b.id === 'btnHint'){ addError(); say(lev.def.aiuto); return; }
+  if (b.id === 'btnHint'){ if (!lev.def.free) addError(); say(lev.def.aiuto); return; }
+  if (b.id === 'btnClear'){ lev.comps = { [BATT]:{ k:'batt', fixed:true } }; sfx('pop'); drawBoard(); return; }
   lev.tool = b.dataset.t; markTool();
 });
 $('board').addEventListener('click', ev => {
@@ -741,6 +748,7 @@ function check(){
   if (!lev || lev.solved || lev.def.test) return;
   const comps = lev.comps, sol = lev.sol, lamps = lampsOf(comps), lit = litKeys(comps, sol), d = LEVELS.indexOf(lev.def);
   if (sol.short){ say('Cortocircuito! La corrente passa tutta nel filo e non nelle lampadine: la pila si scarica subito e può scaldarsi. Togliete il filo di troppo.', { warn:true, speech:'Cortocircuito! Togliete il filo di troppo.' }); return; }
+  if (lev.def.free) return;
   if (lev.step === 'build'){
     let ok = false;
     if (d === 0) ok = lit.length === 1;
@@ -802,12 +810,13 @@ async function playTest(id){
     await wait(500); if (!alive(id)) return;
   }
 }
-async function playLevel(id, def){
+async function playLevel(id, def, first){
   lev = { id, def, comps:{ [BATT]:{ k:'batt', fixed:true } }, tool:null, step:'build', solved:false };
   Object.entries(def.fixed).forEach(([k, c]) => lev.comps[k] = Object.assign({ fixed:true }, c, c.k === 'switch' ? { on:true } : {}));
   $('target').textContent = def.nome;
   buildTools(def); drawBoard();
-  await say(def.intro); if (!alive(id)) return;
+  await say(first ? 'Via! ' + def.intro + ' Scegliete un pezzo qui sotto e toccate un tratto della griglia per posarlo.' : def.intro,
+    first ? { speech:'Via! ' + def.intro } : undefined); if (!alive(id)) return;
   if (def.test){ await playTest(id); return; }
   if (!lev.solved) await new Promise(r => { lev.resolve = r; });
 }
@@ -824,9 +833,9 @@ async function runGame(){
   const id = state.runId;
   state.started = true; state.waitingStart = false; state.level = 0; state.score = 0; state.errors = 0; updateHud();
   showScreen('puzzle');
-  sfx('go'); await say('Via! Scegliete un pezzo qui sotto e toccate un tratto della griglia per posarlo.'); if (!alive(id)) return;
+  sfx('go');
   for (let lv = 0; lv < TOT; lv++){
-    await playLevel(id, LEVELS[lv]); if (!alive(id)) return;
+    await playLevel(id, LEVELS[lv], lv === 0); if (!alive(id)) return;
     state.level++; updateHud(); report(); sfx('win');
     if (state.level < TOT){ await say('Livello completato: avete guadagnato una stella!'); if (!alive(id)) return; }
   }
@@ -834,6 +843,17 @@ async function runGame(){
   report({ finito:true, tempoFine:TS });
   say('Avete finito con ' + points() + ' punti! Aspettiamo le altre squadre…', { speech:'Avete finito! Aspettiamo le altre squadre.' });
 }
+
+/* ===================== LABORATORIO LIBERO ===================== */
+function startFree(){
+  initAudio(); state.voice = $('optVoice').checked;
+  state.runId++; state.net = null; state.started = true; state.finished = true; state.resultShown = true;
+  document.body.classList.add('freemode');
+  $('hud').hidden = false; $('bottom').hidden = false; $('gems').textContent = '🔧 Laboratorio libero';
+  showScreen('puzzle'); clearAnswers();
+  playLevel(state.runId, FREE);
+}
+$('btnFree').addEventListener('click', startFree);
 
 function showResult(g){
   if (state.resultShown) return;
@@ -912,7 +932,7 @@ function startPlay(){
   prepareGame();
 }
 function showStart(){
-  state.runId++; state.net = null; state.teacher = null; lev = null;
+  state.runId++; state.net = null; state.teacher = null; lev = null; document.body.classList.remove('freemode');
   stopPolling(); stopTeacherPolling(); stopVoice();
   $('hud').hidden = true; $('bottom').hidden = true; clearAnswers();
   showScreen('startScreen');
